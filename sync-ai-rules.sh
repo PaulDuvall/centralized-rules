@@ -194,9 +194,400 @@ load_framework_rules() {
     fi
 }
 
-# Generate tool-specific output files
-generate_claude_rules() {
-    log_info "Generating Claude Code rules..."
+# Generate hierarchical rule structure
+generate_claude_rules_hierarchical() {
+    log_info "Generating Claude Code rules (hierarchical structure)..."
+
+    # Create directory structure
+    mkdir -p .claude/rules/{base,languages,frameworks,cloud}
+
+    # Detect what was loaded for the index
+    local languages_loaded
+    local frameworks_loaded
+    read -ra languages_loaded <<< "$(detect_language)"
+    read -ra frameworks_loaded <<< "$(detect_frameworks)"
+
+    # Copy base rules
+    if [[ -d "${CACHE_DIR}/base" ]]; then
+        cp -r "${CACHE_DIR}/base/"*.md .claude/rules/base/ 2>/dev/null || true
+    fi
+
+    # Copy language rules
+    for lang in "${languages_loaded[@]:-}"; do
+        if [[ -n "$lang" ]] && [[ -d "${CACHE_DIR}/languages/${lang}" ]]; then
+            mkdir -p ".claude/rules/languages/${lang}"
+            cp -r "${CACHE_DIR}/languages/${lang}/"*.md ".claude/rules/languages/${lang}/" 2>/dev/null || true
+        fi
+    done
+
+    # Copy framework rules
+    for fw in "${frameworks_loaded[@]:-}"; do
+        if [[ -n "$fw" ]] && [[ -d "${CACHE_DIR}/frameworks/${fw}" ]]; then
+            mkdir -p ".claude/rules/frameworks/${fw}"
+            cp -r "${CACHE_DIR}/frameworks/${fw}/"*.md ".claude/rules/frameworks/${fw}/" 2>/dev/null || true
+        fi
+    done
+
+    # Copy cloud rules if any
+    if [[ -d "${CACHE_DIR}/cloud" ]]; then
+        cp -r "${CACHE_DIR}/cloud/"* .claude/rules/cloud/ 2>/dev/null || true
+    fi
+
+    # Generate index.json
+    generate_rule_index "${languages_loaded[@]:-}" "${frameworks_loaded[@]:-}"
+
+    # Generate AGENTS.md entry point
+    generate_agents_md "${languages_loaded[@]:-}" "${frameworks_loaded[@]:-}"
+
+    log_success "Generated .claude/AGENTS.md and .claude/rules/"
+}
+
+# Generate rule index JSON
+generate_rule_index() {
+    local languages_loaded=("$@")
+    local output=".claude/rules/index.json"
+
+    if [[ -f "${SCRIPT_DIR}/rules-config.json" ]] && command -v python3 &> /dev/null; then
+        python3 <<PYTHON
+import json
+import os
+
+try:
+    with open("${SCRIPT_DIR}/rules-config.json") as f:
+        config = json.load(f)
+
+    languages_loaded = [l for l in "${languages_loaded[@]:-}".split() if l]
+
+    index = {
+        "generated_at": "$(date -u +"%Y-%m-%d %H:%M:%S UTC")",
+        "detected": {
+            "languages": languages_loaded,
+            "frameworks": []
+        },
+        "rules": {
+            "base": [],
+            "languages": {},
+            "frameworks": {}
+        }
+    }
+
+    # Base rules
+    for rule in config.get("base_rules", []):
+        index["rules"]["base"].append({
+            "name": rule["name"],
+            "file": ".claude/rules/" + rule["file"],
+            "when": rule["when"],
+            "always_load": rule.get("always_load", False)
+        })
+
+    # Language rules
+    for lang_key in languages_loaded:
+        if lang_key in config.get("languages", {}):
+            lang = config["languages"][lang_key]
+            index["rules"]["languages"][lang_key] = {
+                "display_name": lang["display_name"],
+                "rules": []
+            }
+            for rule in lang.get("rules", []):
+                index["rules"]["languages"][lang_key]["rules"].append({
+                    "name": rule["name"],
+                    "file": ".claude/rules/" + rule["file"],
+                    "when": rule["when"]
+                })
+
+    with open("${output}", "w") as f:
+        json.dump(index, f, indent=2)
+
+except Exception as e:
+    print(f"Warning: Could not generate index.json: {e}")
+PYTHON
+    fi
+}
+
+# Generate AGENTS.md entry point
+generate_agents_md() {
+    local languages_loaded=("$@")
+    local output=".claude/AGENTS.md"
+
+    cat > "$output" <<'EOF'
+# Development Agent Configuration
+
+**Last updated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+## 🎯 Progressive Disclosure Rule System
+
+This directory contains development rules organized hierarchically for **on-demand loading**.
+
+**DO NOT load all rule files at once.** Use progressive disclosure to load only relevant rules.
+
+---
+
+## 📁 Directory Structure
+
+```
+.claude/rules/
+├── base/              # Universal rules (language-agnostic)
+├── languages/         # Language-specific rules
+├── frameworks/        # Framework-specific rules
+├── cloud/             # Cloud provider rules
+└── index.json         # Machine-readable rule index
+```
+
+---
+
+## 🔍 Discovery Process
+
+### Step 1: Analyze User Request
+
+Identify from the user's question:
+- **Language**: Python (.py), TypeScript (.ts/.tsx), Go (.go), etc.
+- **Framework**: React, FastAPI, Django, Express, etc.
+- **Task type**: Testing, refactoring, code review, new feature, etc.
+
+### Step 2: Load Relevant Rules
+
+Use the **Read tool** to load specific rule files:
+
+**For every task:**
+```
+Read .claude/rules/base/code-quality.md
+```
+
+**For language-specific tasks:**
+```
+Python code → Read .claude/rules/languages/python/coding-standards.md
+TypeScript  → Read .claude/rules/languages/typescript/coding-standards.md
+Go code     → Read .claude/rules/languages/go/coding-standards.md
+```
+
+**For framework-specific tasks:**
+```
+FastAPI → Read .claude/rules/frameworks/fastapi/best-practices.md
+React   → Read .claude/rules/frameworks/react/best-practices.md
+Django  → Read .claude/rules/frameworks/django/best-practices.md
+```
+
+**For testing tasks:**
+```
+Read .claude/rules/base/testing-philosophy.md
+Read .claude/rules/languages/{language}/testing.md
+```
+
+### Step 3: Announce What You Loaded
+
+Show visual feedback:
+
+```markdown
+📚 **Rules Loaded for This Task:**
+✓ Code Quality (.claude/rules/base/code-quality.md)
+✓ Python Coding Standards (.claude/rules/languages/python/coding-standards.md)
+✓ FastAPI Best Practices (.claude/rules/frameworks/fastapi/best-practices.md)
+```
+
+---
+
+## 📋 Rule Index - This Project
+
+**Detected Configuration:**
+EOF
+
+    # Add detected languages and frameworks
+    if [[ ${#languages_loaded[@]} -gt 0 ]]; then
+        echo "- Languages: ${languages_loaded[*]}" >> "$output"
+    else
+        echo "- Languages: None detected (base rules only)" >> "$output"
+    fi
+
+    cat >> "$output" <<'EOF'
+
+**Available Rules:**
+
+### Base Rules (Always Available)
+
+| Rule | File | When to Use |
+|------|------|-------------|
+| Code Quality | `base/code-quality.md` | Every task |
+| Testing Philosophy | `base/testing-philosophy.md` | Testing tasks |
+| Security Principles | `base/security-principles.md` | Security-relevant tasks |
+| Git Workflow | `base/git-workflow.md` | Commits/PRs |
+| Architecture Principles | `base/architecture-principles.md` | Architecture discussions |
+| 12-Factor App | `base/12-factor-app.md` | Deployment/SaaS |
+| Refactoring Patterns | `base/refactoring-patterns.md` | Refactoring tasks |
+
+EOF
+
+    # Add language rules if detected
+    if [[ ${#languages_loaded[@]} -gt 0 ]]; then
+        cat >> "$output" <<'EOF'
+### Language-Specific Rules
+
+EOF
+        if [[ " ${languages_loaded[*]} " =~ " python " ]]; then
+            cat >> "$output" <<'EOF'
+**Python:**
+- `languages/python/coding-standards.md` - Type hints, PEP 8, mypy
+- `languages/python/testing.md` - pytest, fixtures, mocking
+
+EOF
+        fi
+
+        if [[ " ${languages_loaded[*]} " =~ " typescript " ]]; then
+            cat >> "$output" <<'EOF'
+**TypeScript:**
+- `languages/typescript/coding-standards.md` - Strict mode, ESLint, Prettier
+- `languages/typescript/testing.md` - Jest, Vitest, React Testing Library
+
+EOF
+        fi
+
+        if [[ " ${languages_loaded[*]} " =~ " go " ]]; then
+            cat >> "$output" <<'EOF'
+**Go:**
+- `languages/go/coding-standards.md` - Effective Go, conventions
+- `languages/go/testing.md` - Table-driven tests, testify
+
+EOF
+        fi
+    fi
+
+    cat >> "$output" <<'EOF'
+
+---
+
+## 💡 Usage Examples
+
+### Example 1: Python Testing Task
+
+**User**: "Write pytest tests for this function"
+
+**Your workflow**:
+1. Identify: Python + Testing task
+2. Load rules:
+   ```
+   Read .claude/rules/base/testing-philosophy.md
+   Read .claude/rules/languages/python/testing.md
+   ```
+3. Announce:
+   ```
+   📚 Rules Loaded: Testing Philosophy + Python Testing
+   ```
+4. Apply rules and write tests
+
+**Token usage**: ~15K (vs 45K if loading all rules)
+
+---
+
+### Example 2: React Component Review
+
+**User**: "Review this React component"
+
+**Your workflow**:
+1. Identify: TypeScript + React + Code Review
+2. Load rules:
+   ```
+   Read .claude/rules/base/code-quality.md
+   Read .claude/rules/languages/typescript/coding-standards.md
+   Read .claude/rules/frameworks/react/best-practices.md
+   ```
+3. Announce:
+   ```
+   📚 Rules Loaded: Code Quality + TypeScript Standards + React Best Practices
+   ```
+4. Review against loaded rules
+
+**Token usage**: ~18K (60% savings)
+
+---
+
+### Example 3: Multi-Language Project
+
+**User**: "Review the Python API and React frontend"
+
+**Your workflow**:
+1. Identify: Python + TypeScript + FastAPI + React
+2. Load rules:
+   ```
+   # Backend
+   Read .claude/rules/base/code-quality.md
+   Read .claude/rules/languages/python/coding-standards.md
+   Read .claude/rules/frameworks/fastapi/best-practices.md
+
+   # Frontend
+   Read .claude/rules/languages/typescript/coding-standards.md
+   Read .claude/rules/frameworks/react/best-practices.md
+   ```
+3. Announce what's loaded for each part
+4. Apply appropriate rules to each codebase
+
+---
+
+## 📊 Token Efficiency
+
+**Before (monolithic .claude/RULES.md):**
+- All rules loaded: ~45K tokens
+- Available for code: ~55K tokens
+
+**After (hierarchical .claude/rules/):**
+- Selective loading: ~12-18K tokens (2-3 files)
+- Available for code: ~82-88K tokens
+- **Improvement: 60-80% more context for code!**
+
+---
+
+## 🔧 Advanced: Using index.json
+
+For programmatic rule discovery:
+
+```bash
+# See all available rules
+cat .claude/rules/index.json | jq '.rules'
+
+# Find rules for a specific language
+cat .claude/rules/index.json | jq '.rules.languages.python'
+
+# List all base rules
+cat .claude/rules/index.json | jq '.rules.base[] | .name'
+```
+
+---
+
+## ⚠️ Important Guidelines
+
+1. **Start Narrow**: Load base + 1-2 specific rules
+2. **Expand as Needed**: Add more if task requires
+3. **Always Announce**: Show which rules you loaded
+4. **Cite Sources**: Reference specific rules when making recommendations
+5. **Stay Focused**: Don't load unrelated rules
+
+**Goal**: Load ~10-15K of relevant rules, leaving 85-90K for code analysis.
+
+---
+
+## 🆘 Troubleshooting
+
+**Q: What if no rules match the task?**
+A: Load `base/code-quality.md` as a safe default.
+
+**Q: Should I load all base rules?**
+A: No! Only load relevant base rules for the task type.
+
+**Q: What about commits/git tasks?**
+A: Load `base/git-workflow.md` specifically for those tasks.
+
+**Q: Can I load multiple language rules?**
+A: Yes, for multi-language projects, load rules for each language used.
+
+---
+
+*Generated by progressive disclosure sync system*
+EOF
+
+    log_success "Generated $output"
+}
+
+# Generate tool-specific output files (legacy monolithic format)
+generate_claude_rules_monolithic() {
+    log_info "Generating Claude Code rules (monolithic format)..."
 
     local output=".claude/RULES.md"
     mkdir -p .claude
@@ -459,7 +850,7 @@ sync_rules() {
     # Generate tool-specific outputs
     case "$tool" in
         claude)
-            generate_claude_rules
+            generate_claude_rules_hierarchical
             ;;
         cursor)
             generate_cursor_rules
@@ -468,7 +859,7 @@ sync_rules() {
             generate_copilot_rules
             ;;
         all)
-            generate_claude_rules
+            generate_claude_rules_hierarchical
             generate_cursor_rules
             generate_copilot_rules
             ;;
