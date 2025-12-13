@@ -2,6 +2,28 @@
 
 > **When to apply:** All testing across any language or framework
 
+## Maturity Level Indicators
+
+Apply testing practices based on your project's maturity level:
+
+| Practice | MVP/POC | Pre-Production | Production |
+|----------|---------|----------------|------------|
+| Unit tests | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Integration tests | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| E2E tests | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+| Coverage threshold | 40%+ | 60%+ | 80%+ |
+| Coverage enforcement in CI | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Test-first development (TDD) | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Mutation testing | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+| Performance tests | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+
+**Legend:**
+- ✅ Required - Must implement
+- ⚠️ Recommended - Should implement when feasible
+- ❌ Optional - Can skip or defer
+
+See `base/project-maturity-levels.md` for coverage targets and `SUCCESS_METRICS.md` for measurement.
+
 ## Core Testing Principle
 
 **MANDATORY:** Never proceed to the next task or mark work as complete if tests are failing.

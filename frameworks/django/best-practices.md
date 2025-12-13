@@ -1,7 +1,10 @@
 # Django Best Practices
 
-> **Framework:** Django 4.2+
-> **Applies to:** Django projects and Django REST Framework
+> **When to apply:** All Python applications using Django framework
+> **Framework:** Django 4.2+, Django REST Framework 3.14+
+> **Language:** Python 3.11+
+
+Best practices for building production-ready Django applications with models, views, DRF APIs, testing, and performance optimization.
 
 ## Project Structure
 
@@ -392,6 +395,555 @@ class Post(models.Model):
             models.Index(fields=['author', 'is_published']),
         ]
 ```
+
+## Middleware
+
+### Custom Middleware
+
+```python
+# middleware/request_id.py
+import uuid
+from django.utils.deprecation import MiddlewareMixin
+
+class RequestIDMiddleware(MiddlewareMixin):
+    """Add unique request ID to each request."""
+
+    def process_request(self, request):
+        request.id = str(uuid.uuid4())
+        return None
+
+    def process_response(self, request, response):
+        if hasattr(request, 'id'):
+            response['X-Request-ID'] = request.id
+        return response
+```
+
+### Authentication Middleware
+
+```python
+# middleware/auth.py
+from django.http import JsonResponse
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
+
+class JWTAuthenticationMiddleware:
+    """Extract user from JWT token."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        auth_header = request.headers.get('Authorization', '')
+
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            try:
+                access_token = AccessToken(token)
+                request.user_id = access_token['user_id']
+            except TokenError:
+                pass
+
+        return self.get_response(request)
+```
+
+## Signals
+
+### Model Signals
+
+```python
+# signals.py
+from django.db.models.signals import post_save, pre_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+from .models import Post
+
+@receiver(post_save, sender=Post)
+def clear_post_cache(sender, instance, created, **kwargs):
+    """Clear cache when post is created or updated."""
+    cache.delete(f'post_{instance.id}')
+    cache.delete('post_list')
+
+@receiver(pre_delete, sender=Post)
+def cleanup_post_files(sender, instance, **kwargs):
+    """Delete associated files before deleting post."""
+    if instance.image:
+        instance.image.delete(save=False)
+```
+
+### Custom Signals
+
+```python
+# signals.py
+from django.dispatch import Signal
+
+# Define custom signal
+post_published = Signal()
+
+# In model or view
+class Post(models.Model):
+    def publish(self):
+        self.is_published = True
+        self.save()
+
+        # Send signal
+        post_published.send(
+            sender=self.__class__,
+            instance=self,
+            user=self.author
+        )
+
+# In receivers.py
+from .signals import post_published
+
+@receiver(post_published)
+def notify_subscribers(sender, instance, user, **kwargs):
+    """Notify subscribers when post is published."""
+    # Send notifications
+    pass
+```
+
+## Admin Customization
+
+### ModelAdmin Best Practices
+
+```python
+# admin.py
+from django.contrib import admin
+from django.utils.html import format_html
+from .models import Post
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    """Admin interface for Post model."""
+
+    list_display = ['title', 'author', 'status_badge', 'created_at']
+    list_filter = ['is_published', 'created_at']
+    search_fields = ['title', 'content', 'author__username']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Content', {
+            'fields': ('title', 'slug', 'content', 'author')
+        }),
+        ('Publication', {
+            'fields': ('is_published',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def status_badge(self, obj):
+        """Display publication status with color."""
+        if obj.is_published:
+            color = 'green'
+            text = 'Published'
+        else:
+            color = 'red'
+            text = 'Draft'
+
+        return format_html(
+            '<span style="color: {};">{}</span>',
+            color,
+            text
+        )
+    status_badge.short_description = 'Status'
+
+    def get_queryset(self, request):
+        """Optimize queryset with select_related."""
+        qs = super().get_queryset(request)
+        return qs.select_related('author')
+```
+
+## Caching
+
+### Cache Patterns
+
+```python
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+
+# Function-based view caching
+@cache_page(60 * 15)  # Cache for 15 minutes
+def post_list(request):
+    posts = Post.objects.published()
+    return render(request, 'posts.html', {'posts': posts})
+
+# Class-based view caching
+class PostListView(ListView):
+    model = Post
+
+    @method_decorator(cache_page(60 * 15))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# Manual caching
+def get_post(post_id: int) -> Post:
+    """Get post with caching."""
+    cache_key = f'post_{post_id}'
+    post = cache.get(cache_key)
+
+    if post is None:
+        post = Post.objects.select_related('author').get(id=post_id)
+        cache.set(cache_key, post, 60 * 15)
+
+    return post
+
+# Template fragment caching
+{% load cache %}
+{% cache 500 post_sidebar post.id %}
+    <div class="sidebar">
+        {{ post.related_posts }}
+    </div>
+{% endcache %}
+```
+
+### Cache Invalidation
+
+```python
+from django.db.models.signals import post_save
+from django.core.cache import cache
+
+@receiver(post_save, sender=Post)
+def invalidate_post_cache(sender, instance, **kwargs):
+    """Invalidate cache on post save."""
+    cache.delete(f'post_{instance.id}')
+    cache.delete('post_list')
+
+    # Invalidate related caches
+    cache.delete(f'author_{instance.author_id}_posts')
+```
+
+## Async and Background Tasks
+
+### Celery Tasks
+
+```python
+# tasks.py
+from celery import shared_task
+from django.core.mail import send_mail
+from .models import Post
+
+@shared_task
+def send_notification_email(post_id: int):
+    """Send email notification for new post."""
+    try:
+        post = Post.objects.get(id=post_id)
+
+        send_mail(
+            subject=f'New Post: {post.title}',
+            message=post.content[:200],
+            from_email='noreply@example.com',
+            recipient_list=['subscribers@example.com'],
+            fail_silently=False,
+        )
+
+        return f'Email sent for post {post_id}'
+    except Post.DoesNotExist:
+        return f'Post {post_id} not found'
+
+@shared_task(bind=True, max_retries=3)
+def process_image(self, post_id: int):
+    """Process post image with retry logic."""
+    try:
+        post = Post.objects.get(id=post_id)
+        # Process image
+        return f'Image processed for post {post_id}'
+    except Exception as exc:
+        # Retry after 60 seconds
+        raise self.retry(exc=exc, countdown=60)
+
+# Usage in views
+from .tasks import send_notification_email
+
+def publish_post(request, post_id):
+    post = Post.objects.get(id=post_id)
+    post.is_published = True
+    post.save()
+
+    # Queue background task
+    send_notification_email.delay(post_id)
+
+    return redirect('post-detail', pk=post_id)
+```
+
+## Advanced DRF Patterns
+
+### Nested Serializers
+
+```python
+# serializers.py
+from rest_framework import serializers
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'content', 'author', 'created_at']
+
+class PostDetailSerializer(serializers.ModelSerializer):
+    """Detailed post serializer with nested comments."""
+
+    comments = CommentSerializer(many=True, read_only=True)
+    author_name = serializers.CharField(source='author.get_full_name', read_only=True)
+
+    class Meta:
+        model = Post
+        fields = [
+            'id', 'title', 'slug', 'content',
+            'author', 'author_name',
+            'comments', 'created_at', 'is_published'
+        ]
+```
+
+### Custom Permissions
+
+```python
+# permissions.py
+from rest_framework import permissions
+
+class IsAuthorOrReadOnly(permissions.BasePermission):
+    """Allow authors to edit their own posts."""
+
+    def has_object_permission(self, request, view, obj):
+        # Read permissions for any request
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions only for author
+        return obj.author == request.user
+
+# Usage in ViewSet
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthorOrReadOnly]
+```
+
+### Pagination
+
+```python
+# pagination.py
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+# settings.py
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'myapp.pagination.StandardResultsSetPagination',
+}
+```
+
+## Advanced Testing
+
+### Factory Pattern with Factory Boy
+
+```python
+# factories.py
+import factory
+from factory.django import DjangoModelFactory
+from .models import Post, User
+
+class UserFactory(DjangoModelFactory):
+    class Meta:
+        model = User
+
+    username = factory.Sequence(lambda n: f'user{n}')
+    email = factory.LazyAttribute(lambda obj: f'{obj.username}@example.com')
+
+class PostFactory(DjangoModelFactory):
+    class Meta:
+        model = Post
+
+    title = factory.Sequence(lambda n: f'Post {n}')
+    content = factory.Faker('paragraph')
+    author = factory.SubFactory(UserFactory)
+
+# Usage in tests
+from .factories import PostFactory, UserFactory
+
+class PostTest(TestCase):
+    def test_create_post(self):
+        user = UserFactory()
+        post = PostFactory(author=user)
+
+        self.assertEqual(post.author, user)
+```
+
+### Pytest-Django
+
+```python
+# tests/test_models.py
+import pytest
+from myapp.models import Post
+from myapp.factories import UserFactory, PostFactory
+
+@pytest.mark.django_db
+class TestPost:
+    """Test Post model."""
+
+    def test_create_post(self):
+        """Test creating a post."""
+        post = PostFactory()
+        assert post.id is not None
+        assert post.title.startswith('Post')
+
+    def test_published_queryset(self):
+        """Test published posts queryset."""
+        PostFactory(is_published=True)
+        PostFactory(is_published=False)
+
+        published = Post.objects.published()
+        assert published.count() == 1
+
+# conftest.py
+import pytest
+from rest_framework.test import APIClient
+
+@pytest.fixture
+def api_client():
+    """Provide API client for tests."""
+    return APIClient()
+
+@pytest.fixture
+def authenticated_client(api_client, user):
+    """Provide authenticated API client."""
+    api_client.force_authenticate(user=user)
+    return api_client
+```
+
+## Deployment
+
+### Production Settings
+
+```python
+# settings/production.py
+import os
+from .base import *
+
+DEBUG = False
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 600,
+    }
+}
+
+# Static files
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/django/app.log',
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['file'],
+        'level': 'INFO',
+    },
+}
+```
+
+### Docker Configuration
+
+```dockerfile
+# Dockerfile
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project
+COPY . .
+
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
+EXPOSE 8000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi:application"]
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: gunicorn myproject.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+```
+
+## Related Resources
+
+- See `languages/python/coding-standards.md` for Python patterns
+- See `languages/python/testing.md` for testing strategies
+- See `base/security-principles.md` for security guidelines
 
 ## References
 

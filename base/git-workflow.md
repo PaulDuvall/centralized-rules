@@ -2,6 +2,26 @@
 
 > **When to apply:** All git operations across any project
 
+## Maturity Level Indicators
+
+This document contains practices applicable to different project maturity levels. Apply practices based on your project's current phase:
+
+| Practice | MVP/POC | Pre-Production | Production |
+|----------|---------|----------------|------------|
+| Frequent commits | ✅ Required | ✅ Required | ✅ Required |
+| Conventional commit messages | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Branch protection | ❌ Optional | ✅ Required | ✅ Required |
+| Required code reviews | ❌ Optional | ✅ Required (1 approval) | ✅ Required (2 approvals) |
+| Automated commit hooks | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| GPG signed commits | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+
+**Legend:**
+- ✅ Required - Must implement this practice
+- ⚠️ Recommended - Should implement when feasible
+- ❌ Optional - Can skip or defer
+
+See `base/project-maturity-levels.md` for detailed maturity framework.
+
 ## Commit Frequency
 
 ### Rule: Commit and Push Often

@@ -1,0 +1,224 @@
+{
+  "version": "1.0.0",
+  "generated": "{{TIMESTAMP}}",
+  "project": {
+    "languages": ["{{LANGUAGES}}"],
+    "frameworks": ["{{FRAMEWORKS}}"],
+    "cloud_providers": ["{{CLOUD_PROVIDERS}}"],
+    "maturity_level": "{{MATURITY_LEVEL}}"
+  },
+  "rules": {
+    "base": [
+      {
+        "file": "git-workflow.md",
+        "category": "base",
+        "title": "Git Workflow",
+        "description": "Commit message standards, branching strategy, commit frequency",
+        "when_to_apply": "Creating commits, managing branches, collaborating via Git",
+        "maturity_aware": true,
+        "related": ["code-review-guidelines.md"]
+      },
+      {
+        "file": "code-quality.md",
+        "category": "base",
+        "title": "Code Quality",
+        "description": "Function size limits, DRY principle, naming conventions, complexity management",
+        "when_to_apply": "Writing new code, code reviews, refactoring",
+        "maturity_aware": true,
+        "related": ["refactoring-guidelines.md", "code-review-guidelines.md"]
+      },
+      {
+        "file": "testing-philosophy.md",
+        "category": "base",
+        "title": "Testing Philosophy",
+        "description": "Test coverage goals, test types, TDD approach, never proceed with failing tests",
+        "when_to_apply": "Writing tests, test reviews, establishing test strategy",
+        "maturity_aware": true,
+        "related": []
+      },
+      {
+        "file": "security-principles.md",
+        "category": "base",
+        "title": "Security Principles",
+        "description": "No hardcoded secrets, input validation, authentication, authorization",
+        "when_to_apply": "Writing code that handles data, authentication, or external inputs",
+        "maturity_aware": true,
+        "related": ["api-design-principles.md"]
+      },
+      {
+        "file": "cicd-comprehensive.md",
+        "category": "base",
+        "title": "CI/CD Comprehensive",
+        "description": "Pipeline best practices, automated testing, deployment strategies",
+        "when_to_apply": "Setting up CI/CD, modifying pipelines, deployment configuration",
+        "maturity_aware": true,
+        "related": ["testing-philosophy.md"]
+      },
+      {
+        "file": "architecture-principles.md",
+        "category": "base",
+        "title": "Architecture Principles",
+        "description": "System design patterns, separation of concerns, modularity",
+        "when_to_apply": "Designing new features, architectural decisions, refactoring",
+        "maturity_aware": false,
+        "related": ["api-design-principles.md"]
+      },
+      {
+        "file": "development-workflow.md",
+        "category": "base",
+        "title": "Development Workflow",
+        "description": "Plan → Implement → Test → Refactor cycle",
+        "when_to_apply": "Starting new tasks, managing development process",
+        "maturity_aware": false,
+        "related": []
+      },
+      {
+        "file": "error-handling.md",
+        "category": "base",
+        "title": "Error Handling",
+        "description": "Exception handling patterns, error messages, logging errors",
+        "when_to_apply": "Writing error handling code, debugging, improving reliability",
+        "maturity_aware": false,
+        "related": ["logging-monitoring.md"]
+      },
+      {
+        "file": "logging-monitoring.md",
+        "category": "base",
+        "title": "Logging & Monitoring",
+        "description": "Structured logging, observability, metrics, tracing",
+        "when_to_apply": "Adding logging, setting up monitoring, debugging production issues",
+        "maturity_aware": false,
+        "related": ["error-handling.md"]
+      },
+      {
+        "file": "documentation.md",
+        "category": "base",
+        "title": "Documentation",
+        "description": "Code comments, README files, API documentation",
+        "when_to_apply": "Documenting code, writing READMEs, API docs",
+        "maturity_aware": false,
+        "related": ["api-design-principles.md"]
+      },
+      {
+        "file": "performance-optimization.md",
+        "category": "base",
+        "title": "Performance Optimization",
+        "description": "Profiling, caching strategies, query optimization",
+        "when_to_apply": "Optimizing slow code, improving response times, scaling",
+        "maturity_aware": false,
+        "related": ["database-best-practices.md"]
+      },
+      {
+        "file": "dependency-management.md",
+        "category": "base",
+        "title": "Dependency Management",
+        "description": "Version pinning, security updates, dependency audits",
+        "when_to_apply": "Adding dependencies, updating packages, security audits",
+        "maturity_aware": false,
+        "related": ["security-principles.md"]
+      },
+      {
+        "file": "database-best-practices.md",
+        "category": "base",
+        "title": "Database Best Practices",
+        "description": "Schema design, indexing, query optimization, migrations",
+        "when_to_apply": "Database schema changes, query optimization, migrations",
+        "maturity_aware": false,
+        "related": ["performance-optimization.md"]
+      },
+      {
+        "file": "api-design-principles.md",
+        "category": "base",
+        "title": "API Design Principles",
+        "description": "RESTful design, versioning, error responses, pagination",
+        "when_to_apply": "Designing APIs, adding endpoints, API versioning",
+        "maturity_aware": false,
+        "related": ["security-principles.md", "documentation.md"]
+      },
+      {
+        "file": "code-review-guidelines.md",
+        "category": "base",
+        "title": "Code Review Guidelines",
+        "description": "Review process, standards, constructive feedback",
+        "when_to_apply": "Reviewing code, preparing code for review",
+        "maturity_aware": true,
+        "related": ["git-workflow.md", "code-quality.md"]
+      },
+      {
+        "file": "refactoring-guidelines.md",
+        "category": "base",
+        "title": "Refactoring Guidelines",
+        "description": "When to refactor, safe refactoring practices, incremental improvements",
+        "when_to_apply": "Refactoring code, improving code quality",
+        "maturity_aware": false,
+        "related": ["code-quality.md", "testing-philosophy.md"]
+      },
+      {
+        "file": "project-maturity-levels.md",
+        "category": "base",
+        "title": "Project Maturity Levels",
+        "description": "MVP/POC, Pre-Production, Production criteria and requirements",
+        "when_to_apply": "Understanding project requirements, planning quality gates",
+        "maturity_aware": true,
+        "related": []
+      }
+    ],
+    "languages": {
+      "{{LANGUAGE_NAME}}": [
+        {
+          "file": "coding-standards.md",
+          "category": "language",
+          "language": "{{LANGUAGE_NAME}}",
+          "title": "{{LANGUAGE_NAME}} Coding Standards",
+          "description": "Language-specific style guide, idioms, best practices",
+          "when_to_apply": "Writing {{LANGUAGE_NAME}} code, code reviews",
+          "related": ["testing.md"]
+        },
+        {
+          "file": "testing.md",
+          "category": "language",
+          "language": "{{LANGUAGE_NAME}}",
+          "title": "{{LANGUAGE_NAME}} Testing",
+          "description": "Testing frameworks, patterns, mocking strategies",
+          "when_to_apply": "Writing tests for {{LANGUAGE_NAME}} code",
+          "related": ["coding-standards.md"]
+        }
+      ]
+    },
+    "frameworks": {
+      "{{FRAMEWORK_NAME}}": [
+        {
+          "file": "best-practices.md",
+          "category": "framework",
+          "framework": "{{FRAMEWORK_NAME}}",
+          "title": "{{FRAMEWORK_NAME}} Best Practices",
+          "description": "Framework-specific patterns, architecture, common pitfalls",
+          "when_to_apply": "Working with {{FRAMEWORK_NAME}} features and patterns",
+          "related": []
+        }
+      ]
+    },
+    "cloud": {
+      "{{CLOUD_PROVIDER}}": [
+        {
+          "file": "deployment-best-practices.md",
+          "category": "cloud",
+          "provider": "{{CLOUD_PROVIDER}}",
+          "title": "{{CLOUD_PROVIDER}} Deployment",
+          "description": "Deployment patterns, configuration, optimization",
+          "when_to_apply": "Deploying to {{CLOUD_PROVIDER}}",
+          "related": ["environment-configuration.md"]
+        }
+      ]
+    }
+  },
+  "task_suggestions": {
+    "code_review": ["base/code-quality.md", "languages/{{LANGUAGE}}/coding-standards.md"],
+    "write_tests": ["base/testing-philosophy.md", "languages/{{LANGUAGE}}/testing.md"],
+    "git_commit": ["base/git-workflow.md"],
+    "security_review": ["base/security-principles.md", "languages/{{LANGUAGE}}/security.md"],
+    "api_development": ["base/api-design-principles.md", "frameworks/{{FRAMEWORK}}/best-practices.md"],
+    "database_work": ["base/database-best-practices.md"],
+    "deployment": ["base/cicd-comprehensive.md", "cloud/{{PROVIDER}}/deployment-best-practices.md"]
+  }
+}

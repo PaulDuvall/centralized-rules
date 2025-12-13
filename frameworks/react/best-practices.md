@@ -1,7 +1,10 @@
 # React Best Practices
 
-> **Framework:** React 18+
-> **Applies to:** React and React-based frameworks (Next.js, Remix)
+> **When to apply:** All JavaScript/TypeScript applications using React framework
+> **Framework:** React 18+, Next.js 14+
+> **Language:** TypeScript/JavaScript
+
+Best practices for building production-ready React applications with hooks, components, state management, performance optimization, and testing.
 
 ## Component Design
 
@@ -336,6 +339,677 @@ const handleButtonClick = useCallback(() => {
 const cardStyle = { margin: 10 };
 <UserCard user={user} style={cardStyle} />
 ```
+
+## Advanced Hook Patterns
+
+### useReducer for Complex State
+
+```typescript
+// ✅ Use useReducer for complex state logic
+type State = {
+  count: number;
+  step: number;
+};
+
+type Action =
+  | { type: 'increment' }
+  | { type: 'decrement' }
+  | { type: 'setStep'; step: number };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'increment':
+      return { ...state, count: state.count + state.step };
+    case 'decrement':
+      return { ...state, count: state.count - state.step };
+    case 'setStep':
+      return { ...state, step: action.step };
+    default:
+      return state;
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, { count: 0, step: 1 });
+
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+      <input
+        type="number"
+        value={state.step}
+        onChange={(e) => dispatch({ type: 'setStep', step: +e.target.value })}
+      />
+    </div>
+  );
+}
+```
+
+### useRef for DOM References and Mutable Values
+
+```typescript
+// ✅ DOM reference
+function TextInput() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
+
+  return (
+    <>
+      <input ref={inputRef} type="text" />
+      <button onClick={focusInput}>Focus</button>
+    </>
+  );
+}
+
+// ✅ Mutable value that persists across renders
+function Timer() {
+  const intervalRef = useRef<number>();
+
+  useEffect(() => {
+    intervalRef.current = window.setInterval(() => {
+      console.log('Tick');
+    }, 1000);
+
+    return () => clearInterval(intervalRef.current);
+  }, []);
+
+  return <div>Timer running</div>;
+}
+```
+
+### useLayoutEffect for DOM Measurements
+
+```typescript
+// ✅ useLayoutEffect fires synchronously after DOM mutations
+function Tooltip({ children }: { children: React.ReactNode }) {
+  const [height, setHeight] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (ref.current) {
+      setHeight(ref.current.offsetHeight);
+    }
+  }, [children]);
+
+  return (
+    <div ref={ref} style={{ marginTop: height }}>
+      {children}
+    </div>
+  );
+}
+```
+
+## Advanced Component Patterns
+
+### Compound Components
+
+```typescript
+// ✅ Compound component pattern
+const TabsContext = createContext<{
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+} | null>(null);
+
+function Tabs({ children }: { children: React.ReactNode }) {
+  const [activeTab, setActiveTab] = useState('tab1');
+
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div className="tabs">{children}</div>
+    </TabsContext.Provider>
+  );
+}
+
+function TabList({ children }: { children: React.ReactNode }) {
+  return <div className="tab-list">{children}</div>;
+}
+
+function Tab({ id, children }: { id: string; children: React.ReactNode }) {
+  const context = useContext(TabsContext);
+  if (!context) throw new Error('Tab must be used within Tabs');
+
+  const { activeTab, setActiveTab } = context;
+
+  return (
+    <button
+      className={activeTab === id ? 'active' : ''}
+      onClick={() => setActiveTab(id)}
+    >
+      {children}
+    </button>
+  );
+}
+
+function TabPanel({ id, children }: { id: string; children: React.ReactNode }) {
+  const context = useContext(TabsContext);
+  if (!context) throw new Error('TabPanel must be used within Tabs');
+
+  const { activeTab } = context;
+
+  return activeTab === id ? <div className="tab-panel">{children}</div> : null;
+}
+
+// Attach subcomponents
+Tabs.List = TabList;
+Tabs.Tab = Tab;
+Tabs.Panel = TabPanel;
+
+// Usage
+<Tabs>
+  <Tabs.List>
+    <Tabs.Tab id="tab1">Tab 1</Tabs.Tab>
+    <Tabs.Tab id="tab2">Tab 2</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel id="tab1">Content 1</Tabs.Panel>
+  <Tabs.Panel id="tab2">Content 2</Tabs.Panel>
+</Tabs>
+```
+
+### Render Props Pattern
+
+```typescript
+// ✅ Render props for sharing logic
+interface MousePosition {
+  x: number;
+  y: number;
+}
+
+function Mouse({ render }: { render: (pos: MousePosition) => React.ReactNode }) {
+  const [position, setPosition] = useState<MousePosition>({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  return <>{render(position)}</>;
+}
+
+// Usage
+<Mouse render={({ x, y }) => (
+  <div>Mouse at ({x}, {y})</div>
+)} />
+```
+
+### Higher-Order Components (HOC)
+
+```typescript
+// ✅ HOC for adding functionality
+function withLoading<P extends object>(
+  Component: React.ComponentType<P>
+) {
+  return function WithLoadingComponent(
+    props: P & { loading: boolean }
+  ) {
+    const { loading, ...rest } = props;
+
+    if (loading) {
+      return <div>Loading...</div>;
+    }
+
+    return <Component {...(rest as P)} />;
+  };
+}
+
+// Usage
+const UserListWithLoading = withLoading(UserList);
+
+<UserListWithLoading users={users} loading={isLoading} />
+```
+
+## Forms Handling
+
+### Controlled Components
+
+```typescript
+// ✅ Controlled form components
+function LoginForm() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Clear error on change
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Submit form
+    console.log('Submit:', formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          aria-invalid={!!errors.email}
+        />
+        {errors.email && <span className="error">{errors.email}</span>}
+      </div>
+
+      <div>
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          aria-invalid={!!errors.password}
+        />
+        {errors.password && <span className="error">{errors.password}</span>}
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+### React Hook Form
+
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// ✅ Schema-based validation
+const loginSchema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+function LoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    await login(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('email')} type="email" />
+      {errors.email && <span>{errors.email.message}</span>}
+
+      <input {...register('password')} type="password" />
+      {errors.password && <span>{errors.password.message}</span>}
+
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Logging in...' : 'Login'}
+      </button>
+    </form>
+  );
+}
+```
+
+## Data Fetching
+
+### SWR Pattern
+
+```typescript
+import useSWR from 'swr';
+
+// ✅ Data fetching with SWR
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
+function UserProfile({ userId }: { userId: string }) {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/api/users/${userId}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // 1 minute
+    }
+  );
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <div>
+      <h1>{data.name}</h1>
+      <button onClick={() => mutate()}>Refresh</button>
+    </div>
+  );
+}
+```
+
+### React Query
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// ✅ Data fetching with React Query
+function UserList() {
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => fetch('/api/users').then(r => r.json()),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId: string) =>
+      fetch(`/api/users/${userId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading users</div>;
+
+  return (
+    <ul>
+      {data.map((user: User) => (
+        <li key={user.id}>
+          {user.name}
+          <button onClick={() => deleteMutation.mutate(user.id)}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## React Server Components (RSC)
+
+### Server Components
+
+```typescript
+// ✅ Server Component (Next.js 13+)
+// app/posts/page.tsx
+async function PostsPage() {
+  // Fetch data directly in Server Component
+  const posts = await fetch('https://api.example.com/posts').then(r => r.json());
+
+  return (
+    <div>
+      <h1>Posts</h1>
+      {posts.map((post: Post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
+    </div>
+  );
+}
+```
+
+### Client Components
+
+```typescript
+// ✅ Client Component for interactivity
+// components/LikeButton.tsx
+'use client';
+
+import { useState } from 'react';
+
+export function LikeButton({ postId }: { postId: string }) {
+  const [liked, setLiked] = useState(false);
+
+  return (
+    <button onClick={() => setLiked(!liked)}>
+      {liked ? '❤️' : '🤍'}
+    </button>
+  );
+}
+```
+
+### Composition Pattern
+
+```typescript
+// ✅ Combine Server and Client Components
+// app/posts/[id]/page.tsx
+async function PostPage({ params }: { params: { id: string } }) {
+  const post = await fetch(`/api/posts/${params.id}`).then(r => r.json());
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <p>{post.content}</p>
+      {/* Client component for interactivity */}
+      <LikeButton postId={post.id} />
+    </article>
+  );
+}
+```
+
+## Styling Best Practices
+
+### CSS Modules
+
+```typescript
+// ✅ CSS Modules for scoped styles
+import styles from './Button.module.css';
+
+function Button({ children }: { children: React.ReactNode }) {
+  return (
+    <button className={styles.button}>
+      {children}
+    </button>
+  );
+}
+```
+
+### Tailwind CSS
+
+```typescript
+// ✅ Utility-first CSS with Tailwind
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <h3 className="text-2xl font-semibold leading-none tracking-tight">
+        {title}
+      </h3>
+      <div className="mt-4 text-sm text-muted-foreground">
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+### CSS-in-JS (styled-components)
+
+```typescript
+import styled from 'styled-components';
+
+// ✅ Styled components
+const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+
+  background-color: ${props =>
+    props.variant === 'primary' ? '#3b82f6' : '#6b7280'};
+  color: white;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+// Usage
+<Button variant="primary">Click me</Button>
+```
+
+## Routing (React Router)
+
+### Basic Routing
+
+```typescript
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
+// ✅ React Router setup
+function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+        <Link to="/users">Users</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/users" element={<UsersPage />} />
+        <Route path="/users/:id" element={<UserDetailPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+### Protected Routes
+
+```typescript
+// ✅ Protected route component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div>Loading...</div>;
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Usage
+<Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <DashboardPage />
+    </ProtectedRoute>
+  }
+/>
+```
+
+## Advanced Testing
+
+### Testing Custom Hooks
+
+```typescript
+import { renderHook, act } from '@testing-library/react';
+import { useCounter } from './useCounter';
+
+// ✅ Test custom hooks
+test('useCounter increments', () => {
+  const { result } = renderHook(() => useCounter(0));
+
+  act(() => {
+    result.current.increment();
+  });
+
+  expect(result.current.count).toBe(1);
+});
+```
+
+### Testing Async Components
+
+```typescript
+import { render, screen, waitFor } from '@testing-library/react';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+
+// ✅ Mock API with MSW
+const server = setupServer(
+  rest.get('/api/users', (req, res, ctx) => {
+    return res(ctx.json([{ id: '1', name: 'John' }]));
+  })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+test('loads and displays users', async () => {
+  render(<UserList />);
+
+  await waitFor(() => {
+    expect(screen.getByText('John')).toBeInTheDocument();
+  });
+});
+```
+
+### Component Snapshot Testing
+
+```typescript
+import { render } from '@testing-library/react';
+
+// ✅ Snapshot testing
+test('UserCard matches snapshot', () => {
+  const user = { id: '1', name: 'John Doe', email: 'john@example.com' };
+  const { container } = render(<UserCard user={user} />);
+
+  expect(container.firstChild).toMatchSnapshot();
+});
+```
+
+## Related Resources
+
+- See `languages/typescript/coding-standards.md` for TypeScript patterns
+- See `languages/typescript/testing.md` for testing strategies
+- See `base/architecture-principles.md` for architecture patterns
 
 ## References
 

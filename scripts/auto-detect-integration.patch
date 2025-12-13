@@ -1,0 +1,163 @@
+# Patch to integrate auto-detection into sync-ai-rules.sh
+# Apply these changes to make the script auto-detect AI tools
+
+# 1. Add detect_ai_tools() function after detect_cloud_providers()
+# Insert this function around line 154:
+
+detect_ai_tools() {
+    local detected_tools=()
+
+    # Claude Code - check for .claude directory or RULES.md
+    if [[ -d ".claude" ]] || [[ -f ".claude/RULES.md" ]] || [[ -f ".claude/AGENTS.md" ]]; then
+        detected_tools+=("claude")
+    fi
+
+    # Cursor - check for .cursorrules file
+    if [[ -f ".cursorrules" ]]; then
+        detected_tools+=("cursor")
+    fi
+
+    # GitHub Copilot - check for copilot instructions
+    if [[ -f ".github/copilot-instructions.md" ]]; then
+        detected_tools+=("copilot")
+    fi
+
+    # Google Gemini/Codegemma - check for .gemini directory
+    if [[ -d ".gemini" ]] || [[ -f ".gemini/rules.md" ]]; then
+        detected_tools+=("gemini")
+    fi
+
+    echo "${detected_tools[@]:-}"
+}
+
+# 2. Update sync_rules() function (around line 895)
+# Replace the tool parameter logic:
+
+sync_rules() {
+    local tool="${1:-auto}"
+
+    log_info "Starting AI rules synchronization..."
+    echo ""
+
+    # Auto-detect AI tools if not specified
+    if [[ "$tool" == "auto" ]] || [[ "$tool" == "all" ]]; then
+        local detected
+        mapfile -t detected < <(detect_ai_tools)
+
+        if [[ ${#detected[@]} -gt 0 ]] && [[ "$tool" == "auto" ]]; then
+            log_info "Auto-detected AI tools: ${detected[*]}"
+            # Sync for each detected tool
+            for ai_tool in "${detected[@]}"; do
+                case "$ai_tool" in
+                    claude|cursor|copilot|continue|windsurf|cody|gemini)
+                        ;;
+                esac
+            done
+        else
+            log_info "No AI tools detected or 'all' specified, generating for all supported tools"
+        fi
+    fi
+
+    # ... rest of sync_rules function
+
+    # Generate tool-specific outputs
+    if [[ "$tool" == "auto" ]]; then
+        # Generate for detected tools
+        local detected
+        mapfile -t detected < <(detect_ai_tools)
+
+        if [[ ${#detected[@]} -gt 0 ]]; then
+            for ai_tool in "${detected[@]}"; do
+                case "$ai_tool" in
+                    claude)
+                        generate_claude_rules_hierarchical
+                        ;;
+                    cursor)
+                        generate_cursor_rules
+                        ;;
+                    copilot)
+                        generate_copilot_rules
+                        ;;
+                esac
+            done
+        else
+            # Fallback to all if nothing detected
+            generate_claude_rules_hierarchical
+            generate_cursor_rules
+            generate_copilot_rules
+        fi
+    elif [[ "$tool" == "all" ]]; then
+        generate_claude_rules_hierarchical
+        generate_cursor_rules
+        generate_copilot_rules
+    else
+        case "$tool" in
+            claude)
+                generate_claude_rules_hierarchical
+                ;;
+            cursor)
+                generate_cursor_rules
+                ;;
+            copilot)
+                generate_copilot_rules
+                ;;
+            *)
+                log_error "Unknown tool: $tool"
+                log_error "Supported tools: claude, cursor, copilot, all, auto"
+                exit 1
+                ;;
+        esac
+    fi
+
+    echo ""
+    log_success "Synchronization complete!"
+    log_info "Rules cached in: $CACHE_DIR"
+}
+
+# 3. Update command-line argument parsing (around line 977)
+# Change default from "all" to "auto":
+
+# Parse command-line arguments
+tool="auto"  # Changed from "all" to "auto"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --tool)
+            tool="$2"
+            shift 2
+            ;;
+        --only-detected)
+            # Only sync for detected tools, fail if none found
+            tool="auto"
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [--tool claude|cursor|copilot|all|auto] [--only-detected]"
+            echo ""
+            echo "Options:"
+            echo "  --tool TOOL        Generate rules for specific tool"
+            echo "                     auto: Auto-detect from project (default)"
+            echo "                     all: Generate for all tools"
+            echo "                     claude, cursor, copilot: Specific tool"
+            echo "  --only-detected    Only sync detected tools (same as --tool auto)"
+            echo "  --help, -h         Show this help message"
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# 4. Update usage comments at the top of the file (lines 7-14):
+
+# Usage:
+#   ./sync-ai-rules.sh                         # Auto-detect AI tools and sync
+#   ./sync-ai-rules.sh --tool all              # Sync for all tools
+#   ./sync-ai-rules.sh --tool claude           # Sync only for Claude
+#   ./sync-ai-rules.sh --only-detected         # Sync only detected tools
+#
+# Examples:
+#   ./sync-ai-rules.sh                         # Detects .claude/ → generates Claude rules only
+#   ./sync-ai-rules.sh --tool all              # Generate for all tools regardless of detection

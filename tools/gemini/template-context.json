@@ -1,0 +1,146 @@
+{
+  "version": "1.0.0",
+  "generated": "{{SYNC_TIMESTAMP}}",
+  "project": {
+    "name": "{{PROJECT_NAME}}",
+    "type": "{{PROJECT_TYPE}}",
+    "description": "{{PROJECT_DESCRIPTION}}",
+    "maturity_level": "{{MATURITY_LEVEL}}",
+    "repository": "{{REPOSITORY_URL}}"
+  },
+  "technologies": {
+    "languages": {{DETECTED_LANGUAGES_JSON}},
+    "frameworks": {{DETECTED_FRAMEWORKS_JSON}},
+    "cloud_providers": {{DETECTED_CLOUD_JSON}},
+    "package_managers": {{PACKAGE_MANAGERS_JSON}},
+    "testing_frameworks": {{TESTING_FRAMEWORKS_JSON}},
+    "build_tools": {{BUILD_TOOLS_JSON}}
+  },
+  "code_style": {
+    "indent": {{INDENT_SIZE}},
+    "max_line_length": {{MAX_LINE_LENGTH}},
+    "quote_style": "{{QUOTE_STYLE}}",
+    "trailing_commas": {{TRAILING_COMMAS}},
+    "max_function_lines": {{MAX_FUNCTION_LINES}},
+    "max_nesting_depth": {{MAX_NESTING_DEPTH}}
+  },
+  "naming_conventions": {
+    "variables": "{{VARIABLE_NAMING}}",
+    "functions": "{{FUNCTION_NAMING}}",
+    "classes": "{{CLASS_NAMING}}",
+    "constants": "{{CONSTANT_NAMING}}",
+    "files": "{{FILE_NAMING}}"
+  },
+  "quality_standards": {
+    "test_coverage_threshold": {{MIN_COVERAGE}},
+    "require_tests_for_pr": {{REQUIRE_TESTS}},
+    "require_type_hints": {{REQUIRE_TYPE_HINTS}},
+    "code_review_required": {{CODE_REVIEW_REQUIRED}},
+    "min_reviewers": {{MIN_REVIEWERS}},
+    "ci_required": {{CI_REQUIRED}},
+    "security_scanning": {{SECURITY_SCANNING}}
+  },
+  "documentation": {
+    "docstring_format": "{{DOCSTRING_FORMAT}}",
+    "comment_density": "{{COMMENT_DENSITY}}",
+    "api_documentation": "{{API_DOC_STYLE}}",
+    "readme_required": true,
+    "changelog_required": {{CHANGELOG_REQUIRED}}
+  },
+  "testing": {
+    "primary_framework": "{{PRIMARY_TEST_FRAMEWORK}}",
+    "coverage_tool": "{{COVERAGE_TOOL}}",
+    "mocking_library": "{{MOCKING_LIBRARY}}",
+    "e2e_framework": "{{E2E_FRAMEWORK}}",
+    "test_directory": "{{TEST_DIRECTORY}}"
+  },
+  "security": {
+    "secret_scanning": true,
+    "dependency_scanning": {{DEPENDENCY_SCANNING}},
+    "sast_enabled": {{SAST_ENABLED}},
+    "dast_enabled": {{DAST_ENABLED}},
+    "allowed_licenses": {{ALLOWED_LICENSES_JSON}}
+  },
+  "cicd": {
+    "platform": "{{CICD_PLATFORM}}",
+    "auto_deploy_branches": {{AUTO_DEPLOY_BRANCHES_JSON}},
+    "require_passing_tests": true,
+    "require_passing_linting": {{REQUIRE_LINTING}},
+    "staging_environment": "{{STAGING_ENV}}",
+    "production_environment": "{{PRODUCTION_ENV}}"
+  },
+  "maturity_requirements": {
+    "mvp_poc": {
+      "required": [
+        "Basic error handling",
+        "No hardcoded secrets",
+        "Standard commit messages",
+        "Core functionality tests"
+      ],
+      "recommended": [
+        "Type hints/annotations",
+        "60%+ test coverage",
+        "Code reviews"
+      ],
+      "optional": [
+        "Full CI/CD pipeline",
+        "Monitoring",
+        "Performance optimization"
+      ]
+    },
+    "pre_production": {
+      "required": [
+        "Type hints/annotations",
+        "70%+ test coverage",
+        "Error handling and logging",
+        "Input validation",
+        "Code reviews (1 approval)",
+        "CI/CD pipeline",
+        "Security scanning"
+      ],
+      "recommended": [
+        "Monitoring and alerting",
+        "Performance testing",
+        "Comprehensive documentation"
+      ],
+      "optional": [
+        "Advanced optimization",
+        "Chaos engineering"
+      ]
+    },
+    "production": {
+      "required": [
+        "Strict type checking",
+        "80%+ test coverage",
+        "Comprehensive error handling",
+        "Input validation and sanitization",
+        "Code reviews (2 approvals)",
+        "Full CI/CD with staging",
+        "Security scanning (SAST, DAST, dependency)",
+        "Monitoring and alerting",
+        "Performance testing",
+        "Comprehensive documentation",
+        "Incident response procedures"
+      ],
+      "recommended": [
+        "Chaos engineering",
+        "Advanced performance optimization",
+        "A/B testing framework"
+      ],
+      "optional": []
+    }
+  },
+  "custom_patterns": {
+    "error_handling": "{{ERROR_HANDLING_PATTERN}}",
+    "logging": "{{LOGGING_PATTERN}}",
+    "api_response": "{{API_RESPONSE_PATTERN}}",
+    "database_query": "{{DATABASE_QUERY_PATTERN}}"
+  },
+  "excluded_rules": {{EXCLUDED_RULES_JSON}},
+  "custom_rules": {{CUSTOM_RULES_JSON}},
+  "rules_source": {
+    "repository": "https://github.com/PaulDuvall/centralized-rules",
+    "version": "{{RULES_VERSION}}",
+    "last_sync": "{{SYNC_TIMESTAMP}}"
+  }
+}

@@ -21,26 +21,67 @@ This file contains multiple rule categories. **DO NOT apply all rules to every t
    - For testing tasks → Read 'Testing Philosophy' + language-specific testing
    - For code review → Read 'Code Quality' + language-specific standards
 
-3. **Base Rules Application**
+3. **REQUIRED: Announce Rules Loaded**
+
+   **You MUST start every response by announcing which rules you're applying.**
+
+   Use this format:
+   ```
+   📚 **Rules Applied:**
+   ✓ Code Quality (base - always)
+   ✓ Python Coding Standards (language-specific)
+   ✓ FastAPI Best Practices (framework-specific)
+   ```
+
+   - This announcement is **mandatory**, not optional
+   - Shows the user transparency into which guidelines you're following
+   - Helps validate you're applying the right rules for their task
+   - If only using base rules, announce that too
+
+4. **Base Rules Application**
    - **Always consider:** Code Quality Standards, Security Principles
    - **Context-dependent:**
      * Git Workflow → Only for commit/PR tasks
      * Testing Philosophy → Only for testing tasks
      * 12-Factor App → Only for architecture/deployment discussions
 
-4. **Discovery Pattern Examples**
+5. **Discovery Pattern Examples**
+
+   **Example 1:**
    ```
    User: 'Review this Python function'
-   → Load: Code Quality + Python Coding Standards
 
+   AI Response:
+   📚 **Rules Applied:**
+   ✓ Code Quality (base)
+   ✓ Python Coding Standards (language-specific)
+
+   [Your review continues here...]
+   ```
+
+   **Example 2:**
+   ```
    User: 'Write pytest tests for this FastAPI endpoint'
-   → Load: Testing Philosophy + Python Testing + FastAPI Best Practices
 
-   User: 'Fix this React component's rendering'
-   → Load: Code Quality + TypeScript Coding Standards + React Best Practices
+   AI Response:
+   📚 **Rules Applied:**
+   ✓ Testing Philosophy (base)
+   ✓ Python Testing (language-specific)
+   ✓ FastAPI Best Practices (framework-specific)
 
+   [Your implementation continues here...]
+   ```
+
+   **Example 3:**
+   ```
    User: 'Help me commit these changes'
-   → Load: Git Workflow + Code Quality
+
+   AI Response:
+   📚 **Rules Applied:**
+   ✓ Git Workflow (base)
+   ✓ Code Quality (base)
+
+   [Your commit help continues here...]
    ```
 
 ### 📋 Rule Index - This Project

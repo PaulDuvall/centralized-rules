@@ -2,6 +2,27 @@
 
 > **When to apply:** All code across any language or framework
 
+## Maturity Level Indicators
+
+Apply code quality practices based on your project's maturity level:
+
+| Practice | MVP/POC | Pre-Production | Production |
+|----------|---------|----------------|------------|
+| Linting (ESLint, Pylint, etc.) | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Auto-formatting (Prettier, Black) | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Type checking (TypeScript, mypy) | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Code complexity limits | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Duplication detection | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Static analysis (SonarQube) | ❌ Not needed | ⚠️ Recommended | ✅ Required |
+| Pre-commit hooks | ❌ Optional | ⚠️ Recommended | ✅ Required |
+
+**Legend:**
+- ✅ Required - Must implement
+- ⚠️ Recommended - Should implement when feasible
+- ❌ Optional - Can skip or defer
+
+See `base/project-maturity-levels.md` for detailed maturity framework.
+
 ## Core Principles
 
 ### 1. Function/Method Length

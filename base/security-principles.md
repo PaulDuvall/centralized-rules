@@ -2,6 +2,31 @@
 
 > **When to apply:** All code across any language or framework
 
+## Maturity Level Indicators
+
+Apply security practices based on your project's maturity level:
+
+| Practice | MVP/POC | Pre-Production | Production |
+|----------|---------|----------------|------------|
+| No hardcoded secrets | ✅ Required | ✅ Required | ✅ Required |
+| Input validation | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Authentication | ❌ Optional | ✅ Required | ✅ Required |
+| Authorization (RBAC) | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Security headers | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| HTTPS enforcement | ❌ Optional | ✅ Required | ✅ Required |
+| Rate limiting | ❌ Not needed | ⚠️ Recommended | ✅ Required |
+| Security scanning (SAST) | ❌ Not needed | ⚠️ Recommended | ✅ Required |
+| Dependency vulnerability scanning | ❌ Optional | ✅ Required | ✅ Required |
+| Secret scanning (git-secrets) | ❌ Optional | ✅ Required | ✅ Required |
+| Penetration testing | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+
+**Legend:**
+- ✅ Required - Must implement
+- ⚠️ Recommended - Should implement when feasible
+- ❌ Optional - Can skip or defer
+
+See `SUCCESS_METRICS.md` for security metrics and `ANTI_PATTERNS.md` for security anti-patterns.
+
 ## Core Security Principles
 
 ### 1. Never Hardcode Secrets

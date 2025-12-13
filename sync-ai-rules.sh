@@ -6,12 +6,13 @@
 # loads only the relevant rules from a centralized rules repository.
 #
 # Usage:
-#   ./sync-ai-rules.sh [--tool claude|cursor|copilot]
+#   ./sync-ai-rules.sh [--tool claude|cursor|copilot|gemini|all]
 #
 # Examples:
 #   ./sync-ai-rules.sh                    # Auto-detect and sync for all tools
 #   ./sync-ai-rules.sh --tool claude      # Sync only for Claude
 #   ./sync-ai-rules.sh --tool cursor      # Sync only for Cursor
+#   ./sync-ai-rules.sh --tool gemini      # Sync only for Gemini/Codegemma
 
 set -euo pipefail
 
@@ -73,6 +74,11 @@ detect_language() {
         languages+=("java")
     fi
 
+    # C#
+    if [[ -f "*.csproj" ]] || [[ -f "*.sln" ]]; then
+        languages+=("csharp")
+    fi
+
     # Ruby
     if [[ -f "Gemfile" ]]; then
         languages+=("ruby")
@@ -120,6 +126,85 @@ detect_frameworks() {
     echo "${frameworks[@]:-}"
 }
 
+# Detect cloud providers
+detect_cloud_providers() {
+    local providers=()
+
+    # Vercel
+    if [[ -f "vercel.json" ]] || [[ -d ".vercel" ]]; then
+        providers+=("vercel")
+    fi
+
+    # AWS
+    if [[ -f ".aws-sam" ]] || [[ -d "cdk.out" ]] || [[ -f "serverless.yml" ]]; then
+        providers+=("aws")
+    fi
+
+    # Azure
+    if [[ -f "azure-pipelines.yml" ]] || [[ -d ".azure" ]]; then
+        providers+=("azure")
+    fi
+
+    # GCP
+    if [[ -f "app.yaml" ]] || [[ -f "cloudbuild.yaml" ]]; then
+        providers+=("gcp")
+    fi
+
+    echo "${providers[@]:-}"
+}
+
+# Detect project maturity level
+detect_maturity_level() {
+    local production_indicators=0
+    local preproduction_indicators=0
+
+    # Production indicators (need 3+ for production level)
+    # CI/CD with deployment
+    if [[ -d ".github/workflows" ]] || [[ -d ".gitlab-ci.yml" ]] || [[ -d ".circleci" ]]; then
+        ((production_indicators++))
+    fi
+
+    # Production environment files
+    if [[ -f ".env.production" ]] || [[ -f "config/production.yml" ]]; then
+        ((production_indicators++))
+    fi
+
+    # Monitoring/observability
+    if grep -rq "sentry\|datadog\|newrelic\|prometheus" . 2>/dev/null; then
+        ((production_indicators++))
+    fi
+
+    # Security scanning
+    if [[ -f ".github/workflows/security.yml" ]] || grep -rq "snyk\|dependabot" .github 2>/dev/null; then
+        ((production_indicators++))
+    fi
+
+    # Pre-production indicators (need 2+ for pre-production level)
+    # Testing framework present
+    if [[ -f "pytest.ini" ]] || [[ -f "jest.config.js" ]] || [[ -f "vitest.config.ts" ]] || grep -q "\"test\":" package.json 2>/dev/null; then
+        ((preproduction_indicators++))
+    fi
+
+    # CI/CD present (even if basic)
+    if [[ -d ".github/workflows" ]] || [[ -f ".gitlab-ci.yml" ]] || [[ -f "Jenkinsfile" ]]; then
+        ((preproduction_indicators++))
+    fi
+
+    # Linting configuration
+    if [[ -f ".eslintrc.json" ]] || [[ -f ".eslintrc.js" ]] || [[ -f "pylintrc" ]] || [[ -f ".pylintrc" ]] || [[ -f "pyproject.toml" ]]; then
+        ((preproduction_indicators++))
+    fi
+
+    # Determine maturity level
+    if [[ $production_indicators -ge 3 ]]; then
+        echo "production"
+    elif [[ $preproduction_indicators -ge 2 ]]; then
+        echo "pre-production"
+    else
+        echo "mvp-poc"
+    fi
+}
+
 # Download rule file from repository
 download_rule() {
     local rule_path="$1"
@@ -142,11 +227,40 @@ load_base_rules() {
     log_info "Loading base universal rules..."
 
     local base_rules=(
+        # Core workflow
         "base/git-workflow.md"
         "base/code-quality.md"
-        "base/testing-philosophy.md"
-        "base/security-principles.md"
         "base/development-workflow.md"
+
+        # Testing & quality
+        "base/testing-philosophy.md"
+        "base/testing-atdd.md"
+        "base/refactoring-patterns.md"
+
+        # Architecture & design
+        "base/architecture-principles.md"
+        "base/12-factor-app.md"
+        "base/specification-driven-development.md"
+
+        # Security & operations
+        "base/security-principles.md"
+        "base/cicd-comprehensive.md"
+        "base/configuration-management.md"
+        "base/metrics-standards.md"
+        "base/operations-automation.md"
+
+        # AI development
+        "base/ai-assisted-development.md"
+        "base/ai-ethics-governance.md"
+        "base/ai-model-lifecycle.md"
+        "base/knowledge-management.md"
+        "base/parallel-development.md"
+
+        # Advanced practices
+        "base/chaos-engineering.md"
+        "base/lean-development.md"
+        "base/tool-design.md"
+        "base/project-maturity-levels.md"
     )
 
     for rule in "${base_rules[@]}"; do
@@ -192,6 +306,30 @@ load_framework_rules() {
     else
         log_warn "No framework rules for $framework"
     fi
+}
+
+# Load cloud provider rules
+load_cloud_rules() {
+    local provider="$1"
+    log_info "Loading $provider cloud rules..."
+
+    local cloud_rules=(
+        "cloud/${provider}/deployment-best-practices.md"
+        "cloud/${provider}/environment-configuration.md"
+        "cloud/${provider}/security-practices.md"
+        "cloud/${provider}/performance-optimization.md"
+        "cloud/${provider}/reliability-observability.md"
+        "cloud/${provider}/cost-optimization.md"
+    )
+
+    for rule in "${cloud_rules[@]}"; do
+        local output="${CACHE_DIR}/${rule}"
+        if download_rule "$rule" "$output"; then
+            log_success "Loaded $(basename "$rule")"
+        else
+            log_warn "No $(basename "$rule") for $provider"
+        fi
+    done
 }
 
 # Generate hierarchical rule structure
@@ -806,6 +944,56 @@ generate_copilot_rules() {
     log_success "Generated $output"
 }
 
+generate_gemini_rules() {
+    log_info "Generating Gemini/Codegemma rules..."
+
+    local rules_output=".gemini/rules.md"
+    local context_output=".gemini/context.json"
+    mkdir -p .gemini
+
+    # Generate rules.md
+    {
+        echo "# Gemini Code Assistant - Development Rules"
+        echo ""
+        echo "**Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+        echo "**Source:** https://github.com/PaulDuvall/centralized-rules"
+        echo ""
+        echo "## Project Configuration"
+        echo ""
+
+        # Combine all cached rules
+        find "${CACHE_DIR}" -name "*.md" -type f | sort | while read -r file; do
+            cat "$file"
+            echo ""
+        done
+    } > "$rules_output"
+
+    # Generate context.json
+    {
+        echo "{"
+        echo "  \"version\": \"1.0.0\","
+        echo "  \"generated\": \"$(date -u +"%Y-%m-%d %H:%M:%S UTC")\","
+        echo "  \"project\": {"
+        echo "    \"name\": \"$(basename "$(pwd)")\","
+        echo "    \"type\": \"development\""
+        echo "  },"
+        echo "  \"technologies\": {"
+        echo "    \"languages\": $(printf '%s\n' "${languages[@]:-}" | jq -R . | jq -s .),"
+        echo "    \"frameworks\": $(printf '%s\n' "${frameworks[@]:-}" | jq -R . | jq -s .),"
+        echo "    \"cloud_providers\": $(printf '%s\n' "${cloud_providers[@]:-}" | jq -R . | jq -s .)"
+        echo "  },"
+        echo "  \"maturity_level\": \"$maturity_level\","
+        echo "  \"rules_source\": {"
+        echo "    \"repository\": \"https://github.com/PaulDuvall/centralized-rules\","
+        echo "    \"last_sync\": \"$(date -u +"%Y-%m-%d %H:%M:%S UTC")\""
+        echo "  }"
+        echo "}"
+    } > "$context_output"
+
+    log_success "Generated $rules_output"
+    log_success "Generated $context_output"
+}
+
 # Main sync function
 sync_rules() {
     local tool="${1:-all}"
@@ -821,6 +1009,10 @@ sync_rules() {
     mapfile -t languages < <(detect_language)
     local frameworks
     mapfile -t frameworks < <(detect_frameworks)
+    local cloud_providers
+    mapfile -t cloud_providers < <(detect_cloud_providers)
+    local maturity_level
+    maturity_level=$(detect_maturity_level)
 
     if [[ ${#languages[@]} -eq 0 ]]; then
         log_warn "No recognized language detected. Loading base rules only."
@@ -831,6 +1023,13 @@ sync_rules() {
     if [[ ${#frameworks[@]} -gt 0 ]]; then
         log_info "Detected frameworks: ${frameworks[*]}"
     fi
+
+    if [[ ${#cloud_providers[@]} -gt 0 ]]; then
+        log_info "Detected cloud providers: ${cloud_providers[*]}"
+    fi
+
+    log_info "Detected maturity level: $maturity_level"
+    log_info "💡 Apply rigor appropriate for $maturity_level (see base/project-maturity-levels.md)"
     echo ""
 
     # Load base rules (always)
@@ -849,6 +1048,12 @@ sync_rules() {
         echo ""
     done
 
+    # Load cloud provider rules
+    for provider in "${cloud_providers[@]:-}"; do
+        [[ -n "$provider" ]] && load_cloud_rules "$provider"
+        echo ""
+    done
+
     # Generate tool-specific outputs
     case "$tool" in
         claude)
@@ -860,14 +1065,18 @@ sync_rules() {
         copilot)
             generate_copilot_rules
             ;;
+        gemini)
+            generate_gemini_rules
+            ;;
         all)
             generate_claude_rules_hierarchical
             generate_cursor_rules
             generate_copilot_rules
+            generate_gemini_rules
             ;;
         *)
             log_error "Unknown tool: $tool"
-            log_error "Supported tools: claude, cursor, copilot, all"
+            log_error "Supported tools: claude, cursor, copilot, gemini, all"
             exit 1
             ;;
     esac
@@ -877,8 +1086,25 @@ sync_rules() {
     log_info "Rules cached in: $CACHE_DIR"
 }
 
+# Auto-detect AI tool environment
+detect_ai_tool() {
+    # Check environment variables for AI tool detection
+    if [[ -n "${CLAUDE_CODE_VERSION:-}" ]] || [[ -d ".claude" ]]; then
+        echo "claude"
+    elif [[ -n "${CURSOR_VERSION:-}" ]] || [[ -f ".cursorrules" ]]; then
+        echo "cursor"
+    elif [[ -n "${GITHUB_COPILOT:-}" ]] || [[ -d ".github/copilot-instructions.md" ]]; then
+        echo "copilot"
+    elif [[ -n "${GEMINI_AI:-}" ]] || [[ -d ".gemini" ]]; then
+        echo "gemini"
+    else
+        # Default to all if no specific tool detected
+        echo "all"
+    fi
+}
+
 # Parse command-line arguments
-tool="all"
+tool=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --tool)
@@ -886,11 +1112,20 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help|-h)
-            echo "Usage: $0 [--tool claude|cursor|copilot|all]"
+            echo "Usage: $0 [--tool claude|cursor|copilot|gemini|all]"
             echo ""
             echo "Options:"
-            echo "  --tool TOOL    Generate rules for specific tool (default: all)"
+            echo "  --tool TOOL    Generate rules for specific tool (auto-detected if omitted)"
             echo "  --help, -h     Show this help message"
+            echo ""
+            echo "Supported tools: claude, cursor, copilot, gemini, all"
+            echo ""
+            echo "Auto-detection:"
+            echo "  - Claude Code: Checks for CLAUDE_CODE_VERSION env var or .claude/ directory"
+            echo "  - Cursor: Checks for CURSOR_VERSION env var or .cursorrules file"
+            echo "  - GitHub Copilot: Checks for GITHUB_COPILOT env var"
+            echo "  - Gemini: Checks for GEMINI_AI env var or .gemini/ directory"
+            echo "  - Defaults to 'all' if no tool detected"
             exit 0
             ;;
         *)
@@ -900,6 +1135,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Auto-detect if not specified
+if [[ -z "$tool" ]]; then
+    tool=$(detect_ai_tool)
+    log_info "Auto-detected AI tool: $tool"
+fi
 
 # Run sync
 sync_rules "$tool"

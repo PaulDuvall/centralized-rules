@@ -4,6 +4,31 @@
 
 87 best practices for building robust, secure, and efficient CI/CD pipelines across all platforms and technologies.
 
+## Maturity Level Indicators
+
+Apply CI/CD practices based on your project's maturity level:
+
+| Practice | MVP/POC | Pre-Production | Production |
+|----------|---------|----------------|------------|
+| Automated builds | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Automated tests in CI | ⚠️ Recommended | ✅ Required | ✅ Required |
+| Linting in CI | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Security scanning | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Build artifacts | ❌ Optional | ⚠️ Recommended | ✅ Required |
+| Automated deployment | ❌ Not needed | ⚠️ Recommended | ✅ Required |
+| Deployment approval gates | ❌ Not needed | ⚠️ Recommended | ✅ Required |
+| Blue-green/canary deployment | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+| Rollback automation | ❌ Not needed | ⚠️ Recommended | ✅ Required |
+| Performance testing in CI | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
+| Pipeline monitoring | ❌ Optional | ⚠️ Recommended | ✅ Required |
+
+**Legend:**
+- ✅ Required - Must implement
+- ⚠️ Recommended - Should implement when feasible
+- ❌ Optional - Can skip or defer
+
+See `SUCCESS_METRICS.md` for DORA metrics (deployment frequency, lead time, MTTR, change failure rate).
+
 ## Table of Contents
 
 - [Pipeline Design](#pipeline-design)

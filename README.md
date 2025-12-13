@@ -8,9 +8,13 @@ A centralized repository of development rules that dynamically loads only releva
 
 Instead of maintaining separate rule files in each project, this repository provides:
 
-- **Universal base rules** - Language-agnostic best practices
-- **Language-specific rules** - Python, TypeScript, Go, Java, Ruby, Rust
-- **Framework-specific rules** - React, Django, FastAPI, Express, Spring Boot, etc.
+- **MECE Framework** - Mutually Exclusive, Collectively Exhaustive organization
+- **Four-Dimensional Structure:**
+  - **Base rules** (23 files) - Universal, language-agnostic best practices
+  - **Language rules** (6+ languages) - Python, TypeScript, Go, Java, C#, Rust
+  - **Framework rules** (5+ frameworks) - React, Django, FastAPI, Express, Spring Boot
+  - **Cloud rules** (Vercel + extensible) - Provider-specific deployment and operations
+- **Progressive Rigor** - Maturity-based requirements (MVP/POC, Pre-Production, Production)
 - **Two-phase progressive disclosure** - Load only what's relevant (project + task level)
 - **Multi-tool support** - Generate outputs for Claude, Cursor, Copilot
 - **74.4% average token savings** - Validated in real-world testing
@@ -22,40 +26,50 @@ Instead of maintaining separate rule files in each project, this repository prov
 
 ```
 centralized-rules/
-├── base/                          # Universal rules (always loaded)
-│   ├── git-workflow.md
-│   ├── code-quality.md
-│   ├── testing-philosophy.md
-│   ├── security-principles.md
-│   └── development-workflow.md
+├── base/                          # 23 universal rules (always loaded)
+│   ├── git-workflow.md           # + maturity indicators
+│   ├── code-quality.md           # + maturity indicators
+│   ├── testing-philosophy.md     # + maturity indicators
+│   ├── security-principles.md    # + maturity indicators
+│   ├── cicd-comprehensive.md     # + maturity indicators
+│   ├── project-maturity-levels.md
+│   ├── ai-assisted-development.md
+│   └── ... (16 more)
 │
-├── languages/                     # Language-specific rules
+├── languages/                     # 6+ languages supported
 │   ├── python/
-│   │   ├── coding-standards.md
-│   │   └── testing.md
 │   ├── typescript/
-│   │   ├── coding-standards.md
-│   │   └── testing.md
 │   ├── go/
 │   ├── java/
-│   ├── ruby/
-│   └── rust/
+│   ├── csharp/                   # NEW
+│   └── rust/                     # NEW
 │
-├── frameworks/                    # Framework-specific rules
-│   ├── react/
-│   │   └── best-practices.md
-│   ├── django/
-│   │   └── best-practices.md
+├── frameworks/                    # 5+ frameworks supported
+│   ├── react/                    # Enriched with advanced patterns
+│   ├── django/                   # Enriched with DRF, signals, Celery
 │   ├── fastapi/
-│   ├── express/
-│   └── springboot/
+│   ├── express/                  # NEW
+│   └── springboot/               # NEW
 │
-├── tools/                         # Tool-specific templates
-│   ├── claude/
-│   ├── cursor/
-│   └── copilot/
+├── cloud/                         # Cloud provider rules (NEW)
+│   └── vercel/                   # 6 comprehensive guides
+│       ├── deployment-best-practices.md
+│       ├── environment-configuration.md
+│       ├── security-practices.md
+│       ├── performance-optimization.md
+│       ├── reliability-observability.md
+│       └── cost-optimization.md
 │
-└── sync-ai-rules.sh              # Progressive disclosure script
+├── scripts/                       # NEW
+│   └── validate-mece.sh          # MECE compliance checker
+│
+├── sync-ai-rules.sh              # Progressive disclosure script (enhanced)
+├── PRACTICE_CROSSREFERENCE.md    # Practice-to-file mapping (NEW)
+├── ANTI_PATTERNS.md              # Common anti-patterns (NEW)
+├── IMPLEMENTATION_GUIDE.md       # 8-week rollout plan (NEW)
+├── SUCCESS_METRICS.md            # Measurable KPIs (NEW)
+├── ARCHITECTURE.md               # Detailed architecture (updated)
+└── README.md                      # This file
 ```
 
 ## Quick Start

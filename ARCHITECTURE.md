@@ -50,77 +50,223 @@ Task: "Commit changes" → loads base/git-workflow only
 
 **Outcome:** 55-90% token reduction per task (measured in real-world testing)
 
-### 2. Multi-Dimensional Organization
+### 2. MECE Framework: Four-Dimensional Organization
 
-Rules are organized across three dimensions:
+Rules are organized using the **MECE principle** (Mutually Exclusive, Collectively Exhaustive) across four dimensions:
 
-#### Dimension 1: Scope (Base vs Specific)
-- **Base:** Universal rules (git, testing, security)
-- **Language:** Language-specific (Python, TypeScript, Go)
-- **Framework:** Framework-specific (React, Django, FastAPI)
+#### MECE Principles Applied
 
-#### Dimension 2: Language
-- Python
-- TypeScript/JavaScript
-- Go
-- Java
-- Ruby
-- Rust
-- (extensible)
+**Mutually Exclusive:**
+- No duplication across dimensions
+- Base rules are language/framework/cloud-agnostic
+- Language rules reference base rules instead of duplicating
+- Framework rules build on language rules
+- Cloud rules are provider-specific
 
-#### Dimension 3: Tool
-- Claude Code (`.claude/RULES.md`)
-- Cursor (`.cursorrules`)
-- GitHub Copilot (`.github/copilot-instructions.md`)
-- (extensible)
+**Collectively Exhaustive:**
+- Complete coverage of common development scenarios
+- All practices map to one or more rule files
+- Clear escalation path: base → language → framework → cloud
+
+#### Dimension 1: Base (Universal Rules)
+
+Language-agnostic, framework-agnostic, always applicable:
+
+**Core Workflow:**
+- git-workflow.md
+- code-quality.md
+- development-workflow.md
+
+**Testing & Quality:**
+- testing-philosophy.md
+- testing-atdd.md
+- refactoring-patterns.md
+
+**Architecture & Design:**
+- architecture-principles.md
+- 12-factor-app.md
+- specification-driven-development.md
+
+**Security & Operations:**
+- security-principles.md
+- cicd-comprehensive.md
+- configuration-management.md
+- metrics-standards.md
+- operations-automation.md
+
+**AI Development:**
+- ai-assisted-development.md
+- ai-ethics-governance.md
+- ai-model-lifecycle.md
+- knowledge-management.md
+- parallel-development.md
+
+**Advanced Practices:**
+- chaos-engineering.md
+- lean-development.md
+- tool-design.md
+- project-maturity-levels.md
+
+#### Dimension 2: Language (Language-Specific Rules)
+
+Loaded when language is detected:
+
+- **Python:** coding-standards.md, testing.md
+- **TypeScript/JavaScript:** coding-standards.md, testing.md
+- **Go:** coding-standards.md, testing.md
+- **Java:** coding-standards.md, testing.md
+- **C#:** coding-standards.md, testing.md
+- **Rust:** coding-standards.md, testing.md
+- **Ruby:** (extensible)
+
+#### Dimension 3: Framework (Framework-Specific Rules)
+
+Loaded when framework is detected:
+
+- **React:** best-practices.md
+- **Django:** best-practices.md
+- **FastAPI:** best-practices.md
+- **Express:** best-practices.md
+- **Spring Boot:** best-practices.md
+- **Next.js:** (extensible)
+- **Vue:** (extensible)
+
+#### Dimension 4: Cloud (Cloud Provider Rules)
+
+Loaded when cloud provider is detected:
+
+**Vercel:**
+- deployment-best-practices.md
+- environment-configuration.md
+- security-practices.md
+- performance-optimization.md
+- reliability-observability.md
+- cost-optimization.md
+
+**AWS, Azure, GCP:** (extensible following same pattern)
+
+#### Supporting Documentation
+
+**Practice Cross-Reference** (`PRACTICE_CROSSREFERENCE.md`):
+- Bidirectional mapping: practices ↔ files
+- Quick lookup for AI assistants and developers
+- Usage patterns and examples
+
+**Anti-Patterns** (`ANTI_PATTERNS.md`):
+- Common mistakes and code smells
+- Detection strategies and automated tools
+- Prevention techniques with examples
+- Categories: code quality, architecture, security, testing, AI development, DevOps
+
+**Implementation Guide** (`IMPLEMENTATION_GUIDE.md`):
+- Phased 8-week rollout plan
+- Progressive adoption by maturity level
+- Phase 1-4 with specific tasks and success criteria
+- Customization guidance for different project types
+
+**Success Metrics** (`SUCCESS_METRICS.md`):
+- Measurable KPIs for all practices
+- DORA metrics (deployment frequency, lead time, MTTR, change failure rate)
+- Code quality, security, performance, and team productivity metrics
+- Target thresholds by maturity level
+
+**MECE Validation** (`scripts/validate-mece.sh`):
+- Automated compliance checking
+- Dimension separation validation
+- Coverage completeness verification
+- Documentation and structure checks
 
 ### 3. Detection-Based Loading
 
-The sync script auto-detects project configuration:
+The sync script auto-detects project configuration and maturity level:
 
 ```bash
-# Detection logic
+# Language/Framework detection
 if exists("pyproject.toml") → Load Python rules
 if exists("package.json") → Load JS/TS rules
 if contains("django") → Load Django rules
 if contains("react") → Load React rules
+
+# Cloud provider detection
+if exists("vercel.json") → Load Vercel rules
+if exists(".aws-sam") → Load AWS rules
+
+# Maturity level detection
+if (CI/CD + monitoring + security scanning) → Production
+elif (tests + CI/CD + linting) → Pre-Production
+else → MVP/POC
 ```
+
+**Progressive Rigor:**
+
+Detected maturity level determines which practices are:
+- **Required** (must implement)
+- **Recommended** (should implement when feasible)
+- **Optional** (can skip or defer)
+
+Example:
+```
+Practice: Type checking (TypeScript strict mode)
+- MVP/POC: Optional
+- Pre-Production: Recommended
+- Production: Required
+```
+
+See `base/project-maturity-levels.md` and maturity indicators in each base rule file.
 
 ## Directory Structure
 
 ```
 centralized-rules/
 │
-├── base/                          # Universal rules (always loaded)
-│   ├── git-workflow.md           # Git best practices
-│   ├── code-quality.md           # Universal code quality
-│   ├── testing-philosophy.md     # Testing principles
-│   ├── security-principles.md    # Security best practices
-│   └── development-workflow.md   # Dev lifecycle
+├── base/                          # Universal rules (23 files)
+│   ├── git-workflow.md
+│   ├── code-quality.md
+│   ├── testing-philosophy.md
+│   ├── security-principles.md
+│   ├── architecture-principles.md
+│   ├── cicd-comprehensive.md
+│   ├── project-maturity-levels.md
+│   ├── ai-assisted-development.md
+│   ├── chaos-engineering.md
+│   └── ... (14 more)
 │
 ├── languages/                     # Language-specific rules
 │   ├── python/
-│   │   ├── coding-standards.md   # Python style, types, mypy
-│   │   └── testing.md            # pytest, coverage
+│   │   ├── coding-standards.md
+│   │   └── testing.md
 │   ├── typescript/
-│   │   ├── coding-standards.md   # TS style, types, ESLint
-│   │   └── testing.md            # Jest, Vitest
+│   │   ├── coding-standards.md
+│   │   └── testing.md
 │   ├── go/
 │   ├── java/
-│   ├── ruby/
-│   └── rust/
+│   ├── csharp/
+│   ├── rust/
+│   └── ruby/
 │
 ├── frameworks/                    # Framework-specific rules
-│   ├── react/
-│   │   └── best-practices.md     # Hooks, components, performance
-│   ├── django/
-│   │   └── best-practices.md     # Models, views, DRF
-│   ├── fastapi/
-│   │   └── best-practices.md     # Async, Pydantic, endpoints
-│   ├── express/
+│   ├── react/best-practices.md
+│   ├── django/best-practices.md
+│   ├── fastapi/best-practices.md
+│   ├── express/best-practices.md
+│   ├── springboot/best-practices.md
 │   ├── nextjs/
-│   ├── vue/
-│   └── springboot/
+│   └── vue/
+│
+├── cloud/                         # Cloud provider rules (NEW)
+│   ├── vercel/
+│   │   ├── deployment-best-practices.md
+│   │   ├── environment-configuration.md
+│   │   ├── security-practices.md
+│   │   ├── performance-optimization.md
+│   │   ├── reliability-observability.md
+│   │   └── cost-optimization.md
+│   ├── aws/                      # (extensible)
+│   ├── azure/                    # (extensible)
+│   └── gcp/                      # (extensible)
+│
+├── scripts/                       # Automation scripts (NEW)
+│   └── validate-mece.sh          # MECE compliance checker
 │
 ├── tools/                         # Tool-specific templates
 │   ├── claude/
@@ -128,12 +274,16 @@ centralized-rules/
 │   └── copilot/
 │
 ├── examples/                      # Usage examples
-│   ├── sync-config.json          # Configuration example
-│   └── USAGE_EXAMPLES.md         # Detailed examples
+│   ├── sync-config.json
+│   └── USAGE_EXAMPLES.md
 │
-├── sync-ai-rules.sh              # Main sync script
+├── sync-ai-rules.sh              # Main sync script (updated)
 ├── README.md                      # Main documentation
-└── ARCHITECTURE.md               # This file
+├── ARCHITECTURE.md               # This file (updated)
+├── PRACTICE_CROSSREFERENCE.md    # Practice-to-file mapping (NEW)
+├── ANTI_PATTERNS.md              # Common anti-patterns (NEW)
+├── IMPLEMENTATION_GUIDE.md       # 8-week rollout plan (NEW)
+└── SUCCESS_METRICS.md            # Measurable KPIs (NEW)
 ```
 
 ## Data Flow
