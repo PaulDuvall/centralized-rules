@@ -469,7 +469,7 @@ jobs:
               RUN go build -o service
               CMD ["./service"]
               EOF
-              mkdir -p k8s services
+              mkdir -p k8s services/api
               cat > k8s/deployment.yml <<'EOF'
               apiVersion: apps/v1
               kind: Deployment
@@ -540,7 +540,7 @@ jobs:
               version = "0.1.0"
               edition = "2021"
               EOF
-              mkdir -p backend frontend compute
+              mkdir -p backend frontend compute/src
               echo 'from fastapi import FastAPI' > backend/main.py
               echo 'import React from "react";' > frontend/App.tsx
               echo 'fn main() {}' > compute/src/main.rs
