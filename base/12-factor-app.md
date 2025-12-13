@@ -789,10 +789,320 @@ The twelve-factor methodology works seamlessly with:
 
 ---
 
+## Extending Twelve-Factor for AI Systems
+
+### Well-Architected AI Systems
+
+Modern AI/ML applications should combine twelve-factor methodology with AWS Well-Architected Framework principles. AI systems have unique requirements around model lifecycle, data pipelines, and computational resources.
+
+#### The Six Pillars for AI Workloads
+
+**1. Operational Excellence**
+
+Monitor model performance and implement automated retraining pipelines.
+
+```python
+# Monitor model drift
+def monitor_model_performance():
+    current_metrics = evaluate_model(production_data)
+    if current_metrics['accuracy'] < ACCURACY_THRESHOLD:
+        trigger_retraining_pipeline()
+        log('WARNING', 'Model drift detected', metrics=current_metrics)
+
+# Automated retraining pipeline (one-off process per Factor XII)
+def retrain_model():
+    """Run as scheduled admin process"""
+    new_data = fetch_training_data()
+    model = train_model(new_data)
+    if validate_model(model):
+        deploy_model(model)
+```
+
+**2. Security**
+
+- Store model artifacts and training data securely
+- Implement data privacy controls (anonymization, encryption)
+- Use least-privilege access for ML pipelines
+- Version and audit model deployments
+
+```python
+# Secure model configuration (Factor III: Config)
+MODEL_BUCKET = os.environ['MODEL_ARTIFACTS_BUCKET']
+TRAINING_DATA_URL = os.environ['TRAINING_DATA_URL']  # Encrypted S3 bucket
+
+# Access control
+def deploy_model(model_version):
+    # Require explicit approval for production deployments
+    if not has_approval(model_version):
+        raise PermissionError("Model deployment requires approval")
+
+    s3_client.upload_file(
+        f'model-{model_version}.pkl',
+        MODEL_BUCKET,
+        ServerSideEncryption='AES256'
+    )
+```
+
+**3. Reliability**
+
+- Design for model failure with fallback strategies
+- Implement circuit breakers for ML inference
+- Use A/B testing for gradual rollouts
+- Maintain model versioning and rollback capability
+
+```python
+# Reliable inference with fallback (Factor IX: Disposability)
+def predict_with_fallback(input_data):
+    try:
+        # Try latest model
+        return model_v2.predict(input_data)
+    except Exception as e:
+        log('ERROR', 'Model v2 failed, falling back to v1', error=str(e))
+        # Fallback to previous stable version
+        return model_v1.predict(input_data)
+
+# Circuit breaker pattern
+class ModelCircuitBreaker:
+    def __init__(self, failure_threshold=5):
+        self.failure_count = 0
+        self.threshold = failure_threshold
+        self.is_open = False
+
+    def call(self, func, *args):
+        if self.is_open:
+            return self.fallback()
+
+        try:
+            result = func(*args)
+            self.failure_count = 0
+            return result
+        except Exception:
+            self.failure_count += 1
+            if self.failure_count >= self.threshold:
+                self.is_open = True
+            return self.fallback()
+```
+
+**4. Performance Efficiency**
+
+- Right-size compute for training vs inference
+- Use model optimization techniques (quantization, pruning)
+- Implement caching for repeated predictions
+- Scale inference horizontally (Factor VIII: Concurrency)
+
+```python
+# Horizontal scaling for inference (Factor VIII)
+# Deploy multiple stateless inference processes
+# Procfile:
+# inference: gunicorn inference_api:app --workers 8
+
+# Model caching (Factor VI: Stateless processes with backing service)
+import redis
+
+class CachedPredictor:
+    def __init__(self):
+        self.redis = redis.from_url(os.environ['REDIS_URL'])
+        self.model = load_model()
+
+    def predict(self, input_hash, input_data):
+        # Check cache first
+        cached_result = self.redis.get(f'prediction:{input_hash}')
+        if cached_result:
+            return json.loads(cached_result)
+
+        # Compute and cache
+        result = self.model.predict(input_data)
+        self.redis.setex(
+            f'prediction:{input_hash}',
+            3600,  # 1 hour TTL
+            json.dumps(result)
+        )
+        return result
+```
+
+**5. Cost Optimization**
+
+- Use spot instances for training jobs
+- Implement auto-scaling for inference
+- Optimize model size for deployment
+- Monitor and analyze compute costs
+
+```bash
+# Spot instances for training (AWS Batch, SageMaker)
+# Training jobs as one-off processes (Factor XII)
+aws batch submit-job \
+  --job-name model-training \
+  --job-queue spot-queue \
+  --job-definition training-job
+
+# Auto-scaling inference (Factor VIII: Concurrency)
+# Scale based on request load
+aws application-autoscaling put-scaling-policy \
+  --policy-name scale-inference \
+  --service-namespace ecs \
+  --scalable-dimension ecs:service:DesiredCount \
+  --min-capacity 2 \
+  --max-capacity 10
+```
+
+**6. Sustainability**
+
+- Optimize model efficiency (smaller models, fewer parameters)
+- Use carbon-aware computing (schedule training in low-carbon regions)
+- Implement model compression and efficient architectures
+- Monitor energy consumption metrics
+
+```python
+# Efficient model serving
+def optimize_for_sustainability():
+    # Use quantized models for reduced compute
+    model = load_quantized_model()  # 8-bit instead of 32-bit
+
+    # Batch predictions for efficiency
+    def batch_predict(inputs, batch_size=32):
+        results = []
+        for i in range(0, len(inputs), batch_size):
+            batch = inputs[i:i + batch_size]
+            results.extend(model.predict(batch))
+        return results
+```
+
+#### AI-Specific Twelve-Factor Adaptations
+
+**Data as a Dependency (extends Factor II)**
+
+```python
+# Declare data dependencies explicitly
+# data-requirements.txt
+"""
+training-dataset==v2.3.0
+validation-dataset==v2.3.0
+feature-definitions==v1.5.0
+"""
+
+# Version data like code (Factor I: Codebase)
+TRAINING_DATA_VERSION = os.environ['TRAINING_DATA_VERSION']
+data_url = f's3://ml-data/training-{TRAINING_DATA_VERSION}.parquet'
+```
+
+**Model as Configuration (extends Factor III)**
+
+```bash
+# Model versions in environment
+MODEL_VERSION=v2.5.3
+MODEL_ARTIFACT_URL=s3://ml-models/production/model-v2.5.3.pkl
+FEATURE_STORE_URL=https://features.example.com
+
+# Swap models without code changes (Factor IV: Backing Services)
+# Development: MODEL_VERSION=v2.5.3-dev
+# Staging:     MODEL_VERSION=v2.5.3-rc1
+# Production:  MODEL_VERSION=v2.5.3
+```
+
+**Stateless Inference (extends Factor VI)**
+
+```python
+# Never store prediction history in process memory
+# Bad:
+class StatefulPredictor:
+    def __init__(self):
+        self.prediction_history = []  # Anti-pattern!
+
+# Good: Store in backing service
+class StatelessPredictor:
+    def __init__(self):
+        self.model = load_model()
+        self.db = connect_to_database(os.environ['DATABASE_URL'])
+
+    def predict_and_store(self, input_data, user_id):
+        prediction = self.model.predict(input_data)
+
+        # Store in database, not in process
+        self.db.predictions.insert({
+            'user_id': user_id,
+            'input': input_data,
+            'output': prediction,
+            'model_version': os.environ['MODEL_VERSION'],
+            'timestamp': datetime.utcnow()
+        })
+
+        return prediction
+```
+
+**Build, Release, Run for ML (extends Factor V)**
+
+```bash
+# ML Pipeline Stages
+
+# 1. BUILD: Train model
+python train.py
+python evaluate.py
+python package_model.py  # Creates model artifact
+
+# 2. RELEASE: Version and tag model
+aws s3 cp model.pkl s3://models/model-v${VERSION}.pkl
+echo "model-v${VERSION}" > CURRENT_VERSION
+
+# 3. RUN: Deploy model to inference service
+docker build -t inference:v${VERSION} .
+docker run -e MODEL_VERSION=v${VERSION} inference:v${VERSION}
+
+# Rollback capability
+docker run -e MODEL_VERSION=v2.4.0 inference:v2.4.0  # Previous version
+```
+
+#### ML-Specific Logging (extends Factor XI)
+
+```python
+# Structured logging for ML systems
+def log_prediction(input_data, prediction, model_version):
+    log_entry = {
+        'timestamp': datetime.utcnow().isoformat(),
+        'event': 'prediction',
+        'model_version': model_version,
+        'input_hash': hash_input(input_data),
+        'prediction': prediction,
+        'latency_ms': get_latency(),
+        'confidence': get_confidence_score(prediction)
+    }
+    # Logs to stdout (Factor XI)
+    print(json.dumps(log_entry), file=sys.stdout)
+
+# Monitor for model drift
+def log_model_metrics():
+    metrics = {
+        'timestamp': datetime.utcnow().isoformat(),
+        'event': 'model_metrics',
+        'accuracy': current_accuracy,
+        'precision': current_precision,
+        'recall': current_recall,
+        'data_drift': detect_drift_score()
+    }
+    print(json.dumps(metrics), file=sys.stdout)
+```
+
+#### Checklist: Twelve-Factor AI Systems
+
+- [ ] **Versioned Data:** Training data in version control or versioned storage
+- [ ] **Model Artifacts:** Stored as immutable releases with semantic versioning
+- [ ] **Stateless Inference:** No prediction history in process memory
+- [ ] **Environment-Based Config:** Model versions and endpoints in env vars
+- [ ] **Horizontal Scaling:** Multiple inference processes behind load balancer
+- [ ] **Monitoring:** Model performance metrics logged to stdout
+- [ ] **Fallback Strategy:** Graceful degradation when model fails
+- [ ] **A/B Testing:** Gradual rollout of new model versions
+- [ ] **Automated Retraining:** Scheduled admin processes for model updates
+- [ ] **Resource Right-Sizing:** Different compute for training vs inference
+
+---
+
 ## Related Resources
 
 - **Official 12-Factor Site:** https://12factor.net
 - **Beyond the Twelve-Factor App:** https://www.oreilly.com/library/view/beyond-the-twelve-factor/9781492042631/
+- **AWS Well-Architected Framework:** https://aws.amazon.com/architecture/well-architected/
+- **AWS Well-Architected Machine Learning Lens:** https://docs.aws.amazon.com/wellarchitected/latest/machine-learning-lens/
 - See `base/architecture-principles.md` for broader architectural guidance
 - See `base/cicd-comprehensive.md` for deployment automation practices
 - See `base/development-workflow.md` for day-to-day development practices
+- See `cloud/aws/well-architected.md` for detailed AWS Well-Architected guidance

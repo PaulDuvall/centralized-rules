@@ -610,7 +610,637 @@ Use PostgreSQL as the primary relational database.
 
 ---
 
+## Architectural Principles for AI Systems
+
+### SOLID Principles for AI/ML
+
+Traditional SOLID principles apply to AI systems with unique considerations for model lifecycle, data pipelines, and inference services.
+
+#### Single Responsibility in ML
+
+Each component handles one aspect of the ML workflow.
+
+```python
+# Bad: God class handling everything
+class MLPipeline:
+    def load_data(self): pass
+    def preprocess(self): pass
+    def train_model(self): pass
+    def evaluate(self): pass
+    def deploy(self): pass
+    def monitor(self): pass
+    def retrain(self): pass
+
+# Good: Separate responsibilities
+class DataLoader:
+    """Responsible only for data loading"""
+    def load(self, source: str) -> Dataset:
+        return Dataset.from_source(source)
+
+class FeatureEngineer:
+    """Responsible only for feature transformation"""
+    def transform(self, data: Dataset) -> Features:
+        return self.pipeline.transform(data)
+
+class ModelTrainer:
+    """Responsible only for model training"""
+    def train(self, features: Features, labels: Labels) -> Model:
+        return self.algorithm.fit(features, labels)
+
+class ModelEvaluator:
+    """Responsible only for model evaluation"""
+    def evaluate(self, model: Model, test_data: Dataset) -> Metrics:
+        predictions = model.predict(test_data.features)
+        return calculate_metrics(predictions, test_data.labels)
+
+class ModelDeployer:
+    """Responsible only for deployment"""
+    def deploy(self, model: Model, environment: str) -> Endpoint:
+        return self.deployment_service.deploy(model, environment)
+```
+
+#### Open/Closed Principle for ML Models
+
+Design systems extensible to new model types without modifying existing code.
+
+```python
+# Interface for model abstraction
+class ModelInterface:
+    def train(self, features, labels): pass
+    def predict(self, features): pass
+    def save(self, path): pass
+    def load(self, path): pass
+
+# Concrete implementations
+class RandomForestModel(ModelInterface):
+    def __init__(self):
+        self.model = RandomForestClassifier()
+
+    def train(self, features, labels):
+        self.model.fit(features, labels)
+
+    def predict(self, features):
+        return self.model.predict(features)
+
+class NeuralNetworkModel(ModelInterface):
+    def __init__(self):
+        self.model = self._build_network()
+
+    def train(self, features, labels):
+        self.model.fit(features, labels, epochs=10)
+
+    def predict(self, features):
+        return self.model.predict(features)
+
+# Model trainer works with any model implementation
+class ModelTrainer:
+    def __init__(self, model: ModelInterface):
+        self.model = model  # Open for extension, closed for modification
+
+    def train_and_evaluate(self, train_data, test_data):
+        self.model.train(train_data.features, train_data.labels)
+        return self.model.predict(test_data.features)
+
+# Add new models without changing ModelTrainer
+trainer = ModelTrainer(RandomForestModel())
+# or
+trainer = ModelTrainer(NeuralNetworkModel())
+# or
+trainer = ModelTrainer(GradientBoostingModel())  # New model type
+```
+
+#### Dependency Inversion for ML Infrastructure
+
+Depend on abstractions for data sources, model storage, and inference endpoints.
+
+```python
+# Abstract interfaces
+class DataSource:
+    def load(self, query: str) -> DataFrame: pass
+
+class ModelStore:
+    def save(self, model, version: str): pass
+    def load(self, version: str) -> Model: pass
+
+class FeatureStore:
+    def get_features(self, entity_ids: List[str]) -> Features: pass
+
+# Concrete implementations
+class S3DataSource(DataSource):
+    def __init__(self, bucket: str):
+        self.bucket = bucket
+
+    def load(self, query: str) -> DataFrame:
+        # S3-specific loading logic
+        return pd.read_parquet(f's3://{self.bucket}/{query}')
+
+class PostgresDataSource(DataSource):
+    def __init__(self, connection_string: str):
+        self.conn = create_connection(connection_string)
+
+    def load(self, query: str) -> DataFrame:
+        return pd.read_sql(query, self.conn)
+
+# High-level ML service depends on abstractions
+class MLPipeline:
+    def __init__(
+        self,
+        data_source: DataSource,  # Abstraction
+        model_store: ModelStore,   # Abstraction
+        feature_store: FeatureStore  # Abstraction
+    ):
+        self.data_source = data_source
+        self.model_store = model_store
+        self.feature_store = feature_store
+
+    def train(self, query: str, model_version: str):
+        # Works with any implementation
+        data = self.data_source.load(query)
+        features = self.feature_store.get_features(data['id'])
+        model = train_model(features, data['labels'])
+        self.model_store.save(model, model_version)
+
+# Dependency injection at composition root
+pipeline = MLPipeline(
+    data_source=S3DataSource('ml-training-data'),
+    model_store=MLFlowModelStore(),
+    feature_store=FeastFeatureStore()
+)
+```
+
+### Clean Architecture for AI Systems
+
+Apply hexagonal architecture to isolate ML domain logic from infrastructure concerns.
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  Presentation Layer                 │
+│         (REST API, Batch Jobs, Notebooks)           │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│               Application Layer                     │
+│     (ML Use Cases, Training Workflows, Inference)   │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│                  Domain Layer                       │
+│  (ML Algorithms, Feature Engineering, Evaluation)   │
+│           ▲                  ▲                      │
+│           │                  │                      │
+│      ┌────┴──────┐      ┌───┴──────┐               │
+│      │   Ports   │      │  Ports   │               │
+└──────┴───────────┴──────┴──────────┴───────────────┘
+           │                  │
+┌──────────▼──────────────────▼───────────────────────┐
+│              Infrastructure Layer                    │
+│  (S3, DynamoDB, SageMaker, MLFlow, Feature Store)   │
+└─────────────────────────────────────────────────────┘
+```
+
+**Implementation:**
+
+```python
+# Domain Layer - Core ML Logic
+class MLModel:
+    """Domain entity representing an ML model"""
+    def __init__(self, version: str, algorithm: str, metrics: dict):
+        self.version = version
+        self.algorithm = algorithm
+        self.metrics = metrics
+        self.created_at = datetime.utcnow()
+
+    def is_better_than(self, other: 'MLModel') -> bool:
+        """Domain logic for comparing models"""
+        return self.metrics['accuracy'] > other.metrics['accuracy']
+
+# Ports - Interfaces
+class ModelRepository:
+    """Port for model persistence"""
+    def save(self, model: MLModel): pass
+    def load(self, version: str) -> MLModel: pass
+    def list_versions(self) -> List[str]: pass
+
+class TrainingDataSource:
+    """Port for training data"""
+    def fetch_training_batch(self, size: int) -> TrainingData: pass
+
+# Application Layer - Use Cases
+class TrainModelUseCase:
+    """Application service orchestrating ML training"""
+    def __init__(
+        self,
+        data_source: TrainingDataSource,
+        model_repo: ModelRepository
+    ):
+        self.data_source = data_source
+        self.model_repo = model_repo
+
+    def execute(self, algorithm: str, hyperparams: dict) -> MLModel:
+        # Orchestrate domain logic
+        training_data = self.data_source.fetch_training_batch(1000)
+
+        # Train model (domain logic)
+        model = train_algorithm(algorithm, hyperparams, training_data)
+
+        # Evaluate (domain logic)
+        metrics = evaluate_model(model, training_data.validation_set)
+
+        # Create domain entity
+        ml_model = MLModel(
+            version=generate_version(),
+            algorithm=algorithm,
+            metrics=metrics
+        )
+
+        # Persist through port
+        self.model_repo.save(ml_model)
+
+        return ml_model
+
+# Infrastructure Layer - Adapters
+class S3ModelRepository(ModelRepository):
+    """Adapter for S3 storage"""
+    def __init__(self, bucket: str):
+        self.bucket = bucket
+        self.s3_client = boto3.client('s3')
+
+    def save(self, model: MLModel):
+        # S3-specific implementation
+        model_bytes = pickle.dumps(model)
+        self.s3_client.put_object(
+            Bucket=self.bucket,
+            Key=f'models/{model.version}.pkl',
+            Body=model_bytes
+        )
+
+    def load(self, version: str) -> MLModel:
+        obj = self.s3_client.get_object(
+            Bucket=self.bucket,
+            Key=f'models/{version}.pkl'
+        )
+        return pickle.loads(obj['Body'].read())
+
+class DataWarehouseTrainingDataSource(TrainingDataSource):
+    """Adapter for data warehouse"""
+    def __init__(self, connection_string: str):
+        self.conn = create_connection(connection_string)
+
+    def fetch_training_batch(self, size: int) -> TrainingData:
+        query = f"SELECT * FROM training_data ORDER BY RANDOM() LIMIT {size}"
+        df = pd.read_sql(query, self.conn)
+        return TrainingData.from_dataframe(df)
+
+# Presentation Layer - API
+from fastapi import FastAPI
+
+app = FastAPI()
+
+# Dependency injection at composition root
+def get_train_use_case() -> TrainModelUseCase:
+    data_source = DataWarehouseTrainingDataSource(
+        os.environ['DATABASE_URL']
+    )
+    model_repo = S3ModelRepository(
+        os.environ['MODEL_BUCKET']
+    )
+    return TrainModelUseCase(data_source, model_repo)
+
+@app.post("/models/train")
+def train_model(request: TrainRequest):
+    use_case = get_train_use_case()
+    model = use_case.execute(
+        algorithm=request.algorithm,
+        hyperparams=request.hyperparams
+    )
+    return {"version": model.version, "metrics": model.metrics}
+```
+
+### Domain-Driven Design for AI Systems
+
+Apply DDD concepts to ML domain modeling.
+
+#### ML Bounded Contexts
+
+```
+Bounded Context: Model Training
+- Entities: TrainingJob, Experiment, Hyperparameters
+- Value Objects: Metrics, DataSplit
+- Aggregates: Experiment (root) → TrainingJob
+- Repository: ExperimentRepository
+
+Bounded Context: Feature Engineering
+- Entities: FeaturePipeline, Transformation
+- Value Objects: FeatureDefinition, Statistics
+- Aggregates: FeaturePipeline (root) → Transformation
+- Repository: FeatureRepository
+
+Bounded Context: Model Serving
+- Entities: Endpoint, ModelVersion
+- Value Objects: PredictionRequest, PredictionResponse
+- Aggregates: Endpoint (root) → ModelVersion
+- Repository: EndpointRepository
+
+Bounded Context: Data Quality
+- Entities: DataValidation, QualityCheck
+- Value Objects: ValidationRule, QualityMetric
+- Aggregates: DataValidation (root) → QualityCheck
+- Repository: ValidationRepository
+```
+
+#### ML Ubiquitous Language
+
+```python
+# Code reflects ML domain terminology
+class Experiment:
+    """An ML experiment tracking model variations"""
+    def create_run(self, hyperparameters: Hyperparameters) -> ExperimentRun:
+        """Create a new experiment run with given hyperparameters"""
+        pass
+
+    def compare_runs(self, metric: str) -> List[ExperimentRun]:
+        """Compare runs by performance metric"""
+        pass
+
+    def select_best_model(self) -> Model:
+        """Select the best performing model from experiment runs"""
+        pass
+
+class FeaturePipeline:
+    """A pipeline for transforming raw data into features"""
+    def add_transformation(self, transform: Transformation):
+        """Add a feature transformation step"""
+        pass
+
+    def fit(self, training_data: DataFrame):
+        """Fit the pipeline on training data"""
+        pass
+
+    def transform(self, data: DataFrame) -> Features:
+        """Transform data into features"""
+        pass
+
+class ModelMonitor:
+    """Monitor deployed model for drift and performance"""
+    def detect_drift(self, reference_data: Dataset, production_data: Dataset) -> DriftReport:
+        """Detect data drift between reference and production"""
+        pass
+
+    def track_performance(self, predictions: Predictions, actuals: Actuals) -> Metrics:
+        """Track model performance over time"""
+        pass
+```
+
+#### ML Aggregates and Invariants
+
+```python
+class ExperimentAggregate:
+    """Aggregate root for ML experiment"""
+    def __init__(self, experiment_id: str, objective: str):
+        self.id = experiment_id
+        self.objective = objective  # 'maximize' or 'minimize'
+        self._runs: List[ExperimentRun] = []
+        self._best_run: Optional[ExperimentRun] = None
+
+    def add_run(self, hyperparameters: dict, metrics: dict) -> ExperimentRun:
+        """Add a run and maintain best_run invariant"""
+        run = ExperimentRun(
+            id=generate_run_id(),
+            hyperparameters=hyperparameters,
+            metrics=metrics
+        )
+
+        # Enforce business rule: track best run
+        if self._is_better_run(run):
+            self._best_run = run
+
+        self._runs.append(run)
+        return run
+
+    def _is_better_run(self, run: ExperimentRun) -> bool:
+        """Business logic for comparing runs"""
+        if not self._best_run:
+            return True
+
+        metric_value = run.metrics.get('accuracy', 0)
+        best_metric = self._best_run.metrics.get('accuracy', 0)
+
+        if self.objective == 'maximize':
+            return metric_value > best_metric
+        else:
+            return metric_value < best_metric
+
+    def get_best_model(self) -> Model:
+        """Access best model through aggregate root"""
+        if not self._best_run:
+            raise ValueError("No runs in experiment")
+        return self._best_run.model
+
+class ExperimentRun:
+    """Entity within Experiment aggregate"""
+    def __init__(self, id: str, hyperparameters: dict, metrics: dict):
+        self.id = id
+        self.hyperparameters = hyperparameters
+        self.metrics = metrics
+        self.model: Optional[Model] = None
+```
+
+#### ML Domain Services
+
+```python
+class ModelComparisonService:
+    """Domain service for comparing models"""
+    def compare_models(
+        self,
+        model_a: MLModel,
+        model_b: MLModel,
+        test_data: Dataset
+    ) -> ComparisonReport:
+        """Compare two models on the same test data"""
+        predictions_a = model_a.predict(test_data.features)
+        predictions_b = model_b.predict(test_data.features)
+
+        metrics_a = calculate_metrics(predictions_a, test_data.labels)
+        metrics_b = calculate_metrics(predictions_b, test_data.labels)
+
+        return ComparisonReport(
+            model_a_id=model_a.version,
+            model_b_id=model_b.version,
+            metrics_a=metrics_a,
+            metrics_b=metrics_b,
+            winner=self._determine_winner(metrics_a, metrics_b)
+        )
+
+class FeatureImportanceService:
+    """Domain service for analyzing feature importance"""
+    def calculate_importance(
+        self,
+        model: MLModel,
+        features: Features,
+        method: str = 'permutation'
+    ) -> FeatureImportance:
+        """Calculate feature importance using specified method"""
+        if method == 'permutation':
+            return self._permutation_importance(model, features)
+        elif method == 'shap':
+            return self._shap_importance(model, features)
+        else:
+            raise ValueError(f"Unknown method: {method}")
+```
+
+### AI-Specific Architectural Patterns
+
+#### Model Registry Pattern
+
+Centralized model versioning and metadata tracking.
+
+```python
+class ModelRegistry:
+    """Central registry for all models"""
+    def __init__(self, storage: ModelStore, metadata_db: MetadataStore):
+        self.storage = storage
+        self.metadata_db = metadata_db
+
+    def register_model(
+        self,
+        model: Model,
+        metadata: ModelMetadata
+    ) -> ModelVersion:
+        """Register a new model version with metadata"""
+        # Generate semantic version
+        version = self._generate_version(metadata)
+
+        # Store model artifact
+        self.storage.save(model, version)
+
+        # Store metadata
+        self.metadata_db.insert({
+            'version': version,
+            'algorithm': metadata.algorithm,
+            'training_date': datetime.utcnow(),
+            'metrics': metadata.metrics,
+            'dataset_version': metadata.dataset_version,
+            'hyperparameters': metadata.hyperparameters,
+            'status': 'registered'
+        })
+
+        return ModelVersion(version, metadata)
+
+    def promote_to_production(self, version: str):
+        """Promote model version to production"""
+        # Business rule: only models with sufficient accuracy
+        metadata = self.metadata_db.get(version)
+        if metadata['metrics']['accuracy'] < 0.9:
+            raise ValueError("Model accuracy below production threshold")
+
+        self.metadata_db.update(version, {'status': 'production'})
+        self._deploy_to_production(version)
+```
+
+#### Feature Store Pattern
+
+Centralized feature management for training and serving.
+
+```python
+class FeatureStore:
+    """Centralized feature repository"""
+    def __init__(self, online_store: OnlineStore, offline_store: OfflineStore):
+        self.online_store = online_store  # Low-latency serving
+        self.offline_store = offline_store  # Historical training data
+
+    def register_feature(self, feature_def: FeatureDefinition):
+        """Register a new feature with its computation logic"""
+        self._validate_feature(feature_def)
+        self.online_store.create_table(feature_def)
+        self.offline_store.create_table(feature_def)
+
+    def get_online_features(
+        self,
+        entity_ids: List[str],
+        feature_names: List[str]
+    ) -> Features:
+        """Get features for real-time inference"""
+        return self.online_store.fetch(entity_ids, feature_names)
+
+    def get_historical_features(
+        self,
+        entity_ids: List[str],
+        feature_names: List[str],
+        timestamp: datetime
+    ) -> Features:
+        """Get point-in-time features for training"""
+        return self.offline_store.fetch_as_of(
+            entity_ids,
+            feature_names,
+            timestamp
+        )
+```
+
+#### ML Pipeline Pattern
+
+Orchestrate complex ML workflows with clear stages.
+
+```python
+class MLPipelineStage:
+    """Base class for pipeline stages"""
+    def execute(self, input_data: Any) -> Any: pass
+    def rollback(self): pass
+
+class DataValidationStage(MLPipelineStage):
+    def execute(self, raw_data: DataFrame) -> DataFrame:
+        # Validate data quality
+        self._check_schema(raw_data)
+        self._check_data_quality(raw_data)
+        return raw_data
+
+class FeatureEngineeringStage(MLPipelineStage):
+    def execute(self, validated_data: DataFrame) -> Features:
+        # Transform data to features
+        return self.feature_pipeline.transform(validated_data)
+
+class ModelTrainingStage(MLPipelineStage):
+    def execute(self, features: Features) -> Model:
+        # Train model
+        return self.trainer.train(features)
+
+class ModelEvaluationStage(MLPipelineStage):
+    def execute(self, model: Model) -> Metrics:
+        # Evaluate model
+        return self.evaluator.evaluate(model, self.test_data)
+
+# Compose pipeline from stages
+class MLPipeline:
+    def __init__(self, stages: List[MLPipelineStage]):
+        self.stages = stages
+
+    def run(self, input_data: Any) -> Any:
+        """Execute pipeline stages in order"""
+        data = input_data
+        for stage in self.stages:
+            try:
+                data = stage.execute(data)
+            except Exception as e:
+                self._handle_failure(stage, e)
+                raise
+
+        return data
+
+# Usage
+pipeline = MLPipeline([
+    DataValidationStage(),
+    FeatureEngineeringStage(),
+    ModelTrainingStage(),
+    ModelEvaluationStage()
+])
+
+result = pipeline.run(raw_data)
+```
+
+---
+
 **Related Rules:**
 - See `base/12-factor-app.md` for SaaS architecture principles
 - See `base/refactoring-patterns.md` for code improvement techniques
 - See `base/code-quality.md` for general quality standards
+- See `base/ai-assisted-development.md` for AI development best practices
+- See `cloud/aws/well-architected.md` for AWS Well-Architected Framework for ML
