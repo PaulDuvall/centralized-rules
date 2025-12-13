@@ -354,11 +354,11 @@ EOF
         return
     fi
 
-    # Run sync script in test project
+    # Run sync script in test project (generates for all tools by default)
     check_pass
     cd "$test_dir"
     if bash ./sync-ai-rules.sh > /dev/null 2>&1; then
-        success "Sync script executed successfully"
+        success "Sync script executed successfully (all tools)"
     else
         error "Sync script failed to execute"
         cd - > /dev/null
@@ -366,10 +366,14 @@ EOF
         return
     fi
 
-    # Validate generated files
+    # ========================================================================
+    # Validate Claude configuration
+    # ========================================================================
+    info "Validating Claude configuration..."
+
     check_pass
     if [ -f ".claude/AGENTS.md" ]; then
-        success "Generated .claude/AGENTS.md (hierarchical mode entry point)"
+        success "Generated .claude/AGENTS.md (Claude entry point)"
     else
         error "Failed to generate .claude/AGENTS.md"
     fi
@@ -432,8 +436,72 @@ EOF
         fi
     fi
 
+    # ========================================================================
+    # Validate Cursor configuration
+    # ========================================================================
+    info "Validating Cursor configuration..."
+
+    check_pass
+    if [ -f ".cursorrules" ]; then
+        success "Generated .cursorrules (Cursor configuration)"
+    else
+        error "Failed to generate .cursorrules"
+    fi
+
+    check_pass
+    if [ -f ".cursorrules" ] && grep -q "AI Development Rules (Cursor)" ".cursorrules" 2>/dev/null; then
+        success "Cursor rules file has correct header"
+    else
+        warning "Cursor rules file missing expected header"
+    fi
+
+    check_pass
+    if [ -f ".cursorrules" ] && [ -s ".cursorrules" ]; then
+        # Check file is not empty and has substantial content
+        line_count=$(wc -l < ".cursorrules")
+        if [ "$line_count" -gt 10 ]; then
+            success "Cursor rules file has content ($line_count lines)"
+        else
+            warning "Cursor rules file seems too small ($line_count lines)"
+        fi
+    else
+        error "Cursor rules file is empty or missing"
+    fi
+
+    # ========================================================================
+    # Validate Copilot configuration
+    # ========================================================================
+    info "Validating GitHub Copilot configuration..."
+
+    check_pass
+    if [ -f ".github/copilot-instructions.md" ]; then
+        success "Generated .github/copilot-instructions.md (Copilot configuration)"
+    else
+        error "Failed to generate .github/copilot-instructions.md"
+    fi
+
+    check_pass
+    if [ -f ".github/copilot-instructions.md" ] && grep -q "GitHub Copilot Instructions" ".github/copilot-instructions.md" 2>/dev/null; then
+        success "Copilot instructions file has correct header"
+    else
+        warning "Copilot instructions file missing expected header"
+    fi
+
+    check_pass
+    if [ -f ".github/copilot-instructions.md" ] && [ -s ".github/copilot-instructions.md" ]; then
+        # Check file is not empty and has substantial content
+        line_count=$(wc -l < ".github/copilot-instructions.md")
+        if [ "$line_count" -gt 10 ]; then
+            success "Copilot instructions file has content ($line_count lines)"
+        else
+            warning "Copilot instructions file seems too small ($line_count lines)"
+        fi
+    else
+        error "Copilot instructions file is empty or missing"
+    fi
+
     cd - > /dev/null
-    info "Test project validation complete"
+    info "Test project validation complete (Claude + Cursor + Copilot)"
     echo ""
 }
 

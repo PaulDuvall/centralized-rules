@@ -44,12 +44,12 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Tests Performed" >> $GITHUB_STEP_SUMMARY
           echo "- Directory structure validation" >> $GITHUB_STEP_SUMMARY
-          echo "- AGENTS.md configuration check" >> $GITHUB_STEP_SUMMARY
+          echo "- **Claude:** AGENTS.md + hierarchical rules" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cursor:** .cursorrules generation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Copilot:** .github/copilot-instructions.md" >> $GITHUB_STEP_SUMMARY
           echo "- Base rules language-agnostic validation" >> $GITHUB_STEP_SUMMARY
-          echo "- Generated RULES.md verification" >> $GITHUB_STEP_SUMMARY
-          echo "- Sync script functionality test" >> $GITHUB_STEP_SUMMARY
           echo "- Documentation completeness check" >> $GITHUB_STEP_SUMMARY
-          echo "- Real project integration test" >> $GITHUB_STEP_SUMMARY
+          echo "- Real project integration test (all 3 AI tools)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ -f validation-output.txt ]; then
@@ -479,7 +479,7 @@ jobs:
 
           | Test Suite | Status | Details |
           |-----------|---------|---------|
-          | 📋 Progressive Disclosure Validation | ${{ needs.validate-progressive-disclosure.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Architecture validation & real project testing |
+          | 📋 Progressive Disclosure Validation | ${{ needs.validate-progressive-disclosure.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Claude + Cursor + Copilot configs validated |
           | 🔍 ShellCheck Linting | ${{ needs.shellcheck.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Bash script quality & security checks |
           | 🧪 Sync Script Testing | ${{ needs.test-sync-script.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | 7 project type scenarios tested |
           | 📚 Documentation Verification | ${{ needs.verify-documentation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Documentation completeness & quality |
@@ -492,12 +492,12 @@ jobs:
 
           ### Tests Performed
           - ✓ Directory structure compliance (`base/`, `languages/`, `frameworks/`, `cloud/`)
-          - ✓ AGENTS.md configuration validation
+          - ✓ **Claude:** AGENTS.md configuration + hierarchical rules
+          - ✓ **Cursor:** .cursorrules file generation and content
+          - ✓ **Copilot:** .github/copilot-instructions.md generation
           - ✓ Base rules language-agnostic verification
-          - ✓ Generated RULES.md progressive disclosure check
-          - ✓ Sync script functionality test
           - ✓ Documentation completeness check
-          - ✓ Real project integration test (Python + FastAPI)
+          - ✓ Real project integration test (Python + FastAPI, all 3 AI tools)
 
           ### Artifacts
           - `validation-results` - Complete validation output and generated files
