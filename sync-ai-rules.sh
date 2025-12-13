@@ -817,8 +817,10 @@ sync_rules() {
     mkdir -p "$CACHE_DIR"
 
     # Detect project configuration
-    local languages=($(detect_language))
-    local frameworks=($(detect_frameworks))
+    local languages
+    mapfile -t languages < <(detect_language)
+    local frameworks
+    mapfile -t frameworks < <(detect_frameworks)
 
     if [[ ${#languages[@]} -eq 0 ]]; then
         log_warn "No recognized language detected. Loading base rules only."
