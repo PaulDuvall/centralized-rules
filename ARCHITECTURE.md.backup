@@ -99,8 +99,11 @@ centralized-rules/
 │   ├── sync-config.json          # Configuration example
 │   └── USAGE_EXAMPLES.md         # Detailed examples
 │
+├── archive/                       # Old project-specific files
+│
 ├── sync-ai-rules.sh              # Main sync script
 ├── README.md                      # Main documentation
+├── MIGRATION_GUIDE.md            # Migration from old format
 └── ARCHITECTURE.md               # This file
 ```
 
@@ -389,4 +392,5 @@ The architecture supports:
 ## References
 
 - [README.md](./README.md) - Usage and quick start
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) - Migrating from old format
 - [USAGE_EXAMPLES.md](./examples/USAGE_EXAMPLES.md) - Detailed examples

@@ -60,7 +60,7 @@ centralized-rules/
 
 ```bash
 # Download the sync script
-curl -fsSL https://raw.githubusercontent.com/yourusername/centralized-rules/main/sync-ai-rules.sh \
+curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/sync-ai-rules.sh \
     -o sync-ai-rules.sh
 
 chmod +x sync-ai-rules.sh
@@ -408,8 +408,8 @@ MIT License - See LICENSE file for details
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/centralized-rules/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/centralized-rules/discussions)
+- **Issues:** [GitHub Issues](https://github.com/PaulDuvall/centralized-rules/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/discussions)
 - **Documentation:** See [docs/](./docs/) directory
 
 ---

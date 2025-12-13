@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # Configuration
-RULES_REPO_URL="${AI_RULES_REPO:-https://raw.githubusercontent.com/yourusername/centralized-rules/main}"
+RULES_REPO_URL="${AI_RULES_REPO:-https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main}"
 RULES_DIR=".ai-rules"
 CACHE_DIR="${RULES_DIR}/.cache"
 

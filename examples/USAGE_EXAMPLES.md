@@ -18,7 +18,7 @@ myapi/
 
 ```bash
 # Download sync script
-curl -fsSL https://raw.githubusercontent.com/yourusername/centralized-rules/main/sync-ai-rules.sh \
+curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/sync-ai-rules.sh \
     -o sync-ai-rules.sh
 chmod +x sync-ai-rules.sh
 
@@ -142,7 +142,7 @@ jobs:
 
       - name: Download sync script
         run: |
-          curl -fsSL https://raw.githubusercontent.com/yourusername/centralized-rules/main/sync-ai-rules.sh \
+          curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/sync-ai-rules.sh \
             -o sync-ai-rules.sh
           chmod +x sync-ai-rules.sh
 
