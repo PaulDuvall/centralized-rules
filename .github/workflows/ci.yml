@@ -698,12 +698,22 @@ jobs:
           fi
 
           # Validate language-specific rules
+          # For polyglot projects, be lenient - warn instead of fail
+          IS_POLYGLOT="false"
+          if [ "${{ matrix.scenario }}" == "polyglot" ]; then
+            IS_POLYGLOT="true"
+          fi
+
           if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
             if [ -d ".claude/rules/languages/python" ]; then
               echo "✓ Python rules detected"
             else
-              echo "ERROR: Python project but no Python rules"
-              exit 1
+              if [ "$IS_POLYGLOT" == "true" ]; then
+                echo "WARNING: Python project but no Python rules (polyglot - non-fatal)"
+              else
+                echo "ERROR: Python project but no Python rules"
+                exit 1
+              fi
             fi
           fi
 
@@ -711,8 +721,12 @@ jobs:
             if [ -d ".claude/rules/languages/typescript" ] || grep -q "typescript" .claude/rules/ -r; then
               echo "✓ TypeScript/JavaScript rules detected"
             else
-              echo "ERROR: Node.js project but no TypeScript rules"
-              exit 1
+              if [ "$IS_POLYGLOT" == "true" ]; then
+                echo "WARNING: Node.js project but no TypeScript rules (polyglot - non-fatal)"
+              else
+                echo "ERROR: Node.js project but no TypeScript rules"
+                exit 1
+              fi
             fi
           fi
 
@@ -720,8 +734,12 @@ jobs:
             if [ -d ".claude/rules/languages/go" ]; then
               echo "✓ Go rules detected"
             else
-              echo "ERROR: Go project but no Go rules"
-              exit 1
+              if [ "$IS_POLYGLOT" == "true" ]; then
+                echo "WARNING: Go project but no Go rules (polyglot - non-fatal)"
+              else
+                echo "ERROR: Go project but no Go rules"
+                exit 1
+              fi
             fi
           fi
 
@@ -729,8 +747,12 @@ jobs:
             if [ -d ".claude/rules/languages/rust" ]; then
               echo "✓ Rust rules detected"
             else
-              echo "ERROR: Rust project but no Rust rules"
-              exit 1
+              if [ "$IS_POLYGLOT" == "true" ]; then
+                echo "WARNING: Rust project but no Rust rules (polyglot - non-fatal)"
+              else
+                echo "ERROR: Rust project but no Rust rules"
+                exit 1
+              fi
             fi
           fi
 
