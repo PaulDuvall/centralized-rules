@@ -1,6 +1,6 @@
 # AI Development Rules
 
-**Last updated:** 2025-12-13 20:52:33 UTC
+**Last updated:** 2025-12-13 20:55:24 UTC
 
 ---
 
@@ -57,7 +57,12 @@ This file contains multiple rule categories. **DO NOT apply all rules to every t
 | Base | Security-relevant tasks | Security Principles |
 | Base | Testing tasks | Testing Philosophy |
 | Base | Commits/PRs | Git Workflow |
-| Base | Architecture discussions | Architecture Principles, 12-Factor App |
+| Base | Development process | Development Workflow |
+| Base | Architecture discussions | Architecture Principles |
+| Base | Architecture/deployment discussions | 12-Factor App |
+| Base | Refactoring tasks | Refactoring Patterns |
+| Base | AI-assisted development | Ai Assisted Development |
+| Base | Metrics/monitoring tasks | Metrics Standards |
 
 ### 💡 Token Efficiency Tips
 
