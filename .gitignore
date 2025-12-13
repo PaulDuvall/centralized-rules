@@ -1,0 +1,16 @@
+# AI Rules Cache
+.ai-rules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local overrides
+.claude/CUSTOM_RULES.md
+.ai/sync-config.json
