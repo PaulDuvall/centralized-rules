@@ -20,11 +20,47 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run progressive disclosure validation
+        id: validation
         run: |
           chmod +x scripts/validate-progressive-disclosure.sh
-          ./scripts/validate-progressive-disclosure.sh
+          ./scripts/validate-progressive-disclosure.sh | tee validation-output.txt
+          echo "result=$?" >> $GITHUB_OUTPUT
         env:
           RUN_PROJECT_TEST: "true"
+        continue-on-error: true
+
+      - name: Generate validation summary
+        if: always()
+        run: |
+          echo "## 📋 Progressive Disclosure Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.validation.outputs.result }}" == "0" ]; then
+            echo "✅ **Status:** PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tests Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- Directory structure validation" >> $GITHUB_STEP_SUMMARY
+          echo "- AGENTS.md configuration check" >> $GITHUB_STEP_SUMMARY
+          echo "- Base rules language-agnostic validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Generated RULES.md verification" >> $GITHUB_STEP_SUMMARY
+          echo "- Sync script functionality test" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation completeness check" >> $GITHUB_STEP_SUMMARY
+          echo "- Real project integration test" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f validation-output.txt ]; then
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>View detailed output</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            tail -100 validation-output.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload validation results
         if: always()
@@ -32,9 +68,14 @@ jobs:
         with:
           name: validation-results
           path: |
+            validation-output.txt
             .claude/
             scripts/
           retention-days: 5
+
+      - name: Fail if validation failed
+        if: steps.validation.outputs.result != '0'
+        run: exit 1
 
   shellcheck:
     name: ShellCheck Linting
@@ -45,13 +86,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run ShellCheck on all shell scripts
+        id: shellcheck-scripts
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: './scripts'
           severity: warning
           format: gcc
+        continue-on-error: true
 
       - name: Run ShellCheck on sync script
+        id: shellcheck-sync
         uses: ludeeus/action-shellcheck@master
         with:
           check_together: 'yes'
@@ -60,6 +104,37 @@ jobs:
           severity: warning
         env:
           SHELLCHECK_OPTS: -e SC2086
+        continue-on-error: true
+
+      - name: Generate ShellCheck summary
+        if: always()
+        run: |
+          echo "## 🔍 ShellCheck Linting Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          scripts_status="${{ steps.shellcheck-scripts.outcome }}"
+          sync_status="${{ steps.shellcheck-sync.outcome }}"
+
+          if [ "$scripts_status" == "success" ] && [ "$sync_status" == "success" ]; then
+            echo "✅ **Status:** ALL CHECKS PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** ISSUES FOUND" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scanned Files" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scripts directory:** $scripts_status" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sync script (root):** $sync_status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checks Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- Syntax errors" >> $GITHUB_STEP_SUMMARY
+          echo "- Common pitfalls (SC codes)" >> $GITHUB_STEP_SUMMARY
+          echo "- Best practices violations" >> $GITHUB_STEP_SUMMARY
+          echo "- Security issues" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if ShellCheck found issues
+        if: steps.shellcheck-scripts.outcome != 'success' || steps.shellcheck-sync.outcome != 'success'
+        run: exit 1
 
   test-sync-script:
     name: Test Sync Script
@@ -224,6 +299,7 @@ jobs:
           ./sync-ai-rules.sh
 
       - name: Validate generated files
+        id: validate
         run: |
           cd /tmp/test-project
 
@@ -249,6 +325,33 @@ jobs:
           echo "✓ Rules directory structure created"
 
           echo "✅ All validations passed for ${{ matrix.name }}"
+        continue-on-error: true
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🧪 Sync Script Test: ${{ matrix.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.validate.outcome }}" == "success" ]; then
+            echo "✅ **Status:** PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Project Type" >> $GITHUB_STEP_SUMMARY
+          echo "${{ matrix.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Validations Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ AGENTS.md generation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Progressive disclosure warnings" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Rules directory structure" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Language/framework detection" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if validation failed
+        if: steps.validate.outcome != 'success'
+        run: exit 1
 
       - name: Upload test artifacts
         if: always()
@@ -267,14 +370,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check README mentions progressive disclosure
+        id: check-readme
         run: |
           if ! grep -qi "progressive disclosure" README.md; then
             echo "ERROR: README.md doesn't mention progressive disclosure"
             exit 1
           fi
           echo "✓ README.md documents progressive disclosure"
+        continue-on-error: true
 
       - name: Check ARCHITECTURE documentation
+        id: check-arch
         run: |
           if [ -f ARCHITECTURE.md ]; then
             if ! grep -qi "progressive disclosure" ARCHITECTURE.md; then
@@ -285,8 +391,10 @@ jobs:
           else
             echo "WARNING: ARCHITECTURE.md not found"
           fi
+        continue-on-error: true
 
       - name: Verify rule files are markdown
+        id: check-markdown
         run: |
           # Check that all rule files are .md
           non_md=$(find base/ languages/ frameworks/ cloud/ -type f ! -name "*.md" 2>/dev/null || true)
@@ -296,8 +404,10 @@ jobs:
             exit 1
           fi
           echo "✓ All rule files are markdown"
+        continue-on-error: true
 
       - name: Check for broken internal links
+        id: check-links
         run: |
           # Simple check for broken relative links in markdown files
           for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.claude/*"); do
@@ -308,9 +418,38 @@ jobs:
             fi
           done
           echo "✓ Internal link check complete"
+        continue-on-error: true
 
-  all-tests-passed:
-    name: All Tests Passed
+      - name: Generate documentation verification summary
+        if: always()
+        run: |
+          echo "## 📚 Documentation Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          readme="${{ steps.check-readme.outcome }}"
+          arch="${{ steps.check-arch.outcome }}"
+          markdown="${{ steps.check-markdown.outcome }}"
+          links="${{ steps.check-links.outcome }}"
+
+          if [ "$readme" == "success" ] && [ "$arch" == "success" ] && [ "$markdown" == "success" ] && [ "$links" == "success" ]; then
+            echo "✅ **Status:** ALL CHECKS PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** SOME CHECKS FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Documentation Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- **README progressive disclosure:** $readme" >> $GITHUB_STEP_SUMMARY
+          echo "- **ARCHITECTURE documentation:** $arch" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rule files are markdown:** $markdown" >> $GITHUB_STEP_SUMMARY
+          echo "- **Internal links:** $links" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any check failed
+        if: steps.check-readme.outcome != 'success' || steps.check-arch.outcome != 'success' || steps.check-markdown.outcome != 'success' || steps.check-links.outcome != 'success'
+        run: exit 1
+
+  generate-test-report:
+    name: Generate Test Report
     runs-on: ubuntu-latest
     needs:
       - validate-progressive-disclosure
@@ -320,13 +459,151 @@ jobs:
     if: always()
 
     steps:
-      - name: Check all jobs succeeded
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate comprehensive test report
         run: |
-          if [ "${{ needs.validate-progressive-disclosure.result }}" != "success" ] || \
-             [ "${{ needs.shellcheck.result }}" != "success" ] || \
-             [ "${{ needs.test-sync-script.result }}" != "success" ] || \
-             [ "${{ needs.verify-documentation.result }}" != "success" ]; then
-            echo "One or more test jobs failed"
-            exit 1
+          cat > test-report.md << 'REPORT_EOF'
+          # 🚀 CI Test Report
+
+          **Workflow Run:** ${{ github.run_number }}
+          **Commit:** `${{ github.sha }}`
+          **Branch:** `${{ github.ref_name }}`
+          **Triggered by:** ${{ github.event_name }}
+          **Run Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+          ---
+
+          ## 📊 Test Results Summary
+
+          | Test Suite | Status | Details |
+          |-----------|---------|---------|
+          | 📋 Progressive Disclosure Validation | ${{ needs.validate-progressive-disclosure.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Architecture validation & real project testing |
+          | 🔍 ShellCheck Linting | ${{ needs.shellcheck.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Bash script quality & security checks |
+          | 🧪 Sync Script Testing | ${{ needs.test-sync-script.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | 7 project type scenarios tested |
+          | 📚 Documentation Verification | ${{ needs.verify-documentation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Documentation completeness & quality |
+
+          ---
+
+          ## 📋 Progressive Disclosure Validation
+
+          **Status:** ${{ needs.validate-progressive-disclosure.result == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+          ### Tests Performed
+          - ✓ Directory structure compliance (`base/`, `languages/`, `frameworks/`, `cloud/`)
+          - ✓ AGENTS.md configuration validation
+          - ✓ Base rules language-agnostic verification
+          - ✓ Generated RULES.md progressive disclosure check
+          - ✓ Sync script functionality test
+          - ✓ Documentation completeness check
+          - ✓ Real project integration test (Python + FastAPI)
+
+          ### Artifacts
+          - `validation-results` - Complete validation output and generated files
+
+          ---
+
+          ## 🔍 ShellCheck Linting
+
+          **Status:** ${{ needs.shellcheck.result == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+          ### Scanned Files
+          - Shell scripts in `scripts/` directory
+          - Root-level `sync-ai-rules.sh`
+
+          ### Checks Performed
+          - ✓ Syntax errors
+          - ✓ Common pitfalls (SC codes)
+          - ✓ Best practices violations
+          - ✓ Security issues
+
+          ---
+
+          ## 🧪 Sync Script Testing
+
+          **Status:** ${{ needs.test-sync-script.result == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+          ### Project Types Tested
+          1. **Python + FastAPI** - Basic Python web framework
+          2. **TypeScript + React** - Frontend with TypeScript
+          3. **Go + Gin API** - Go REST API
+          4. **Python + Django + PostgreSQL** - Full-stack Python with database
+          5. **TypeScript + Next.js + AWS** - Cloud-integrated frontend
+          6. **Go + Gin + AWS + Docker** - Containerized cloud API
+          7. **Multi-language (Python + TypeScript)** - Polyglot project
+
+          ### Validations Per Project
+          - ✓ AGENTS.md generation with correct content
+          - ✓ Progressive disclosure warnings present
+          - ✓ Rules directory structure created
+          - ✓ Language/framework/cloud detection accuracy
+
+          ### Artifacts
+          - `test-project-*` - Generated `.claude/` directory for each project type (7 artifacts)
+
+          ---
+
+          ## 📚 Documentation Verification
+
+          **Status:** ${{ needs.verify-documentation.result == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+          ### Checks Performed
+          - ✓ README.md mentions progressive disclosure
+          - ✓ ARCHITECTURE.md explains progressive disclosure design
+          - ✓ All rule files use `.md` extension
+          - ✓ Internal markdown links validation
+
+          ---
+
+          ## 🎯 Overall Status
+
+          REPORT_EOF
+
+          # Determine overall status
+          if [ "${{ needs.validate-progressive-disclosure.result }}" == "success" ] && \
+             [ "${{ needs.shellcheck.result }}" == "success" ] && \
+             [ "${{ needs.test-sync-script.result }}" == "success" ] && \
+             [ "${{ needs.verify-documentation.result }}" == "success" ]; then
+            echo "### ✅ ALL TESTS PASSED" >> test-report.md
+            echo "" >> test-report.md
+            echo "All test suites completed successfully. The progressive disclosure architecture is validated and working correctly across all scenarios." >> test-report.md
+            overall_status="success"
+          else
+            echo "### ❌ TESTS FAILED" >> test-report.md
+            echo "" >> test-report.md
+            echo "One or more test suites failed. Please review the individual test results above and check the workflow logs for details." >> test-report.md
+            echo "" >> test-report.md
+            echo "#### Failed Tests:" >> test-report.md
+            [ "${{ needs.validate-progressive-disclosure.result }}" != "success" ] && echo "- Progressive Disclosure Validation" >> test-report.md
+            [ "${{ needs.shellcheck.result }}" != "success" ] && echo "- ShellCheck Linting" >> test-report.md
+            [ "${{ needs.test-sync-script.result }}" != "success" ] && echo "- Sync Script Testing" >> test-report.md
+            [ "${{ needs.verify-documentation.result }}" != "success" ] && echo "- Documentation Verification" >> test-report.md
+            overall_status="failure"
           fi
-          echo "✅ All tests passed!"
+
+          echo "" >> test-report.md
+          echo "---" >> test-report.md
+          echo "" >> test-report.md
+          echo "**Workflow URL:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> test-report.md
+
+          # Output to job summary
+          cat test-report.md >> $GITHUB_STEP_SUMMARY
+
+          # Save status for next step
+          echo "status=$overall_status" >> $GITHUB_OUTPUT
+        id: report
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: test-report.md
+          retention-days: 30
+
+      - name: Fail if tests failed
+        if: steps.report.outputs.status != 'success'
+        run: |
+          echo "❌ One or more test suites failed"
+          exit 1
