@@ -16,6 +16,7 @@
 set -euo pipefail
 
 # Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_REPO_URL="${AI_RULES_REPO:-https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main}"
 RULES_DIR=".ai-rules"
 CACHE_DIR="${RULES_DIR}/.cache"
@@ -270,31 +271,75 @@ generate_claude_rules() {
         echo ""
         echo "| Category | When to Apply | Section Name |"
         echo "|----------|---------------|--------------|"
-        echo "| Base | Every task | Code Quality |"
-        echo "| Base | Security-relevant tasks | Security Principles |"
-        echo "| Base | Testing tasks | Testing Philosophy |"
-        echo "| Base | Commits/PRs | Git Workflow |"
-        echo "| Base | Architecture discussions | Architecture Principles, 12-Factor App |"
-        if [[ ${#languages_loaded[@]} -gt 0 ]] && [[ " ${languages_loaded[*]} " =~ " python " ]]; then
-            echo "| Python | Python files (.py) | Python Coding Standards |"
-            echo "| Python | Python testing | Python Testing |"
-        fi
-        if [[ ${#languages_loaded[@]} -gt 0 ]] && [[ " ${languages_loaded[*]} " =~ " typescript " ]]; then
-            echo "| TypeScript | TypeScript files (.ts, .tsx) | Typescript Coding Standards |"
-            echo "| TypeScript | TypeScript testing | Typescript Testing |"
-        fi
-        if [[ ${#languages_loaded[@]} -gt 0 ]] && [[ " ${languages_loaded[*]} " =~ " go " ]]; then
-            echo "| Go | Go files (.go) | Go Coding Standards |"
-            echo "| Go | Go testing | Go Testing |"
-        fi
-        if [[ ${#frameworks_loaded[@]} -gt 0 ]] && [[ " ${frameworks_loaded[*]} " =~ " react " ]]; then
-            echo "| React | React components | React Best Practices |"
-        fi
-        if [[ ${#frameworks_loaded[@]} -gt 0 ]] && [[ " ${frameworks_loaded[*]} " =~ " django " ]]; then
-            echo "| Django | Django models/views/APIs | Django Best Practices |"
-        fi
-        if [[ ${#frameworks_loaded[@]} -gt 0 ]] && [[ " ${frameworks_loaded[*]} " =~ " fastapi " ]]; then
-            echo "| FastAPI | FastAPI endpoints/models | Fastapi Best Practices |"
+
+        # Generate rule index from config file (if exists) or fallback to hardcoded
+        if [[ -f "${SCRIPT_DIR}/rules-config.json" ]] && command -v python3 &> /dev/null; then
+            # Use Python to parse JSON and generate table
+            python3 <<PYTHON
+import json
+import sys
+
+try:
+    with open("${SCRIPT_DIR}/rules-config.json") as f:
+        config = json.load(f)
+
+    # Base rules
+    for rule in config.get("base_rules", []):
+        print(f"| Base | {rule['when']} | {rule['name']} |")
+
+    # Language rules
+    languages_loaded = "${languages_loaded[*]:-}".split()
+    for lang_key in languages_loaded:
+        if lang_key in config.get("languages", {}):
+            lang = config["languages"][lang_key]
+            for rule in lang.get("rules", []):
+                print(f"| {lang['display_name']} | {rule['when']} | {rule['name']} |")
+
+    # Framework rules
+    frameworks_loaded = "${frameworks_loaded[*]:-}".split()
+    for fw_key in frameworks_loaded:
+        if fw_key in config.get("frameworks", {}):
+            fw = config["frameworks"][fw_key]
+            for rule in fw.get("rules", []):
+                print(f"| {fw['display_name']} | {rule['when']} | {rule['name']} |")
+
+except Exception as e:
+    # Fallback to basic output
+    print("| Base | Every task | Code Quality |")
+    print("| Base | Testing tasks | Testing Philosophy |")
+    sys.exit(0)
+PYTHON
+        else
+            # Fallback if config doesn't exist or no Python
+            echo "| Base | Every task | Code Quality |"
+            echo "| Base | Security-relevant tasks | Security Principles |"
+            echo "| Base | Testing tasks | Testing Philosophy |"
+            echo "| Base | Commits/PRs | Git Workflow |"
+
+            # Languages
+            if [[ ${#languages_loaded[@]} -gt 0 ]] && [[ " ${languages_loaded[*]} " =~ " python " ]]; then
+                echo "| Python | Python files (.py) | Python Coding Standards |"
+                echo "| Python | Python testing | Python Testing |"
+            fi
+            if [[ ${#languages_loaded[@]} -gt 0 ]] && [[ " ${languages_loaded[*]} " =~ " typescript " ]]; then
+                echo "| TypeScript | TypeScript files (.ts, .tsx) | Typescript Coding Standards |"
+                echo "| TypeScript | TypeScript testing | Typescript Testing |"
+            fi
+            if [[ ${#languages_loaded[@]} -gt 0 ]] && [[ " ${languages_loaded[*]} " =~ " go " ]]; then
+                echo "| Go | Go files (.go) | Go Coding Standards |"
+                echo "| Go | Go testing | Go Testing |"
+            fi
+
+            # Frameworks
+            if [[ ${#frameworks_loaded[@]} -gt 0 ]] && [[ " ${frameworks_loaded[*]} " =~ " react " ]]; then
+                echo "| React | React components | React Best Practices |"
+            fi
+            if [[ ${#frameworks_loaded[@]} -gt 0 ]] && [[ " ${frameworks_loaded[*]} " =~ " django " ]]; then
+                echo "| Django | Django models/views/APIs | Django Best Practices |"
+            fi
+            if [[ ${#frameworks_loaded[@]} -gt 0 ]] && [[ " ${frameworks_loaded[*]} " =~ " fastapi " ]]; then
+                echo "| FastAPI | FastAPI endpoints/models | Fastapi Best Practices |"
+            fi
         fi
         echo ""
         echo "### 💡 Token Efficiency Tips"

@@ -1,0 +1,317 @@
+{
+  "languages": {
+    "python": {
+      "display_name": "Python",
+      "file_patterns": ["*.py"],
+      "test_patterns": ["test_*.py", "*_test.py"],
+      "rules": [
+        {
+          "name": "Python Coding Standards",
+          "file": "languages/python/coding-standards.md",
+          "when": "Python files (.py)"
+        },
+        {
+          "name": "Python Testing",
+          "file": "languages/python/testing.md",
+          "when": "Python testing"
+        }
+      ]
+    },
+    "typescript": {
+      "display_name": "TypeScript",
+      "file_patterns": ["*.ts", "*.tsx"],
+      "test_patterns": ["*.test.ts", "*.spec.ts", "*.test.tsx", "*.spec.tsx"],
+      "rules": [
+        {
+          "name": "Typescript Coding Standards",
+          "file": "languages/typescript/coding-standards.md",
+          "when": "TypeScript files (.ts, .tsx)"
+        },
+        {
+          "name": "Typescript Testing",
+          "file": "languages/typescript/testing.md",
+          "when": "TypeScript testing"
+        }
+      ]
+    },
+    "javascript": {
+      "display_name": "JavaScript",
+      "file_patterns": ["*.js", "*.jsx"],
+      "test_patterns": ["*.test.js", "*.spec.js"],
+      "rules": [
+        {
+          "name": "Javascript Coding Standards",
+          "file": "languages/javascript/coding-standards.md",
+          "when": "JavaScript files (.js, .jsx)"
+        }
+      ]
+    },
+    "go": {
+      "display_name": "Go",
+      "file_patterns": ["*.go"],
+      "test_patterns": ["*_test.go"],
+      "rules": [
+        {
+          "name": "Go Coding Standards",
+          "file": "languages/go/coding-standards.md",
+          "when": "Go files (.go)"
+        },
+        {
+          "name": "Go Testing",
+          "file": "languages/go/testing.md",
+          "when": "Go testing"
+        }
+      ]
+    },
+    "java": {
+      "display_name": "Java",
+      "file_patterns": ["*.java"],
+      "test_patterns": ["*Test.java"],
+      "rules": [
+        {
+          "name": "Java Coding Standards",
+          "file": "languages/java/coding-standards.md",
+          "when": "Java files (.java)"
+        },
+        {
+          "name": "Java Testing",
+          "file": "languages/java/testing.md",
+          "when": "Java testing"
+        }
+      ]
+    },
+    "ruby": {
+      "display_name": "Ruby",
+      "file_patterns": ["*.rb"],
+      "test_patterns": ["*_spec.rb", "*_test.rb"],
+      "rules": [
+        {
+          "name": "Ruby Coding Standards",
+          "file": "languages/ruby/coding-standards.md",
+          "when": "Ruby files (.rb)"
+        }
+      ]
+    },
+    "rust": {
+      "display_name": "Rust",
+      "file_patterns": ["*.rs"],
+      "test_patterns": ["tests/*.rs"],
+      "rules": [
+        {
+          "name": "Rust Coding Standards",
+          "file": "languages/rust/coding-standards.md",
+          "when": "Rust files (.rs)"
+        }
+      ]
+    },
+    "csharp": {
+      "display_name": "C#",
+      "file_patterns": ["*.cs"],
+      "test_patterns": ["*Tests.cs", "*.Tests.cs"],
+      "rules": [
+        {
+          "name": "Csharp Coding Standards",
+          "file": "languages/csharp/coding-standards.md",
+          "when": "C# files (.cs)"
+        }
+      ]
+    }
+  },
+  "frameworks": {
+    "react": {
+      "display_name": "React",
+      "applies_to": ["typescript", "javascript"],
+      "rules": [
+        {
+          "name": "React Best Practices",
+          "file": "frameworks/react/best-practices.md",
+          "when": "React components"
+        }
+      ]
+    },
+    "django": {
+      "display_name": "Django",
+      "applies_to": ["python"],
+      "rules": [
+        {
+          "name": "Django Best Practices",
+          "file": "frameworks/django/best-practices.md",
+          "when": "Django models/views/APIs"
+        }
+      ]
+    },
+    "fastapi": {
+      "display_name": "FastAPI",
+      "applies_to": ["python"],
+      "rules": [
+        {
+          "name": "Fastapi Best Practices",
+          "file": "frameworks/fastapi/best-practices.md",
+          "when": "FastAPI endpoints/models"
+        }
+      ]
+    },
+    "flask": {
+      "display_name": "Flask",
+      "applies_to": ["python"],
+      "rules": [
+        {
+          "name": "Flask Best Practices",
+          "file": "frameworks/flask/best-practices.md",
+          "when": "Flask routes/blueprints"
+        }
+      ]
+    },
+    "express": {
+      "display_name": "Express",
+      "applies_to": ["typescript", "javascript"],
+      "rules": [
+        {
+          "name": "Express Best Practices",
+          "file": "frameworks/express/best-practices.md",
+          "when": "Express routes/middleware"
+        }
+      ]
+    },
+    "nextjs": {
+      "display_name": "Next.js",
+      "applies_to": ["typescript", "javascript"],
+      "rules": [
+        {
+          "name": "Nextjs Best Practices",
+          "file": "frameworks/nextjs/best-practices.md",
+          "when": "Next.js pages/API routes"
+        }
+      ]
+    },
+    "vue": {
+      "display_name": "Vue",
+      "applies_to": ["typescript", "javascript"],
+      "rules": [
+        {
+          "name": "Vue Best Practices",
+          "file": "frameworks/vue/best-practices.md",
+          "when": "Vue components"
+        }
+      ]
+    },
+    "springboot": {
+      "display_name": "Spring Boot",
+      "applies_to": ["java"],
+      "rules": [
+        {
+          "name": "Springboot Best Practices",
+          "file": "frameworks/springboot/best-practices.md",
+          "when": "Spring Boot controllers/services"
+        }
+      ]
+    },
+    "nestjs": {
+      "display_name": "NestJS",
+      "applies_to": ["typescript"],
+      "rules": [
+        {
+          "name": "Nestjs Best Practices",
+          "file": "frameworks/nestjs/best-practices.md",
+          "when": "NestJS controllers/modules"
+        }
+      ]
+    },
+    "gin": {
+      "display_name": "Gin",
+      "applies_to": ["go"],
+      "rules": [
+        {
+          "name": "Gin Best Practices",
+          "file": "frameworks/gin/best-practices.md",
+          "when": "Gin handlers/routes"
+        }
+      ]
+    },
+    "fiber": {
+      "display_name": "Fiber",
+      "applies_to": ["go"],
+      "rules": [
+        {
+          "name": "Fiber Best Practices",
+          "file": "frameworks/fiber/best-practices.md",
+          "when": "Fiber handlers/routes"
+        }
+      ]
+    }
+  },
+  "base_rules": [
+    {
+      "name": "Code Quality",
+      "file": "base/code-quality.md",
+      "when": "Every task",
+      "always_load": true
+    },
+    {
+      "name": "Security Principles",
+      "file": "base/security-principles.md",
+      "when": "Security-relevant tasks",
+      "always_load": false
+    },
+    {
+      "name": "Testing Philosophy",
+      "file": "base/testing-philosophy.md",
+      "when": "Testing tasks",
+      "always_load": false
+    },
+    {
+      "name": "Git Workflow",
+      "file": "base/git-workflow.md",
+      "when": "Commits/PRs",
+      "always_load": false
+    },
+    {
+      "name": "Development Workflow",
+      "file": "base/development-workflow.md",
+      "when": "Development process",
+      "always_load": false
+    },
+    {
+      "name": "Architecture Principles",
+      "file": "base/architecture-principles.md",
+      "when": "Architecture discussions",
+      "always_load": false
+    },
+    {
+      "name": "12-Factor App",
+      "file": "base/12-factor-app.md",
+      "when": "Architecture/deployment discussions",
+      "always_load": false
+    },
+    {
+      "name": "Refactoring Patterns",
+      "file": "base/refactoring-patterns.md",
+      "when": "Refactoring tasks",
+      "always_load": false
+    },
+    {
+      "name": "Ai Assisted Development",
+      "file": "base/ai-assisted-development.md",
+      "when": "AI-assisted development",
+      "always_load": false
+    },
+    {
+      "name": "Metrics Standards",
+      "file": "base/metrics-standards.md",
+      "when": "Metrics/monitoring tasks",
+      "always_load": false
+    }
+  ],
+  "cloud_providers": {
+    "aws": {
+      "display_name": "AWS",
+      "rules": [
+        {
+          "name": "AWS Well-Architected",
+          "file": "cloud/aws/well-architected.md",
+          "when": "AWS architecture"
+        }
+      ]
+    }
+  }
+}
