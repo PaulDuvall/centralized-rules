@@ -11,8 +11,12 @@ Instead of maintaining separate rule files in each project, this repository prov
 - **Universal base rules** - Language-agnostic best practices
 - **Language-specific rules** - Python, TypeScript, Go, Java, Ruby, Rust
 - **Framework-specific rules** - React, Django, FastAPI, Express, Spring Boot, etc.
-- **Progressive disclosure** - Load only what's relevant to your project
+- **Two-phase progressive disclosure** - Load only what's relevant (project + task level)
 - **Multi-tool support** - Generate outputs for Claude, Cursor, Copilot
+- **74.4% average token savings** - Validated in real-world testing
+
+> **📚 Part of the [AI Development Patterns Experiments](https://github.com/PaulDuvall/ai-development-patterns/tree/main/experiments#centralized-rules)**
+> Exploring progressive disclosure as a solution to AI instruction saturation
 
 ## Architecture
 
@@ -82,17 +86,29 @@ chmod +x sync-ai-rules.sh
 
 The script generates tool-specific files:
 
-- **Claude Code:** `.claude/RULES.md`
-- **Cursor:** `.cursorrules`
-- **GitHub Copilot:** `.github/copilot-instructions.md`
+**Claude Code (Hierarchical - Recommended):**
+- `.claude/AGENTS.md` - Entry point with discovery instructions
+- `.claude/rules/` - Organized rule directory (on-demand loading)
+- `.claude/rules/index.json` - Machine-readable rule index
+- `.claude/RULES.md` - Legacy monolithic format (deprecated)
 
-Your AI assistant will automatically use these rules!
+**Cursor:**
+- `.cursorrules` - Monolithic format
+
+**GitHub Copilot:**
+- `.github/copilot-instructions.md` - Monolithic format
+
+Your AI assistant will automatically use these rules! Claude Code will use progressive disclosure for maximum efficiency.
 
 ## Progressive Disclosure
 
-The sync script automatically detects your project and loads only relevant rules:
+**Two-phase system that maximizes context efficiency:**
 
-### Example: Python + FastAPI Project
+### Phase 1: Project-Level Disclosure
+
+The sync script automatically detects your project and loads only relevant rules.
+
+**Example: Python + FastAPI Project**
 
 **Detected:**
 - Language: Python (via `pyproject.toml`)
@@ -105,7 +121,36 @@ The sync script automatically detects your project and loads only relevant rules
 - ❌ TypeScript rules (not loaded)
 - ❌ React rules (not loaded)
 
-This prevents overwhelming the AI with irrelevant guidelines!
+**Result:** 8 relevant files loaded vs 50+ available in repository
+
+### Phase 2: Task-Level Disclosure (Hierarchical Mode)
+
+Within your project, AI loads only rules relevant to the specific task.
+
+**Example: "Write pytest tests for this function"**
+
+**Loaded:**
+- ✅ `base/testing-philosophy.md` (testing principles)
+- ✅ `languages/python/testing.md` (pytest patterns)
+- ❌ Code quality rules (not needed for testing)
+- ❌ FastAPI rules (not needed for unit tests)
+- ❌ Git workflow (not a commit task)
+
+**Result:** 2 files (~11K tokens) vs all 8 files (~25K tokens) = **55.8% token savings**
+
+### Real-World Results
+
+Tested with Python + FastAPI project:
+
+| Task Type | Files Loaded | Token Savings |
+|-----------|-------------|---------------|
+| Code Review | 2 files | 86.4% |
+| Write Tests | 2 files | 55.8% |
+| FastAPI Endpoint | 3 files | 65.9% |
+| Git Commit | 2 files | 89.6% |
+| **Average** | **2.25 files** | **74.4%** |
+
+**Impact:** 59% more context window available for code analysis!
 
 ## Detection Logic
 
@@ -287,8 +332,16 @@ Each AI tool has different file conventions:
 
 ## Benefits
 
-### 🎯 Progressive Disclosure
-Load only relevant rules - prevent AI instruction saturation
+### 🎯 Two-Phase Progressive Disclosure
+**Phase 1:** Load only relevant languages/frameworks (8-12 files vs 50+)
+**Phase 2:** Load only relevant tasks within project (2-3 files vs all 8)
+**Result:** 74.4% average token savings, validated in real-world testing
+
+### 📊 Measurable Impact
+- **86.4% savings** for code reviews
+- **55.8% savings** for testing tasks
+- **65.9% savings** for framework work
+- **59% more context** available for code analysis
 
 ### 🔄 Centralized Maintenance
 Update rules once, sync to all projects
@@ -304,6 +357,9 @@ Just Git and bash - works offline after initial sync
 
 ### ⚡ Fast Sync
 Incremental updates - only download what changed
+
+### 👁️ Visual Feedback
+See which rules are active with inline citations and announcements
 
 ## Comparison to Codified Rules
 
@@ -389,13 +445,29 @@ fullstack/
 
 ## Roadmap
 
-- [ ] Support for more languages (C#, PHP, Swift, Kotlin)
-- [ ] Support for more frameworks (Angular, Svelte, Laravel)
-- [ ] Domain-specific rules (fintech, healthcare, e-commerce)
-- [ ] Compliance frameworks (HIPAA, SOC 2, PCI-DSS)
-- [ ] VS Code extension
+### ✅ Completed
+- ✅ Phase 1: Project-level progressive disclosure
+- ✅ Phase 2: Task-level progressive disclosure (hierarchical structure)
+- ✅ Config-driven architecture (rules-config.json)
+- ✅ Visual feedback system
+- ✅ Real-world validation (74.4% token savings)
+
+### 🔜 Short-Term
+- [ ] Extend hierarchical format to Cursor/Copilot
 - [ ] GitHub Action for automatic sync
 - [ ] Rule versioning and rollback
+
+### 📅 Medium-Term
+- [ ] Support for more languages (C#, PHP, Swift, Kotlin)
+- [ ] Support for more frameworks (Angular, Svelte, Laravel)
+- [ ] VS Code extension
+- [ ] Usage analytics
+
+### 🚀 Long-Term
+- [ ] Domain-specific rules (fintech, healthcare, e-commerce)
+- [ ] Compliance frameworks (HIPAA, SOC 2, PCI-DSS)
+- [ ] AI-powered rule suggestions
+- [ ] Web dashboard
 
 ## License
 
@@ -404,7 +476,25 @@ MIT License - See LICENSE file for details
 ## Related Projects
 
 - [AI Development Patterns](https://github.com/PaulDuvall/ai-development-patterns) - Collection of AI-assisted development patterns
+- [Centralized Rules Experiment](https://github.com/PaulDuvall/ai-development-patterns/tree/main/experiments#centralized-rules) - Exploration of progressive disclosure as a solution to instruction saturation
 - [Codified Rules Examples](https://github.com/PaulDuvall/ai-development-patterns/tree/main/examples/codified-rules) - Per-project rule examples
+
+## Documentation
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture and design decisions
+- [USAGE_EXAMPLES.md](./examples/USAGE_EXAMPLES.md) - Detailed usage examples
+- [Real-World Test Results](./ARCHITECTURE.md#performance--validation) - Measured token savings and performance
+
+## Research & Validation
+
+**Progressive Disclosure Effectiveness:**
+- ✅ Validated with real Python + FastAPI project
+- ✅ Measured 55-90% token reduction across task types
+- ✅ 74.4% average savings
+- ✅ 59% more context available for code
+- ✅ Negligible latency impact (<500ms per task)
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md#performance--validation) for complete test results and methodology.
 
 ## Support
 
