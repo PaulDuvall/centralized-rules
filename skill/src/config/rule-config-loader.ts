@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { RuleInfo } from '../types';
+import { ConfigurationError, FileSystemError } from '../errors';
 
 /**
  * Structure of rules-config.json
@@ -75,9 +76,26 @@ export function loadRulesConfig(configPath?: string): RuleInfo[] {
     const configContent = fs.readFileSync(configFilePath, 'utf-8');
     config = JSON.parse(configContent);
   } catch (error) {
-    console.error('[rule-config-loader] Failed to load rules-config.json:', error);
-    // Return empty array if config can't be loaded
-    return [];
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+      throw new FileSystemError(
+        `Rules configuration file not found: ${configFilePath}`,
+        configFilePath,
+        'read',
+        { error }
+      );
+    }
+    if (error instanceof SyntaxError) {
+      throw new ConfigurationError(
+        `Invalid JSON in rules configuration file: ${configFilePath}`,
+        'rules-config.json',
+        { error: error.message }
+      );
+    }
+    throw new ConfigurationError(
+      `Failed to load rules configuration from ${configFilePath}`,
+      'rules-config.json',
+      { error }
+    );
   }
 
   const rules: RuleInfo[] = [];

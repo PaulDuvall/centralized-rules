@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { ProjectContext } from '../types';
 import detectionPatterns from '../config/detection-patterns.json';
+import { DetectionError, getErrorMessage } from '../errors';
 
 /**
  * Language detection patterns (loaded from config)
@@ -28,22 +29,30 @@ interface MaturityIndicators {
  * Detect project context from a directory
  */
 export async function detectContext(directory: string = process.cwd()): Promise<ProjectContext> {
-  const languages = await detectLanguages(directory);
-  const frameworks = await detectFrameworks(directory, languages);
-  const cloudProviders = await detectCloudProviders(directory);
-  const maturity = await detectMaturity(directory);
+  try {
+    const languages = await detectLanguages(directory);
+    const frameworks = await detectFrameworks(directory, languages);
+    const cloudProviders = await detectCloudProviders(directory);
+    const maturity = await detectMaturity(directory);
 
-  // Calculate confidence based on what was detected
-  const confidence = calculateConfidence(languages, frameworks, cloudProviders);
+    // Calculate confidence based on what was detected
+    const confidence = calculateConfidence(languages, frameworks, cloudProviders);
 
-  return {
-    languages,
-    frameworks,
-    cloudProviders,
-    maturity,
-    workingDirectory: directory,
-    confidence,
-  };
+    return {
+      languages,
+      frameworks,
+      cloudProviders,
+      maturity,
+      workingDirectory: directory,
+      confidence,
+    };
+  } catch (error) {
+    throw new DetectionError(
+      `Failed to detect project context in ${directory}: ${getErrorMessage(error)}`,
+      'language',
+      { directory, error: getErrorMessage(error) }
+    );
+  }
 }
 
 /**
@@ -84,19 +93,25 @@ async function detectFrameworks(directory: string, languages: string[]): Promise
   if (languages.includes('typescript') || languages.includes('javascript')) {
     const packageJsonPath = path.join(directory, 'package.json');
     if (fileExists(packageJsonPath)) {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      try {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
-      // Check each framework from config
-      for (const [framework, config] of Object.entries(detectionPatterns.frameworks)) {
-        if ('packageDependencies' in config && config.packageDependencies) {
-          for (const dep of config.packageDependencies) {
-            if (deps[dep]) {
-              detected.add(framework);
-              break;
+        // Check each framework from config
+        for (const [framework, config] of Object.entries(detectionPatterns.frameworks)) {
+          if ('packageDependencies' in config && config.packageDependencies) {
+            for (const dep of config.packageDependencies) {
+              if (deps[dep]) {
+                detected.add(framework);
+                break;
+              }
             }
           }
         }
+      } catch (error) {
+        // Malformed package.json - skip framework detection for this file
+        // This is expected in some edge cases, so just continue
+        console.log(`[detect-context] Could not parse package.json: ${getErrorMessage(error)}`);
       }
     }
   }

@@ -6,6 +6,7 @@ import type { SkillContext, HookResult } from '../types';
 import { detectContext } from '../tools/detect-context';
 import { analyzeIntent, selectRules, getAvailableRules } from '../tools/select-rules';
 import { fetchRules } from '../tools/get-rules';
+import { getErrorDetails, getErrorMessage, isSkillError } from '../errors';
 
 /**
  * Hook execution timing
@@ -131,12 +132,22 @@ export async function handler(context: SkillContext): Promise<HookResult> {
       },
     };
   } catch (error) {
-    // Never block Claude on errors
-    console.error('[before-response] Error:', error);
+    // CRITICAL: Never block Claude on errors - always return continue: true
+    // Log detailed error information for debugging
+    if (isSkillError(error)) {
+      console.error('[before-response] Skill error:', getErrorDetails(error));
+    } else {
+      console.error('[before-response] Unexpected error:', getErrorMessage(error));
+      if (context.config.verbose && error instanceof Error) {
+        console.error('[before-response] Stack trace:', error.stack);
+      }
+    }
+
     return {
       continue: true,
       metadata: {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: getErrorMessage(error),
+        errorDetails: isSkillError(error) ? getErrorDetails(error) : undefined,
       },
     };
   }

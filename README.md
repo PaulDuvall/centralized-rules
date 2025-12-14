@@ -74,7 +74,49 @@ centralized-rules/
 
 ## Quick Start
 
-### 1. Add to Your Project
+Choose your installation method based on your AI tool:
+
+### Option 1: Claude Skill (Recommended for Claude Users)
+
+**Automatic, hook-based rule loading** - No manual syncing required!
+
+```bash
+# One-command installation
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/skill/install.sh | bash
+```
+
+This will:
+- Clone the repository to `~/centralized-rules`
+- Install and build the Claude Skill
+- Show you how to configure Claude
+
+Then add to your Claude configuration (`~/.config/claude/claude_desktop_config.json`):
+
+```json
+{
+  "skills": [
+    {
+      "name": "centralized-rules",
+      "path": "~/centralized-rules/skill"
+    }
+  ]
+}
+```
+
+**How it works:**
+- Automatically detects your project context (language, framework, cloud provider)
+- Intelligently loads only 3-5 relevant rules per request
+- No context window bloat - uses progressive disclosure
+- Always fetches latest rules from GitHub
+- Zero manual sync required
+
+**[Full Skill Documentation →](skill/README.md)**
+
+### Option 2: Sync Script (For Cursor, Copilot, or Manual Sync)
+
+**Traditional sync-based approach** - Works with any AI tool.
+
+#### 1. Add to Your Project
 
 ```bash
 # Download the sync script
@@ -84,7 +126,7 @@ curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/s
 chmod +x sync-ai-rules.sh
 ```
 
-### 2. Run Sync
+#### 2. Run Sync
 
 ```bash
 # Auto-detect and sync for all AI tools
@@ -96,7 +138,7 @@ chmod +x sync-ai-rules.sh
 ./sync-ai-rules.sh --tool copilot
 ```
 
-### 3. Use with AI Tools
+#### 3. Use with AI Tools
 
 The script generates tool-specific files:
 

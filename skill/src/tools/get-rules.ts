@@ -6,6 +6,7 @@ import { Octokit } from '@octokit/rest';
 import type { Rule, RuleInfo, SkillConfig } from '../types';
 import { getCache } from '../cache/rules-cache';
 import { extractTopicsFromPathAndContent } from '../services/metadata-extractor';
+import { ConfigurationError, GitHubApiError, getErrorMessage } from '../errors';
 
 /**
  * GitHub API client (singleton)
@@ -52,8 +53,11 @@ export async function fetchRule(
   try {
     const repoParts = config.rulesRepo.split('/');
     if (repoParts.length !== 2 || !repoParts[0] || !repoParts[1]) {
-      console.error('[get-rules] Invalid repository format:', config.rulesRepo);
-      return null;
+      throw new ConfigurationError(
+        `Invalid repository format: ${config.rulesRepo}. Expected format: owner/repo`,
+        'rulesRepo',
+        { rulesRepo: config.rulesRepo }
+      );
     }
 
     const [owner, repo] = repoParts;
@@ -98,14 +102,56 @@ export async function fetchRule(
 
       return rule;
     } else {
-      console.error(`[get-rules] Invalid response for ${rulePath}: not a file`);
+      // Invalid response type (directory, symlink, etc.)
+      if (config.verbose) {
+        console.log(`[get-rules] Path is not a file: ${rulePath}`);
+      }
       return null;
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`[get-rules] Error fetching ${rulePath}:`, error.message);
+    // Handle specific GitHub API errors
+    if (error && typeof error === 'object' && 'status' in error) {
+      const apiError = error as { status: number; message?: string };
+
+      // 404 = Rule not found (expected case, return null)
+      if (apiError.status === 404) {
+        if (config.verbose) {
+          console.log(`[get-rules] Rule not found: ${rulePath}`);
+        }
+        return null;
+      }
+
+      // 403 = Rate limit or permissions
+      if (apiError.status === 403) {
+        throw new GitHubApiError(
+          `GitHub API rate limit or permission denied for ${rulePath}`,
+          403,
+          undefined,
+          { rulePath, error: getErrorMessage(error) }
+        );
+      }
+
+      // Other API errors
+      throw new GitHubApiError(
+        `GitHub API error fetching ${rulePath}: ${getErrorMessage(error)}`,
+        apiError.status,
+        undefined,
+        { rulePath, error: getErrorMessage(error) }
+      );
     }
-    return null;
+
+    // Re-throw if it's already a ConfigurationError
+    if (error instanceof ConfigurationError) {
+      throw error;
+    }
+
+    // Unexpected errors
+    throw new GitHubApiError(
+      `Unexpected error fetching rule ${rulePath}: ${getErrorMessage(error)}`,
+      undefined,
+      undefined,
+      { rulePath, error: getErrorMessage(error) }
+    );
   }
 }
 
