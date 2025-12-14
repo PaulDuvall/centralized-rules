@@ -1,0 +1,123 @@
+name: Reusable Documentation Validation Workflow
+
+on:
+  workflow_call:
+    inputs:
+      check-progressive-disclosure:
+        description: 'Check for progressive disclosure documentation'
+        required: false
+        type: boolean
+        default: true
+      check-architecture:
+        description: 'Check ARCHITECTURE.md exists and is complete'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  verify-documentation:
+    name: Verify Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check README mentions progressive disclosure
+        if: inputs.check-progressive-disclosure
+        id: check-readme
+        run: |
+          if ! grep -qi "progressive disclosure" README.md; then
+            echo "ERROR: README.md doesn't mention progressive disclosure"
+            exit 1
+          fi
+          echo "✓ README.md documents progressive disclosure"
+        continue-on-error: true
+
+      - name: Check ARCHITECTURE documentation
+        if: inputs.check-architecture
+        id: check-arch
+        run: |
+          if [ -f ARCHITECTURE.md ]; then
+            if ! grep -qi "progressive disclosure" ARCHITECTURE.md; then
+              echo "ERROR: ARCHITECTURE.md doesn't explain progressive disclosure"
+              exit 1
+            fi
+            echo "✓ ARCHITECTURE.md explains progressive disclosure"
+          else
+            echo "WARNING: ARCHITECTURE.md not found"
+          fi
+        continue-on-error: true
+
+      - name: Verify rule files are markdown
+        id: check-markdown
+        run: |
+          # Check that all rule files are .md
+          non_md=$(find base/ languages/ frameworks/ cloud/ -type f ! -name "*.md" 2>/dev/null || true)
+          if [ -n "$non_md" ]; then
+            echo "ERROR: Non-markdown files found in rule directories:"
+            echo "$non_md"
+            exit 1
+          fi
+          echo "✓ All rule files are markdown"
+        continue-on-error: true
+
+      - name: Check for broken internal links
+        id: check-links
+        run: |
+          # Simple check for broken relative links in markdown files
+          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.claude/*"); do
+            echo "Checking $file..."
+            # This is a basic check - could be enhanced with a proper link checker
+            if grep -o '\[.*\](\.\/[^)]*\.md)' "$file" > /dev/null; then
+              echo "  Found internal links"
+            fi
+          done
+          echo "✓ Internal link check complete"
+        continue-on-error: true
+
+      - name: Generate documentation verification summary
+        if: always()
+        run: |
+          echo "## 📚 Documentation Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          readme="${{ steps.check-readme.outcome }}"
+          arch="${{ steps.check-arch.outcome }}"
+          markdown="${{ steps.check-markdown.outcome }}"
+          links="${{ steps.check-links.outcome }}"
+
+          # Handle skipped checks
+          if [ "${{ inputs.check-progressive-disclosure }}" != "true" ]; then
+            readme="skipped"
+          fi
+          if [ "${{ inputs.check-architecture }}" != "true" ]; then
+            arch="skipped"
+          fi
+
+          # Determine overall status
+          failed=0
+          if [ "$readme" == "failure" ] || [ "$arch" == "failure" ] || [ "$markdown" == "failure" ] || [ "$links" == "failure" ]; then
+            failed=1
+          fi
+
+          if [ $failed -eq 0 ]; then
+            echo "✅ **Status:** ALL CHECKS PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** SOME CHECKS FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Documentation Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- **README progressive disclosure:** $readme" >> $GITHUB_STEP_SUMMARY
+          echo "- **ARCHITECTURE documentation:** $arch" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rule files are markdown:** $markdown" >> $GITHUB_STEP_SUMMARY
+          echo "- **Internal links:** $links" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any check failed
+        if: |
+          steps.check-readme.outcome == 'failure' ||
+          steps.check-arch.outcome == 'failure' ||
+          steps.check-markdown.outcome == 'failure' ||
+          steps.check-links.outcome == 'failure'
+        run: exit 1

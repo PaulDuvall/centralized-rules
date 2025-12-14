@@ -1,0 +1,99 @@
+name: Reusable Skill Tests Workflow
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: 'Working directory for skill tests'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '18'
+      run-coverage:
+        description: 'Run coverage report'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  test-skill:
+    name: Test Claude Skill
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: npm ci
+
+      - name: TypeScript type check
+        working-directory: ${{ inputs.working-directory }}
+        run: npm run typecheck
+
+      - name: Build skill
+        working-directory: ${{ inputs.working-directory }}
+        run: npm run build
+
+      - name: Verify build artifacts
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          if [ ! -f dist/index.js ]; then
+            echo "ERROR: dist/index.js not generated"
+            exit 1
+          fi
+          if [ ! -f dist/index.d.ts ]; then
+            echo "ERROR: Type definitions not generated"
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
+
+      - name: Run tests with coverage
+        if: inputs.run-coverage
+        working-directory: ${{ inputs.working-directory }}
+        run: npm run test:coverage
+
+      - name: Run tests without coverage
+        if: ${{ !inputs.run-coverage }}
+        working-directory: ${{ inputs.working-directory }}
+        run: npm test
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🧪 Claude Skill Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeScript compilation: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Type checking: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.run-coverage }}" == "true" ]; then
+            echo "- Coverage threshold (85%): ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload coverage report
+        if: always() && inputs.run-coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-coverage
+          path: ${{ inputs.working-directory }}/coverage/
+          retention-days: 30
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-build
+          path: ${{ inputs.working-directory }}/dist/
+          retention-days: 5

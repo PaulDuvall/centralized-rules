@@ -1,0 +1,86 @@
+name: CI - Test Report
+
+on:
+  workflow_run:
+    workflows:
+      - "CI - Progressive Disclosure Validation"
+      - "CI - Code Quality"
+      - "CI - Sync Script Tests"
+      - "CI - Claude Skill"
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  generate-test-report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion != 'cancelled' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download workflow run artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          run-id: ${{ github.event.workflow_run.id }}
+        continue-on-error: true
+
+      - name: Generate comprehensive test report
+        run: |
+          cat > test-report.md << 'REPORT_EOF'
+          # 🚀 CI Test Report
+
+          **Workflow Run:** ${{ github.run_number }}
+          **Commit:** `${{ github.sha }}`
+          **Branch:** `${{ github.ref_name }}`
+          **Triggered by:** ${{ github.event_name }}
+          **Run Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+          ---
+
+          ## 📊 Test Results Summary
+
+          | Test Suite | Status |
+          |-----------|---------|
+          | 📋 Progressive Disclosure | ${{ github.event.workflow_run.name == 'CI - Progressive Disclosure Validation' && (github.event.workflow_run.conclusion == 'success' && '✅ PASSED' || '❌ FAILED') || 'N/A' }} |
+          | 🔍 Code Quality | ${{ github.event.workflow_run.name == 'CI - Code Quality' && (github.event.workflow_run.conclusion == 'success' && '✅ PASSED' || '❌ FAILED') || 'N/A' }} |
+          | 🧪 Sync Script Tests | ${{ github.event.workflow_run.name == 'CI - Sync Script Tests' && (github.event.workflow_run.conclusion == 'success' && '✅ PASSED' || '❌ FAILED') || 'N/A' }} |
+          | ⚡ Claude Skill | ${{ github.event.workflow_run.name == 'CI - Claude Skill' && (github.event.workflow_run.conclusion == 'success' && '✅ PASSED' || '❌ FAILED') || 'N/A' }} |
+
+          ---
+
+          ## 🎯 Overall Status
+
+          REPORT_EOF
+
+          if [ "${{ github.event.workflow_run.conclusion }}" == "success" ]; then
+            echo "### ✅ WORKFLOW PASSED" >> test-report.md
+            echo "" >> test-report.md
+            echo "The workflow **${{ github.event.workflow_run.name }}** completed successfully." >> test-report.md
+          else
+            echo "### ❌ WORKFLOW FAILED" >> test-report.md
+            echo "" >> test-report.md
+            echo "The workflow **${{ github.event.workflow_run.name }}** failed. Please review the logs for details." >> test-report.md
+          fi
+
+          echo "" >> test-report.md
+          echo "---" >> test-report.md
+          echo "" >> test-report.md
+          echo "**Workflow URL:** https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}" >> test-report.md
+
+          # Output to job summary
+          cat test-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ github.run_number }}
+          path: test-report.md
+          retention-days: 30

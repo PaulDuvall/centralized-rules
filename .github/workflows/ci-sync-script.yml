@@ -1,0 +1,95 @@
+name: CI - Sync Script Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'sync-ai-rules.sh'
+      - '.github/test-scenarios/**'
+      - 'scripts/ci/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'sync-ai-rules.sh'
+      - '.github/test-scenarios/**'
+      - 'scripts/ci/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  load-test-matrix:
+    name: Load Test Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load matrix from JSON
+        id: set-matrix
+        run: |
+          matrix=$(cat .github/test-scenarios/sync-script-matrix.json | jq -c '.scenarios')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  test-sync-script:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    needs: load-test-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.load-test-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create test project
+        run: |
+          mkdir -p /tmp/test-project
+          cd /tmp/test-project
+          bash "$GITHUB_WORKSPACE/.github/test-scenarios/setups/${{ matrix.setup-script }}"
+
+      - name: Copy sync script to test project
+        run: |
+          cp sync-ai-rules.sh /tmp/test-project/
+          chmod +x /tmp/test-project/sync-ai-rules.sh
+
+      - name: Run sync script
+        run: |
+          cd /tmp/test-project
+          ./sync-ai-rules.sh
+
+      - name: Validate generated files
+        id: validate
+        run: |
+          bash scripts/ci/validate-sync-output.sh \
+            --project-type="${{ matrix.project-type }}" \
+            --scenario="${{ matrix.scenario }}" \
+            --test-dir="/tmp/test-project" \
+            --name="${{ matrix.name }}"
+        continue-on-error: true
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          bash scripts/ci/generate-test-summary.sh \
+            --name="${{ matrix.name }}" \
+            --scenario="${{ matrix.scenario }}" \
+            --expected-rules="${{ matrix.expected-rules }}" \
+            --status="${{ steps.validate.outcome }}"
+
+      - name: Fail if validation failed
+        if: steps.validate.outcome != 'success'
+        run: exit 1
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-project-${{ matrix.project-type }}
+          path: /tmp/test-project/.claude/
+          retention-days: 5

@@ -1,0 +1,41 @@
+name: CI - Code Quality
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '**.md'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck-scripts:
+    name: ShellCheck - Scripts Directory
+    uses: ./.github/workflows/_reusable-shellcheck.yml
+    with:
+      scan-dir: './scripts'
+      severity: warning
+      format: gcc
+
+  shellcheck-root:
+    name: ShellCheck - Root Scripts
+    uses: ./.github/workflows/_reusable-shellcheck.yml
+    with:
+      scan-dir: '.'
+      severity: warning
+      format: gcc
+
+  verify-documentation:
+    name: Verify Documentation
+    uses: ./.github/workflows/_reusable-doc-validation.yml
+    with:
+      check-progressive-disclosure: true
+      check-architecture: true

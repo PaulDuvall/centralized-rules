@@ -1,0 +1,24 @@
+name: CI - Claude Skill
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'skill/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'skill/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-skill:
+    name: Test Claude Skill
+    uses: ./.github/workflows/_reusable-skill-tests.yml
+    with:
+      working-directory: 'skill'
+      node-version: '18'
+      run-coverage: true

@@ -1,0 +1,146 @@
+{
+  "description": "Test matrix for sync-ai-rules.sh script validation",
+  "version": "1.0.0",
+  "scenarios": [
+    {
+      "name": "Python + FastAPI",
+      "project-type": "python-fastapi",
+      "scenario": "basic",
+      "expected-rules": "python, fastapi, testing",
+      "setup-script": "python-fastapi.sh"
+    },
+    {
+      "name": "TypeScript + React",
+      "project-type": "typescript-react",
+      "scenario": "basic",
+      "expected-rules": "typescript, react, testing",
+      "setup-script": "typescript-react.sh"
+    },
+    {
+      "name": "Go + Standard Library",
+      "project-type": "go-stdlib",
+      "scenario": "basic",
+      "expected-rules": "go, testing",
+      "setup-script": "go-stdlib.sh"
+    },
+    {
+      "name": "Python + FastAPI + AWS",
+      "project-type": "python-fastapi-aws",
+      "scenario": "cloud-aws",
+      "expected-rules": "python, fastapi, aws, security",
+      "setup-script": "python-fastapi-aws.sh"
+    },
+    {
+      "name": "TypeScript + React + Vercel",
+      "project-type": "typescript-react-vercel",
+      "scenario": "cloud-vercel",
+      "expected-rules": "typescript, react, vercel, performance",
+      "setup-script": "typescript-react-vercel.sh"
+    },
+    {
+      "name": "Python + Django + GCP",
+      "project-type": "python-django-gcp",
+      "scenario": "cloud-gcp",
+      "expected-rules": "python, django, cloud, security",
+      "setup-script": "python-django-gcp.sh"
+    },
+    {
+      "name": "Java + SpringBoot + Azure",
+      "project-type": "java-springboot-azure",
+      "scenario": "cloud-azure",
+      "expected-rules": "java, springboot, cloud, security",
+      "setup-script": "java-springboot-azure.sh"
+    },
+    {
+      "name": "TypeScript + Express + AWS",
+      "project-type": "typescript-express-aws",
+      "scenario": "cloud-aws-api",
+      "expected-rules": "typescript, express, aws, security",
+      "setup-script": "typescript-express-aws.sh"
+    },
+    {
+      "name": "Python Refactoring Scenario",
+      "project-type": "python-refactoring",
+      "scenario": "refactoring",
+      "expected-rules": "python, refactoring-patterns, code-quality",
+      "setup-script": "python-refactoring.sh"
+    },
+    {
+      "name": "TypeScript Performance Optimization",
+      "project-type": "typescript-performance",
+      "scenario": "performance",
+      "expected-rules": "typescript, performance, testing",
+      "setup-script": "typescript-performance.sh"
+    },
+    {
+      "name": "Go Security Hardening",
+      "project-type": "go-security",
+      "scenario": "security",
+      "expected-rules": "go, security-principles, testing",
+      "setup-script": "go-security.sh"
+    },
+    {
+      "name": "Python Debugging & Testing",
+      "project-type": "python-debugging",
+      "scenario": "debugging",
+      "expected-rules": "python, testing-philosophy, code-quality",
+      "setup-script": "python-debugging.sh"
+    },
+    {
+      "name": "Multi-Cloud (AWS + GCP)",
+      "project-type": "multi-cloud",
+      "scenario": "multi-cloud",
+      "expected-rules": "python, aws, cloud, architecture",
+      "setup-script": "multi-cloud.sh"
+    },
+    {
+      "name": "Python + Django + PostgreSQL",
+      "project-type": "python-django-postgres",
+      "scenario": "database",
+      "expected-rules": "python, django, testing, architecture",
+      "setup-script": "python-django-postgres.sh"
+    },
+    {
+      "name": "TypeScript + Next.js + Vercel (Full Stack)",
+      "project-type": "typescript-nextjs-vercel",
+      "scenario": "fullstack-vercel",
+      "expected-rules": "typescript, react, vercel, performance",
+      "setup-script": "typescript-nextjs-vercel.sh"
+    },
+    {
+      "name": "Go + Microservices + Docker + K8s",
+      "project-type": "go-microservices",
+      "scenario": "microservices",
+      "expected-rules": "go, architecture, 12-factor-app, cicd",
+      "setup-script": "go-microservices.sh"
+    },
+    {
+      "name": "Rust + High Performance Computing",
+      "project-type": "rust-hpc",
+      "scenario": "performance-critical",
+      "expected-rules": "rust, performance, testing",
+      "setup-script": "rust-hpc.sh"
+    },
+    {
+      "name": "C# + .NET + Azure Functions",
+      "project-type": "csharp-azure-functions",
+      "scenario": "serverless-azure",
+      "expected-rules": "csharp, cloud, architecture",
+      "setup-script": "csharp-azure-functions.sh"
+    },
+    {
+      "name": "Multi-language (Python + TypeScript + Rust)",
+      "project-type": "multi-lang-polyglot",
+      "scenario": "polyglot",
+      "expected-rules": "python, typescript, rust, architecture",
+      "setup-script": "multi-lang-polyglot.sh"
+    },
+    {
+      "name": "Python + CI/CD Pipeline",
+      "project-type": "python-cicd",
+      "scenario": "cicd",
+      "expected-rules": "python, cicd-comprehensive, testing",
+      "setup-script": "python-cicd.sh"
+    }
+  ]
+}

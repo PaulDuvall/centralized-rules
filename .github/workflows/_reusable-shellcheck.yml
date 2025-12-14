@@ -1,0 +1,59 @@
+name: Reusable ShellCheck Workflow
+
+on:
+  workflow_call:
+    inputs:
+      scan-dir:
+        description: 'Directory to scan for shell scripts'
+        required: true
+        type: string
+      severity:
+        description: 'Minimum severity level (error, warning, info, style)'
+        required: false
+        type: string
+        default: 'warning'
+      format:
+        description: 'Output format (gcc, checkstyle, diff, json, tty)'
+        required: false
+        type: string
+        default: 'gcc'
+
+jobs:
+  shellcheck:
+    name: ShellCheck (${{ inputs.scan-dir }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        id: shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: ${{ inputs.scan-dir }}
+          severity: ${{ inputs.severity }}
+          format: ${{ inputs.format }}
+        continue-on-error: true
+
+      - name: Generate ShellCheck summary
+        if: always()
+        run: |
+          echo "## 🔍 ShellCheck Results: ${{ inputs.scan-dir }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.shellcheck.outcome }}" == "success" ]; then
+            echo "✅ **Status:** PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** ISSUES FOUND" >> $GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scan Directory:** \`${{ inputs.scan-dir }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Severity Level:** ${{ inputs.severity }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Format:** ${{ inputs.format }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if issues found
+        if: steps.shellcheck.outcome != 'success'
+        run: exit 1
