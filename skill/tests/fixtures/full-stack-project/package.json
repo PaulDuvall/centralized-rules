@@ -1,0 +1,8 @@
+{
+  "name": "full-stack-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "^18.2.0",
+    "next": "^14.0.0"
+  }
+}

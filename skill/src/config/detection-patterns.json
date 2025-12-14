@@ -1,0 +1,116 @@
+{
+  "languages": {
+    "python": {
+      "patterns": ["**/*.py", "requirements.txt", "pyproject.toml", "setup.py", "Pipfile"]
+    },
+    "typescript": {
+      "patterns": ["**/*.ts", "**/*.tsx", "tsconfig.json"]
+    },
+    "javascript": {
+      "patterns": ["**/*.js", "**/*.jsx", "package.json"]
+    },
+    "go": {
+      "patterns": ["**/*.go", "go.mod", "go.sum"]
+    },
+    "java": {
+      "patterns": ["**/*.java", "pom.xml", "build.gradle", "build.gradle.kts"]
+    },
+    "rust": {
+      "patterns": ["**/*.rs", "Cargo.toml", "Cargo.lock"]
+    },
+    "csharp": {
+      "patterns": ["**/*.cs", "**/*.csproj", "**/*.sln"]
+    }
+  },
+  "frameworks": {
+    "react": {
+      "language": "typescript",
+      "packageDependencies": ["react"]
+    },
+    "nextjs": {
+      "language": "typescript",
+      "packageDependencies": ["next"]
+    },
+    "express": {
+      "language": "typescript",
+      "packageDependencies": ["express"]
+    },
+    "nestjs": {
+      "language": "typescript",
+      "packageDependencies": ["@nestjs/core"]
+    },
+    "fastapi": {
+      "language": "python",
+      "requirementsDependencies": ["fastapi"]
+    },
+    "django": {
+      "language": "python",
+      "requirementsDependencies": ["django", "Django"]
+    },
+    "flask": {
+      "language": "python",
+      "requirementsDependencies": ["flask", "Flask"]
+    },
+    "springboot": {
+      "language": "java",
+      "filePaths": ["src/main/java"]
+    },
+    "gin": {
+      "language": "go",
+      "goModDependencies": ["github.com/gin-gonic/gin"]
+    },
+    "echo": {
+      "language": "go",
+      "goModDependencies": ["github.com/labstack/echo"]
+    }
+  },
+  "cloudProviders": {
+    "aws": {
+      "packageDependencies": ["aws-sdk", "@aws-sdk/client-s3", "boto3"],
+      "configFiles": [".aws/config", "terraform/aws"]
+    },
+    "vercel": {
+      "configFiles": ["vercel.json", ".vercel"]
+    },
+    "azure": {
+      "packageDependencies": ["@azure/storage-blob", "azure-storage-blob"]
+    },
+    "gcp": {
+      "packageDependencies": ["@google-cloud/storage", "google-cloud-storage"]
+    }
+  },
+  "maturity": {
+    "indicators": {
+      "ci": {
+        "paths": [".github/workflows", ".gitlab-ci.yml", ".circleci/config.yml", "Jenkinsfile"]
+      },
+      "docker": {
+        "paths": ["Dockerfile", "docker-compose.yml", ".dockerignore"]
+      },
+      "testing": {
+        "paths": ["tests/", "test/", "__tests__/", "spec/"]
+      },
+      "monitoring": {
+        "dependencies": ["prometheus", "@opentelemetry", "datadog", "newrelic"]
+      }
+    },
+    "levels": {
+      "mvp": {
+        "minVersion": "0.0.0",
+        "maxVersion": "0.9.99",
+        "requiresCI": false
+      },
+      "pre-production": {
+        "minVersion": "0.9.0",
+        "requiresCI": true,
+        "requiresDocker": false
+      },
+      "production": {
+        "minVersion": "1.0.0",
+        "requiresCI": true,
+        "requiresDocker": true,
+        "requiresMonitoring": false
+      }
+    }
+  }
+}

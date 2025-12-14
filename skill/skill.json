@@ -1,0 +1,139 @@
+{
+  "name": "centralized-rules",
+  "version": "0.1.0",
+  "description": "Smart coding rules that automatically load based on your project context. Provides intelligent, context-aware coding standards for Python, TypeScript, Go, Java, and more.",
+  "author": "Paul Duvall",
+  "license": "MIT",
+  "repository": "https://github.com/paulduvall/centralized-rules",
+
+  "permissions": [
+    "read:filesystem",
+    "network:github.com",
+    "network:raw.githubusercontent.com"
+  ],
+
+  "hooks": {
+    "beforeResponse": {
+      "handler": "./dist/hooks/before-response.js",
+      "description": "Automatically detect project context and inject relevant coding rules before Claude generates a response",
+      "enabled": true,
+      "timeout": 3000
+    }
+  },
+
+  "tools": [
+    {
+      "name": "get_rules",
+      "handler": "./dist/tools/get-rules.js",
+      "description": "Manually fetch specific coding rules from the centralized repository",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "description": "Programming language (e.g., 'python', 'typescript', 'go', 'java', 'rust', 'csharp')"
+          },
+          "framework": {
+            "type": "string",
+            "description": "Framework (e.g., 'fastapi', 'django', 'flask', 'react', 'nextjs', 'express', 'nestjs', 'springboot', 'gin')"
+          },
+          "topic": {
+            "type": "string",
+            "description": "Specific topic (e.g., 'authentication', 'testing', 'security')"
+          },
+          "maturity": {
+            "type": "string",
+            "description": "Project maturity level",
+            "enum": ["mvp", "pre-production", "production"]
+          }
+        }
+      }
+    },
+    {
+      "name": "detect_context",
+      "handler": "./dist/tools/detect-context.js",
+      "description": "Analyze the current project to detect languages, frameworks, cloud providers, and maturity level",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "directory": {
+            "type": "string",
+            "description": "Directory to analyze (defaults to current working directory)"
+          }
+        }
+      }
+    }
+  ],
+
+  "configuration": {
+    "rulesRepo": {
+      "type": "string",
+      "default": "paulduvall/centralized-rules",
+      "description": "GitHub repository containing the centralized rules (format: 'owner/repo')"
+    },
+    "rulesBranch": {
+      "type": "string",
+      "default": "main",
+      "description": "Git branch to fetch rules from"
+    },
+    "enableAutoLoad": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically load relevant rules via beforeResponse hook"
+    },
+    "cacheEnabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable caching of fetched rules for better performance"
+    },
+    "cacheTTL": {
+      "type": "number",
+      "default": 3600,
+      "description": "Cache time-to-live in seconds (default: 1 hour)",
+      "minimum": 60,
+      "maximum": 86400
+    },
+    "maxRules": {
+      "type": "number",
+      "default": 5,
+      "description": "Maximum number of rules to load per request",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "maxTokens": {
+      "type": "number",
+      "default": 5000,
+      "description": "Maximum tokens to allocate for rules (approximate)",
+      "minimum": 1000,
+      "maximum": 20000
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable verbose logging for debugging"
+    }
+  },
+
+  "categories": [
+    "development",
+    "coding-standards",
+    "best-practices",
+    "productivity"
+  ],
+
+  "keywords": [
+    "coding-rules",
+    "coding-standards",
+    "best-practices",
+    "development-tools",
+    "python",
+    "typescript",
+    "react",
+    "fastapi",
+    "context-aware"
+  ],
+
+  "compatibility": {
+    "claude": ">=3.5.0"
+  }
+}

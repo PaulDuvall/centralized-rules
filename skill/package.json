@@ -1,0 +1,50 @@
+{
+  "name": "@paulduvall/centralized-rules-skill",
+  "version": "0.1.0",
+  "description": "Smart coding rules for Claude that auto-load based on project context",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "eslint src/ --ext .ts --fix",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": "Paul Duvall",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paulduvall/centralized-rules.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "node-cache": "^5.1.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/ui": "^1.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "prettier": "^3.1.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}

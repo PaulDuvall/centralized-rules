@@ -1,0 +1,24 @@
+{
+  "description": "Example configuration for overriding auto-detection",
+  "languages": [
+    "python",
+    "typescript"
+  ],
+  "frameworks": [
+    "fastapi",
+    "react"
+  ],
+  "exclude": [
+    "testing-mocking",
+    "performance-monitoring"
+  ],
+  "custom_rules": [
+    "https://example.com/company-specific-rules.md"
+  ],
+  "environment": "production",
+  "metadata": {
+    "project_name": "My Project",
+    "team": "Platform Team",
+    "last_updated": "2025-12-13"
+  }
+}
