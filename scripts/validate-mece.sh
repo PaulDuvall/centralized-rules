@@ -71,7 +71,8 @@ check_duplication() {
         files=$(grep -rl "$pattern" "$REPO_ROOT" --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.cache --exclude="*.sh" || true)
     fi
 
-    local file_count=$(echo "$files" | grep -c . || echo "0")
+    local file_count
+    file_count=$(echo "$files" | grep -c . || echo "0")
 
     if [[ $file_count -le 1 ]]; then
         log_success "$description: No duplication found"
@@ -106,7 +107,8 @@ check_dimension_separation() {
 
     # Language files should not duplicate base content
     ((TOTAL_CHECKS++))
-    local lang_files=$(find "$REPO_ROOT/languages" -name "*.md" 2>/dev/null || true)
+    local lang_files
+    lang_files=$(find "$REPO_ROOT/languages" -name "*.md" 2>/dev/null || true)
     if [[ -n "$lang_files" ]]; then
         # Check if language files reference base principles instead of duplicating
         if grep -rq "See.*base/" "$REPO_ROOT/languages/"; then
@@ -118,7 +120,8 @@ check_dimension_separation() {
 
     # Framework files should not duplicate language content
     ((TOTAL_CHECKS++))
-    local framework_files=$(find "$REPO_ROOT/frameworks" -name "*.md" 2>/dev/null || true)
+    local framework_files
+    framework_files=$(find "$REPO_ROOT/frameworks" -name "*.md" 2>/dev/null || true)
     if [[ -n "$framework_files" ]]; then
         if grep -rq "See.*languages/" "$REPO_ROOT/frameworks/"; then
             log_success "Framework rules: Reference language rules instead of duplicating"
@@ -235,7 +238,8 @@ check_file_structure() {
 
     # All base rules should have "When to apply" header
     ((TOTAL_CHECKS++))
-    local base_without_when=$(grep -L "When to apply:" "$REPO_ROOT/base/"*.md 2>/dev/null || true)
+    local base_without_when
+    base_without_when=$(grep -L "When to apply:" "$REPO_ROOT/base/"*.md 2>/dev/null || true)
     if [[ -z "$base_without_when" ]]; then
         log_success "All base rules have 'When to apply' header"
     else
@@ -264,7 +268,8 @@ check_file_structure() {
     local inconsistent_langs=()
     for lang_dir in "$REPO_ROOT/languages"/*; do
         if [[ -d "$lang_dir" ]]; then
-            local lang=$(basename "$lang_dir")
+            local lang
+            lang=$(basename "$lang_dir")
             if [[ ! -f "$lang_dir/coding-standards.md" ]] || [[ ! -f "$lang_dir/testing.md" ]]; then
                 inconsistent_langs+=("$lang")
             fi
@@ -310,10 +315,12 @@ check_cross_references() {
         # Extract markdown links
         while IFS= read -r link; do
             # Extract the file path (remove anchor)
-            local ref_file=$(echo "$link" | sed 's/#.*//')
+            local ref_file
+            ref_file=$(echo "$link" | sed 's/#.*//')
 
             # Check if file exists (relative to the file containing the reference)
-            local file_dir=$(dirname "$file")
+            local file_dir
+            file_dir=$(dirname "$file")
             if [[ -n "$ref_file" ]] && [[ "$ref_file" == *.md ]]; then
                 if [[ ! -f "$file_dir/$ref_file" ]] && [[ ! -f "$REPO_ROOT/$ref_file" ]]; then
                     broken_refs+=("$file -> $ref_file")

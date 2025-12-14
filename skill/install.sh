@@ -137,7 +137,7 @@ show_config_instructions() {
     echo ""
     echo "   Add this to the 'skills' array:"
     echo ""
-    echo "   {\"
+    echo "   {"
     echo "     \"skills\": ["
     echo "       {"
     echo "         \"name\": \"centralized-rules\","
