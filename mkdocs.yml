@@ -1,0 +1,174 @@
+site_name: Centralized AI Development Rules
+site_description: Progressive disclosure for AI coding tools - dynamically load only relevant development rules
+site_author: Paul Duvall
+site_url: https://paulduvall.github.io/centralized-rules
+
+repo_name: PaulDuvall/centralized-rules
+repo_url: https://github.com/PaulDuvall/centralized-rules
+edit_uri: edit/main/
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - minify:
+      minify_html: true
+
+# Exclude unnecessary directories from docs
+exclude_docs: |
+  skill/node_modules/
+  skill/dist/
+  skill/build/
+  .venv-docs/
+  .git/
+  .github/
+  .beads/
+  scripts/
+  .ai-rules/
+  __pycache__/
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/PaulDuvall/centralized-rules
+    - icon: fontawesome/brands/github
+      link: https://github.com/PaulDuvall/ai-development-patterns
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Usage Examples: examples/USAGE_EXAMPLES.md
+  - Architecture:
+    - Overview: ARCHITECTURE.md
+    - Auto-Detection: AUTO_DETECTION.md
+  - Guides:
+    - Implementation Guide: IMPLEMENTATION_GUIDE.md
+    - Anti-Patterns: ANTI_PATTERNS.md
+    - Success Metrics: SUCCESS_METRICS.md
+  - Reference:
+    - Practice Cross-Reference: PRACTICE_CROSSREFERENCE.md
+    - Base Rules:
+      - Git Workflow: base/git-workflow.md
+      - Code Quality: base/code-quality.md
+      - Testing Philosophy: base/testing-philosophy.md
+      - Security Principles: base/security-principles.md
+      - CI/CD Comprehensive: base/cicd-comprehensive.md
+      - AI-Assisted Development: base/ai-assisted-development.md
+      - Architecture Principles: base/architecture-principles.md
+      - 12-Factor App: base/12-factor-app.md
+      - Refactoring Patterns: base/refactoring-patterns.md
+      - Configuration Management: base/configuration-management.md
+      - Specification-Driven Development: base/specification-driven-development.md
+      - Testing ATDD: base/testing-atdd.md
+      - Project Maturity Levels: base/project-maturity-levels.md
+      - Metrics Standards: base/metrics-standards.md
+      - Parallel Development: base/parallel-development.md
+      - AI Model Lifecycle: base/ai-model-lifecycle.md
+      - Knowledge Management: base/knowledge-management.md
+      - AI Ethics & Governance: base/ai-ethics-governance.md
+      - Lean Development: base/lean-development.md
+      - Chaos Engineering: base/chaos-engineering.md
+      - Operations Automation: base/operations-automation.md
+      - Tool Design: base/tool-design.md
+      - Development Workflow: base/development-workflow.md
+    - Language Rules:
+      - Python:
+        - Coding Standards: languages/python/coding-standards.md
+        - Testing: languages/python/testing.md
+      - TypeScript:
+        - Coding Standards: languages/typescript/coding-standards.md
+        - Testing: languages/typescript/testing.md
+      - Go:
+        - Coding Standards: languages/go/coding-standards.md
+        - Testing: languages/go/testing.md
+      - Java:
+        - Coding Standards: languages/java/coding-standards.md
+        - Testing: languages/java/testing.md
+      - C#:
+        - Coding Standards: languages/csharp/coding-standards.md
+        - Testing: languages/csharp/testing.md
+      - Rust:
+        - Coding Standards: languages/rust/coding-standards.md
+        - Testing: languages/rust/testing.md
+    - Framework Rules:
+      - React: frameworks/react/best-practices.md
+      - Django: frameworks/django/best-practices.md
+      - FastAPI: frameworks/fastapi/best-practices.md
+      - Express: frameworks/express/best-practices.md
+      - Spring Boot: frameworks/springboot/best-practices.md
+    - Cloud Rules:
+      - AWS:
+        - Well-Architected: cloud/aws/well-architected.md
+        - IAM Best Practices: cloud/aws/iam-best-practices.md
+        - Security Best Practices: cloud/aws/security-best-practices.md
+      - Vercel:
+        - Deployment: cloud/vercel/deployment-best-practices.md
+        - Environment Config: cloud/vercel/environment-configuration.md
+        - Security: cloud/vercel/security-practices.md
+        - Performance: cloud/vercel/performance-optimization.md
+        - Reliability: cloud/vercel/reliability-observability.md
+        - Cost Optimization: cloud/vercel/cost-optimization.md
+  - Claude Skill:
+    - Overview: skill/README.md
+    - Migration Guide: skill/MIGRATION_GUIDE.md
+  - About:
+    - License: LICENSE.md

@@ -8,6 +8,7 @@ import * as path from 'path';
 import type { ProjectContext } from '../types';
 import detectionPatterns from '../config/detection-patterns.json';
 import { DetectionError, getErrorMessage } from '../errors';
+import { loggers } from '../services/logger';
 
 /**
  * Language detection patterns (loaded from config)
@@ -111,7 +112,9 @@ async function detectFrameworks(directory: string, languages: string[]): Promise
       } catch (error) {
         // Malformed package.json - skip framework detection for this file
         // This is expected in some edge cases, so just continue
-        console.log(`[detect-context] Could not parse package.json: ${getErrorMessage(error)}`);
+        loggers.detection.debug('Could not parse package.json', {
+          error: getErrorMessage(error),
+        });
       }
     }
   }

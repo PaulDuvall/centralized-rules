@@ -1,0 +1,61 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'base/**/*.md'
+      - 'languages/**/*.md'
+      - 'frameworks/**/*.md'
+      - 'cloud/**/*.md'
+      - '*.md'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-docs.txt
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build and deploy docs
+        run: |
+          mkdocs gh-deploy --force --clean --verbose
+
+      - name: Summary
+        run: |
+          echo "### 📚 Documentation Deployed Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The documentation site has been deployed to GitHub Pages." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Site URL:** https://paulduvall.github.io/centralized-rules" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Updated files:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation pages" >> $GITHUB_STEP_SUMMARY
+          echo "- Search index" >> $GITHUB_STEP_SUMMARY
+          echo "- Static assets" >> $GITHUB_STEP_SUMMARY

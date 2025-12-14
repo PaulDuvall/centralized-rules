@@ -7,6 +7,7 @@ import type { Rule, RuleInfo, SkillConfig } from '../types';
 import { getCache } from '../cache/rules-cache';
 import { extractTopicsFromPathAndContent } from '../services/metadata-extractor';
 import { ConfigurationError, GitHubApiError, getErrorMessage } from '../errors';
+import { loggers } from '../services/logger';
 
 /**
  * GitHub API client (singleton)
@@ -34,21 +35,18 @@ export async function fetchRule(
   config: SkillConfig
 ): Promise<Rule | null> {
   const cache = getCache(config.cacheTTL);
+  const logger = loggers.rules;
 
   // Check cache first
   if (config.cacheEnabled && cache.has(rulePath)) {
     const cached = cache.get(rulePath);
     if (cached) {
-      if (config.verbose) {
-        console.log(`[get-rules] Cache hit for ${rulePath}`);
-      }
+      logger.debug('Cache hit', { rulePath });
       return cached;
     }
   }
 
-  if (config.verbose) {
-    console.log(`[get-rules] Fetching ${rulePath} from GitHub...`);
-  }
+  logger.debug('Fetching rule from GitHub', { rulePath });
 
   try {
     const repoParts = config.rulesRepo.split('/');
@@ -103,9 +101,7 @@ export async function fetchRule(
       return rule;
     } else {
       // Invalid response type (directory, symlink, etc.)
-      if (config.verbose) {
-        console.log(`[get-rules] Path is not a file: ${rulePath}`);
-      }
+      logger.debug('Path is not a file', { rulePath });
       return null;
     }
   } catch (error) {
@@ -115,9 +111,7 @@ export async function fetchRule(
 
       // 404 = Rule not found (expected case, return null)
       if (apiError.status === 404) {
-        if (config.verbose) {
-          console.log(`[get-rules] Rule not found: ${rulePath}`);
-        }
+        logger.debug('Rule not found', { rulePath, status: 404 });
         return null;
       }
 

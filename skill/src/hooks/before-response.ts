@@ -7,6 +7,7 @@ import { detectContext } from '../tools/detect-context';
 import { analyzeIntent, selectRules, getAvailableRules } from '../tools/select-rules';
 import { fetchRules } from '../tools/get-rules';
 import { getErrorDetails, getErrorMessage, isSkillError } from '../errors';
+import { loggers, configureLogging, formatDuration } from '../services/logger';
 
 /**
  * Hook execution timing
@@ -25,13 +26,15 @@ interface Timing {
 export async function handler(context: SkillContext): Promise<HookResult> {
   const startTime = Date.now();
   const timing: Partial<Timing> = {};
+  const logger = loggers.hook;
+
+  // Configure logging based on verbose setting
+  configureLogging(context.config.verbose);
 
   try {
     // Check if auto-load is enabled
     if (!context.config.enableAutoLoad) {
-      if (context.config.verbose) {
-        console.log('[before-response] Auto-load disabled, skipping');
-      }
+      logger.debug('Auto-load disabled, skipping rule injection');
       return {
         continue: true,
       };
@@ -53,18 +56,26 @@ export async function handler(context: SkillContext): Promise<HookResult> {
     const projectContext = await detectContext(context.workingDirectory);
     timing.detection = Date.now() - detectionStart;
 
-    if (context.config.verbose) {
-      console.log('[before-response] Project context:', JSON.stringify(projectContext, null, 2));
-    }
+    logger.debug('Project context detected', {
+      languages: projectContext.languages,
+      frameworks: projectContext.frameworks,
+      cloudProviders: projectContext.cloudProviders,
+      maturity: projectContext.maturity,
+      confidence: projectContext.confidence,
+      duration: formatDuration(timing.detection),
+    });
 
     // Step 2: Analyze user intent
     const analysisStart = Date.now();
     const userIntent = analyzeIntent(lastUserMessage.content);
     timing.analysis = Date.now() - analysisStart;
 
-    if (context.config.verbose) {
-      console.log('[before-response] User intent:', JSON.stringify(userIntent, null, 2));
-    }
+    logger.debug('User intent analyzed', {
+      topics: userIntent.topics,
+      action: userIntent.action,
+      urgency: userIntent.urgency,
+      duration: formatDuration(timing.analysis),
+    });
 
     // Step 3: Select relevant rules
     const selectionStart = Date.now();
@@ -77,18 +88,15 @@ export async function handler(context: SkillContext): Promise<HookResult> {
     });
     timing.selection = Date.now() - selectionStart;
 
-    if (context.config.verbose) {
-      console.log(
-        '[before-response] Selected rules:',
-        selectedRuleInfos.map(r => r.path)
-      );
-    }
+    logger.debug('Rules selected', {
+      count: selectedRuleInfos.length,
+      rules: selectedRuleInfos.map(r => r.path),
+      duration: formatDuration(timing.selection),
+    });
 
     // If no rules selected, skip
     if (selectedRuleInfos.length === 0) {
-      if (context.config.verbose) {
-        console.log('[before-response] No relevant rules found');
-      }
+      logger.info('No relevant rules found for current context');
       return {
         continue: true,
       };
@@ -100,11 +108,18 @@ export async function handler(context: SkillContext): Promise<HookResult> {
     timing.fetching = Date.now() - fetchingStart;
 
     if (rules.length === 0) {
-      console.warn('[before-response] Failed to fetch any rules');
+      logger.warn('Failed to fetch any rules from GitHub', {
+        requestedCount: selectedRuleInfos.length,
+      });
       return {
         continue: true,
       };
     }
+
+    logger.debug('Rules fetched from GitHub', {
+      count: rules.length,
+      duration: formatDuration(timing.fetching),
+    });
 
     // Step 5: Format rules for injection
     const systemPrompt = formatRulesForInjection(projectContext, userIntent, rules);
@@ -113,12 +128,22 @@ export async function handler(context: SkillContext): Promise<HookResult> {
 
     // Warn if execution is slow
     if (timing.total > 2000) {
-      console.warn(`[before-response] Slow execution: ${timing.total}ms`);
+      logger.warn('Slow hook execution detected', {
+        duration: formatDuration(timing.total),
+        threshold: '2000ms',
+      });
     }
 
-    if (context.config.verbose) {
-      console.log('[before-response] Timing:', timing);
-    }
+    logger.debug('Hook execution complete', {
+      rulesInjected: rules.length,
+      totalDuration: formatDuration(timing.total),
+      timing: {
+        detection: formatDuration(timing.detection || 0),
+        analysis: formatDuration(timing.analysis || 0),
+        selection: formatDuration(timing.selection || 0),
+        fetching: formatDuration(timing.fetching || 0),
+      },
+    });
 
     return {
       continue: true,
@@ -135,12 +160,12 @@ export async function handler(context: SkillContext): Promise<HookResult> {
     // CRITICAL: Never block Claude on errors - always return continue: true
     // Log detailed error information for debugging
     if (isSkillError(error)) {
-      console.error('[before-response] Skill error:', getErrorDetails(error));
+      logger.error('Skill error in hook execution', error, getErrorDetails(error));
     } else {
-      console.error('[before-response] Unexpected error:', getErrorMessage(error));
-      if (context.config.verbose && error instanceof Error) {
-        console.error('[before-response] Stack trace:', error.stack);
-      }
+      logger.error('Unexpected error in hook execution', error, {
+        message: getErrorMessage(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
     }
 
     return {

@@ -14,3 +14,35 @@ Thumbs.db
 # Local overrides
 .claude/CUSTOM_RULES.md
 .ai/sync-config.json
+
+# Generated CI artifacts
+test-report.md
+test-project-*/
+validation-results/
+
+# Build artifacts (skill/)
+skill/dist/
+skill/build/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+venv/
+.venv/
+*.egg-info/
+
+# Temporary/backup files
+*.backup
+*.bak
+*.tmp
+*~
+
+# Log files
+*.log
+logs/
+
+# MkDocs documentation build
+site/
+.mkdocs_cache/
