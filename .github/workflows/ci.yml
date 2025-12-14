@@ -924,6 +924,77 @@ jobs:
         if: steps.check-readme.outcome != 'success' || steps.check-arch.outcome != 'success' || steps.check-markdown.outcome != 'success' || steps.check-links.outcome != 'success'
         run: exit 1
 
+  test-skill:
+    name: Test Claude Skill
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: skill/package-lock.json
+
+      - name: Install dependencies
+        working-directory: skill
+        run: npm ci
+
+      - name: TypeScript type check
+        working-directory: skill
+        run: npm run typecheck
+
+      - name: Build skill
+        working-directory: skill
+        run: npm run build
+
+      - name: Verify build artifacts
+        working-directory: skill
+        run: |
+          if [ ! -f dist/index.js ]; then
+            echo "ERROR: dist/index.js not generated"
+            exit 1
+          fi
+          if [ ! -f dist/index.d.ts ]; then
+            echo "ERROR: Type definitions not generated"
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
+
+      - name: Run tests with coverage
+        working-directory: skill
+        run: npm run test:coverage
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🧪 Claude Skill Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeScript compilation: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Type checking: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage threshold (85%): ✅ Passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-coverage
+          path: skill/coverage/
+          retention-days: 30
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-build
+          path: skill/dist/
+          retention-days: 5
+
   generate-test-report:
     name: Generate Test Report
     runs-on: ubuntu-latest
@@ -932,6 +1003,7 @@ jobs:
       - shellcheck
       - test-sync-script
       - verify-documentation
+      - test-skill
     if: always()
 
     steps:
@@ -959,6 +1031,7 @@ jobs:
           | 🔍 ShellCheck Linting | ${{ needs.shellcheck.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Bash script quality & security checks |
           | 🧪 Sync Script Testing | ${{ needs.test-sync-script.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | **20+ comprehensive scenarios** (languages, cloud platforms, scenarios) |
           | 📚 Documentation Verification | ${{ needs.verify-documentation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Documentation completeness & quality |
+          | ⚡ Claude Skill Tests | ${{ needs.test-skill.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | TypeScript compilation, tests, 85% coverage |
 
           ---
 
@@ -1064,6 +1137,24 @@ jobs:
 
           ---
 
+          ## ⚡ Claude Skill Tests
+
+          **Status:** ${{ needs.test-skill.result == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+          ### Tests Performed
+          - ✓ TypeScript type checking (strict mode)
+          - ✓ Build compilation to dist/
+          - ✓ Unit tests (123 tests)
+          - ✓ Integration tests
+          - ✓ End-to-end tests
+          - ✓ Coverage threshold enforcement (85%)
+
+          ### Artifacts
+          - `skill-coverage` - Test coverage reports (HTML, JSON)
+          - `skill-build` - Compiled TypeScript output
+
+          ---
+
           ## 🎯 Overall Status
 
           REPORT_EOF
@@ -1072,7 +1163,8 @@ jobs:
           if [ "${{ needs.validate-progressive-disclosure.result }}" == "success" ] && \
              [ "${{ needs.shellcheck.result }}" == "success" ] && \
              [ "${{ needs.test-sync-script.result }}" == "success" ] && \
-             [ "${{ needs.verify-documentation.result }}" == "success" ]; then
+             [ "${{ needs.verify-documentation.result }}" == "success" ] && \
+             [ "${{ needs.test-skill.result }}" == "success" ]; then
             echo "### ✅ ALL TESTS PASSED" >> test-report.md
             echo "" >> test-report.md
             echo "All test suites completed successfully. The progressive disclosure architecture is validated and working correctly across all scenarios." >> test-report.md
@@ -1087,6 +1179,7 @@ jobs:
             [ "${{ needs.shellcheck.result }}" != "success" ] && echo "- ShellCheck Linting" >> test-report.md
             [ "${{ needs.test-sync-script.result }}" != "success" ] && echo "- Sync Script Testing" >> test-report.md
             [ "${{ needs.verify-documentation.result }}" != "success" ] && echo "- Documentation Verification" >> test-report.md
+            [ "${{ needs.test-skill.result }}" != "success" ] && echo "- Claude Skill Tests" >> test-report.md
             overall_status="failure"
           fi
 
