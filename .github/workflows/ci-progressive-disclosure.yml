@@ -1,6 +1,7 @@
 name: CI - Progressive Disclosure Validation
 
 on:
+  workflow_call:
   push:
     branches: [ main ]
     paths:

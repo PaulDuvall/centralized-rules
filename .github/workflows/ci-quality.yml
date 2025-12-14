@@ -1,6 +1,7 @@
 name: CI - Code Quality
 
 on:
+  workflow_call:
   push:
     branches: [ main ]
     paths:

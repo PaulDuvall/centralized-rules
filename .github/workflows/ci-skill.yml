@@ -1,6 +1,7 @@
 name: CI - Claude Skill
 
 on:
+  workflow_call:
   push:
     branches: [ main ]
     paths:
