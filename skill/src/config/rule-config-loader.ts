@@ -14,8 +14,8 @@ import { ConfigurationError, FileSystemError } from '../errors';
 interface RulesConfig {
   languages?: Record<string, LanguageConfig>;
   frameworks?: Record<string, FrameworkConfig>;
-  cloud?: Record<string, CloudConfig>;
-  base?: BaseRuleConfig[];
+  cloud_providers?: Record<string, CloudConfig>;
+  base_rules?: BaseRuleConfig[];
 }
 
 interface LanguageConfig {
@@ -27,8 +27,7 @@ interface LanguageConfig {
 
 interface FrameworkConfig {
   display_name: string;
-  language: string;
-  dependencies: string[];
+  applies_to: string[];
   rules: RuleDefinition[];
 }
 
@@ -101,8 +100,8 @@ export function loadRulesConfig(configPath?: string): RuleInfo[] {
   const rules: RuleInfo[] = [];
 
   // Load base rules
-  if (config.base) {
-    for (const baseRule of config.base) {
+  if (config.base_rules) {
+    for (const baseRule of config.base_rules) {
       rules.push({
         path: baseRule.file,
         title: baseRule.name,
@@ -139,7 +138,6 @@ export function loadRulesConfig(configPath?: string): RuleInfo[] {
           path: rule.file,
           title: rule.name,
           category: 'framework',
-          language: frameworkConfig.language,
           framework: frameworkKey,
           topics: rule.topics || extractTopicsFromName(rule.name),
           maturity: parseMaturity(rule.maturity),
@@ -150,8 +148,8 @@ export function loadRulesConfig(configPath?: string): RuleInfo[] {
   }
 
   // Load cloud rules
-  if (config.cloud) {
-    for (const [cloudKey, cloudConfig] of Object.entries(config.cloud)) {
+  if (config.cloud_providers) {
+    for (const [cloudKey, cloudConfig] of Object.entries(config.cloud_providers)) {
       for (const rule of cloudConfig.rules) {
         rules.push({
           path: rule.file,

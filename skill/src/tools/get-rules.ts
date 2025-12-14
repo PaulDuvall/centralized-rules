@@ -89,7 +89,7 @@ export async function fetchRule(
         maturity: extractMaturity(content),
         estimatedTokens: estimateTokens(content),
         content,
-        fetchedAt: Date.now(),
+        fetchedAt: new Date(),
         ...extractMetadata(rulePath),
       };
 

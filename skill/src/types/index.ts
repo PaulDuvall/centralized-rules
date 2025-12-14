@@ -69,8 +69,8 @@ export interface RuleInfo {
 export interface Rule extends RuleInfo {
   /** The markdown content of the rule */
   content: string;
-  /** When the rule was fetched (Unix timestamp in milliseconds) */
-  fetchedAt: number;
+  /** When the rule was fetched */
+  fetchedAt: Date;
 }
 
 /**

@@ -15,7 +15,7 @@ const WEIGHTS = {
   FRAMEWORK_MATCH: 100,
   CLOUD_MATCH: 75,
   MATURITY_MATCH: 50,
-  TOPIC_MATCH: 30,
+  TOPIC_MATCH: 80, // Increased to prioritize explicit topic requests
   BASE_RULE: 20,
   URGENCY_BOOST: 25,
   ALWAYS_LOAD: 200,
