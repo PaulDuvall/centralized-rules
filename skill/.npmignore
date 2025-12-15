@@ -1,0 +1,35 @@
+# Source files
+src/
+tests/
+
+# Config files
+tsconfig.json
+vitest.config.ts
+.eslintrc.json
+.prettierrc.json
+
+# Development
+node_modules/
+.turbo/
+coverage/
+.vitest/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build artifacts (keep dist/ - it should be published)
+build/
+
+# Husky
+.husky/

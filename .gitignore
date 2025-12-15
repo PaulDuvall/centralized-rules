@@ -20,9 +20,19 @@ test-report.md
 test-project-*/
 validation-results/
 
+# Beads generated files
+.beads/EXECUTION_PLAN.md
+.beads/*.backup
+
+# Generated scripts
+scripts/add-*.py
+
 # Build artifacts (skill/)
 skill/dist/
 skill/build/
+skill/node_modules/
+skill/coverage/
+skill/.turbo/
 
 # Python artifacts
 __pycache__/

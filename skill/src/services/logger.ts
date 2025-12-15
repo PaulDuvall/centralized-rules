@@ -199,6 +199,7 @@ export class Logger {
     switch (level) {
       case LogLevel.DEBUG:
       case LogLevel.INFO:
+        // eslint-disable-next-line no-console
         console.log(message);
         break;
       case LogLevel.WARN:
@@ -277,7 +278,7 @@ export const loggers = {
 export function configureLogging(verbose: boolean): void {
   const level = verbose ? LogLevel.DEBUG : LogLevel.INFO;
 
-  Object.values(loggers).forEach(logger => {
+  Object.values(loggers).forEach((logger) => {
     logger.setLevel(level);
   });
 }

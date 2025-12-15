@@ -32,18 +32,15 @@ interface ScoredRule extends RuleInfo {
 /**
  * Select the most relevant rules based on context and intent
  */
-export function selectRules(
-  availableRules: RuleInfo[],
-  params: RuleSelectionParams
-): RuleInfo[] {
+export function selectRules(availableRules: RuleInfo[], params: RuleSelectionParams): RuleInfo[] {
   // Score all rules
-  const scoredRules = availableRules.map(rule => scoreRule(rule, params));
+  const scoredRules = availableRules.map((rule) => scoreRule(rule, params));
 
   // Sort by score (descending)
   scoredRules.sort((a, b) => b.score - a.score);
 
   // Filter out rules with very low scores (< 10)
-  const relevantRules = scoredRules.filter(rule => rule.score >= 10);
+  const relevantRules = scoredRules.filter((rule) => rule.score >= 10);
 
   // Apply token budget and maxRules constraints
   let selectedRules: ScoredRule[];
@@ -58,7 +55,7 @@ export function selectRules(
   }
 
   // Return without score and reasons (clean RuleInfo objects)
-  return selectedRules.map(({ score, reasons, ...rule }) => rule);
+  return selectedRules.map(({ score: _score, reasons: _reasons, ...rule }) => rule);
 }
 
 /**
@@ -101,7 +98,7 @@ function scoreRule(rule: RuleInfo, params: RuleSelectionParams): ScoredRule {
   }
 
   // Topic matches
-  const matchingTopics = rule.topics.filter(topic => intent.topics.includes(topic));
+  const matchingTopics = rule.topics.filter((topic) => intent.topics.includes(topic));
   if (matchingTopics.length > 0) {
     const topicScore = matchingTopics.length * WEIGHTS.TOPIC_MATCH;
     score += topicScore;

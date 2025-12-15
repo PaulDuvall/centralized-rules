@@ -26,7 +26,7 @@ export function extractTopicsFromText(text: string): string[] {
   const lowerText = text.toLowerCase();
 
   for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
-    if (keywords.some(keyword => lowerText.includes(keyword))) {
+    if (keywords.some((keyword) => lowerText.includes(keyword))) {
       topics.push(topic);
     }
   }
@@ -42,18 +42,18 @@ export function extractTopicsFromPathAndContent(content: string, path: string): 
 
   // Extract from path keywords
   const pathTopics = extractTopicsFromText(path);
-  pathTopics.forEach(topic => topics.add(topic));
+  pathTopics.forEach((topic) => topics.add(topic));
 
   // Extract from content headings
   const headings = content.match(/^##\s+(.+)$/gm) || [];
   for (const heading of headings) {
     const headingTopics = extractTopicsFromText(heading);
-    headingTopics.forEach(topic => topics.add(topic));
+    headingTopics.forEach((topic) => topics.add(topic));
   }
 
   // Also check full content for additional topics (limited to avoid over-matching)
   const contentTopics = extractTopicsFromText(content);
-  contentTopics.forEach(topic => topics.add(topic));
+  contentTopics.forEach((topic) => topics.add(topic));
 
   return Array.from(topics);
 }
@@ -63,7 +63,7 @@ export function extractTopicsFromPathAndContent(content: string, path: string): 
  */
 export function matchesKeywords(text: string, keywords: string[]): boolean {
   const lowerText = text.toLowerCase();
-  return keywords.some(keyword => lowerText.includes(keyword));
+  return keywords.some((keyword) => lowerText.includes(keyword));
 }
 
 /**

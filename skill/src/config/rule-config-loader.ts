@@ -73,7 +73,7 @@ export function loadRulesConfig(configPath?: string): RuleInfo[] {
   let config: RulesConfig;
   try {
     const configContent = fs.readFileSync(configFilePath, 'utf-8');
-    config = JSON.parse(configContent);
+    config = JSON.parse(configContent) as RulesConfig;
   } catch (error) {
     if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       throw new FileSystemError(
