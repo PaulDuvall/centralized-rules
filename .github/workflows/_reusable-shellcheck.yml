@@ -45,7 +45,7 @@ jobs:
           if [ "${{ steps.shellcheck.outcome }}" == "success" ]; then
             echo "✅ **Status:** PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ **Status:** ISSUES FOUND" >> $GITHUB_STEP_SUMMARY"
+            echo "❌ **Status:** ISSUES FOUND" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
