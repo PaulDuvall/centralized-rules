@@ -72,6 +72,23 @@ centralized-rules/
 └── README.md                      # This file
 ```
 
+## Repository Structure
+
+### Root-Level Documentation
+
+This repository uses a hybrid documentation structure with key files at root for easy access and detailed guides in `docs/`:
+
+| File | Purpose | When to Read |
+|------|---------|--------------|
+| **README.md** | Primary documentation, Quick Start, overview of progressive disclosure system | Start here for installation and basic usage |
+| **ARCHITECTURE.md** | Technical architecture, design decisions, performance validation, scalability analysis | Read when understanding system internals or extending functionality |
+| **ANTI_PATTERNS.md** | Catalog of common anti-patterns with detection strategies and prevention techniques | Reference during code review or when debugging quality issues |
+| **PRACTICE_CROSSREFERENCE.md** | Bidirectional mapping between best practices and implementation files | Use to find which file covers a specific practice |
+| **IMPLEMENTATION_GUIDE.md** | 8-week phased rollout plan with success criteria and metrics | Follow when adopting centralized rules in your project |
+| **SUCCESS_METRICS.md** | Measurable KPIs (DORA metrics, code quality, security, team productivity) | Reference when setting up metrics or tracking improvements |
+
+**Note:** All guides are also accessible through the `docs/` directory for documentation site generation.
+
 ## Quick Start
 
 Choose your installation method based on your AI tool:
