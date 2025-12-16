@@ -150,6 +150,21 @@ This will:
 
 **[Full Skill Documentation →](skill/README.md)**
 
+### 🔄 Updating the Skill
+
+To get the latest features and fixes:
+
+```bash
+cd ~/centralized-rules && git pull && cd skill && npm run build
+```
+
+Then restart Claude Code. That's it!
+
+**If you get a merge conflict:**
+```bash
+cd ~/centralized-rules && git reset --hard origin/main && git pull && cd skill && npm run build
+```
+
 ### ✅ Verify It's Working
 
 After installation and restart, test the skill with these prompts:
@@ -161,6 +176,7 @@ After installation and restart, test the skill with these prompts:
 ```
 
 **Expected Response:**
+- **Visible banner** at the top showing active rules and detected context
 - Skill detects your project's language and framework
 - Lists relevant rule categories (base, language-specific, framework-specific)
 - Shows which rules are loaded for your context
@@ -168,21 +184,20 @@ After installation and restart, test the skill with these prompts:
 #### Example Output:
 
 ```
-📋 Centralized Rules Loaded
+═══════════════════════════════════════════════════════
+📋 Centralized Rules Active
+═══════════════════════════════════════════════════════
 
-Detected Context:
-  Language: TypeScript
-  Framework: React
+🔍 Context Detected:
+   Languages: TypeScript | Frameworks: React
+   Maturity: mvp | Confidence: 95%
 
-Available Rules:
-  ✓ Base Rules (23 files)
-    - git-workflow, code-quality, testing-philosophy, security-principles...
-  ✓ TypeScript Rules (4 files)
-    - coding-standards, testing, error-handling, type-safety...
-  ✓ React Rules (3 files)
-    - component-patterns, hooks-best-practices, testing...
+📖 Rules Loaded: 7 files
+   Git Workflow, Code Quality, Testing Philosophy, TypeScript Standards,
+   React Patterns, Security Principles, Error Handling
+═══════════════════════════════════════════════════════
 
-Ready to provide context-aware guidance!
+[Then my actual response to your question...]
 ```
 
 #### Test With Code Task
