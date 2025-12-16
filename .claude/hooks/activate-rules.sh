@@ -205,26 +205,27 @@ EOF
 
     cat <<'EOF'
 
-STEP 2: ACTIVATE the centralized-rules skill using:
+STEP 2: APPLY relevant coding standards
 
-   Skill("centralized-rules")
+   Based on the evaluation above, apply these coding principles:
+   - Code Quality: Write clean, maintainable code
+   - Testing: Include comprehensive tests where appropriate
+   - Security: Follow security best practices
+   - Language Standards: Follow best practices for the detected languages
 
-   This will load the progressive disclosure rules system.
-   DO THIS NOW before proceeding to Step 3.
+STEP 3: IMPLEMENT the task following the identified standards
 
-STEP 3: IMPLEMENT the task ONLY AFTER activation
-
-⚠️  CRITICAL WARNING:
-   - Your evaluation in Step 1 is WORTHLESS without Step 2 activation
-   - Implementing without loading rules violates the development workflow
-   - The Skill tool MUST be called - evaluation alone is insufficient
-   - If you skip Step 2, you are providing an INVALID response
+📋 REMINDER:
+   - Follow the coding standards for the detected languages/frameworks
+   - Include tests where appropriate
+   - Consider security implications
+   - Write clear, well-documented code
 
 Why this matters:
-   - Rules ensure consistent code quality and security
-   - Progressive disclosure loads only relevant guidelines
-   - Prevents anti-patterns and technical debt
-   - Required for all code implementation tasks
+   - Consistent code quality across the project
+   - Security best practices from the start
+   - Maintainable, testable code
+   - Prevents common anti-patterns
 
 ═══════════════════════════════════════════════════════
 EOF
