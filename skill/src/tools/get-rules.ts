@@ -30,10 +30,7 @@ function getOctokit(): Octokit {
 /**
  * Fetch a single rule from GitHub
  */
-export async function fetchRule(
-  rulePath: string,
-  config: SkillConfig
-): Promise<Rule | null> {
+export async function fetchRule(rulePath: string, config: SkillConfig): Promise<Rule | null> {
   const cache = getCache(config.cacheTTL);
   const logger = loggers.rules;
 
@@ -152,17 +149,14 @@ export async function fetchRule(
 /**
  * Fetch multiple rules in parallel
  */
-export async function fetchRules(
-  ruleInfos: RuleInfo[],
-  config: SkillConfig
-): Promise<Rule[]> {
+export async function fetchRules(ruleInfos: RuleInfo[], config: SkillConfig): Promise<Rule[]> {
   const maxConcurrent = 5; // Limit concurrent requests to avoid rate limiting
   const rules: Rule[] = [];
 
   // Process in batches
   for (let i = 0; i < ruleInfos.length; i += maxConcurrent) {
     const batch = ruleInfos.slice(i, i + maxConcurrent);
-    const batchPromises = batch.map(info => fetchRule(info.path, config));
+    const batchPromises = batch.map((info) => fetchRule(info.path, config));
     const batchResults = await Promise.all(batchPromises);
 
     // Filter out null results (failed fetches)
@@ -309,12 +303,16 @@ export async function handler(
   }
 
   // Fetch the rules
-  const ruleInfos: RuleInfo[] = paths.map(rulePath => ({
+  const ruleInfos: RuleInfo[] = paths.map((rulePath) => ({
     path: rulePath,
     title: rulePath,
     category: determineCategory(rulePath),
     topics: [],
-    maturity: ['mvp', 'pre-production', 'production'] as ('mvp' | 'pre-production' | 'production')[],
+    maturity: ['mvp', 'pre-production', 'production'] as (
+      | 'mvp'
+      | 'pre-production'
+      | 'production'
+    )[],
     estimatedTokens: 1000,
   }));
 

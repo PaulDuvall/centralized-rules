@@ -29,12 +29,13 @@ interface MaturityIndicators {
 /**
  * Detect project context from a directory
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function detectContext(directory: string = process.cwd()): Promise<ProjectContext> {
   try {
-    const languages = await detectLanguages(directory);
-    const frameworks = await detectFrameworks(directory, languages);
-    const cloudProviders = await detectCloudProviders(directory);
-    const maturity = await detectMaturity(directory);
+    const languages = detectLanguages(directory);
+    const frameworks = detectFrameworks(directory, languages);
+    const cloudProviders = detectCloudProviders(directory);
+    const maturity = detectMaturity(directory);
 
     // Calculate confidence based on what was detected
     const confidence = calculateConfidence(languages, frameworks, cloudProviders);
@@ -59,7 +60,7 @@ export async function detectContext(directory: string = process.cwd()): Promise<
 /**
  * Detect programming languages in the project
  */
-async function detectLanguages(directory: string): Promise<string[]> {
+function detectLanguages(directory: string): string[] {
   const detected: Set<string> = new Set();
 
   for (const [lang, config] of Object.entries(LANGUAGE_PATTERNS)) {
@@ -87,7 +88,7 @@ async function detectLanguages(directory: string): Promise<string[]> {
 /**
  * Detect frameworks based on language and file patterns
  */
-async function detectFrameworks(directory: string, languages: string[]): Promise<string[]> {
+function detectFrameworks(directory: string, languages: string[]): string[] {
   const detected: Set<string> = new Set();
 
   // Check package.json for Node.js frameworks
@@ -95,7 +96,10 @@ async function detectFrameworks(directory: string, languages: string[]): Promise
     const packageJsonPath = path.join(directory, 'package.json');
     if (fileExists(packageJsonPath)) {
       try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as {
+          dependencies?: Record<string, string>;
+          devDependencies?: Record<string, string>;
+        };
         const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
         // Check each framework from config
@@ -187,7 +191,7 @@ async function detectFrameworks(directory: string, languages: string[]): Promise
 /**
  * Detect cloud providers used in the project
  */
-async function detectCloudProviders(directory: string): Promise<string[]> {
+function detectCloudProviders(directory: string): string[] {
   const detected: Set<string> = new Set();
 
   // Check for AWS
@@ -221,12 +225,19 @@ async function detectCloudProviders(directory: string): Promise<string[]> {
   // Check package dependencies for cloud SDKs
   const packageJsonPath = path.join(directory, 'package.json');
   if (fileExists(packageJsonPath)) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as {
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
+      const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
-    if (deps['aws-sdk'] || deps['@aws-sdk/client-s3']) detected.add('aws');
-    if (deps['@azure/storage-blob']) detected.add('azure');
-    if (deps['@google-cloud/storage']) detected.add('gcp');
+      if (deps['aws-sdk'] || deps['@aws-sdk/client-s3']) detected.add('aws');
+      if (deps['@azure/storage-blob']) detected.add('azure');
+      if (deps['@google-cloud/storage']) detected.add('gcp');
+    } catch {
+      // Ignore malformed package.json
+    }
   }
 
   const reqPath = path.join(directory, 'requirements.txt');
@@ -243,8 +254,8 @@ async function detectCloudProviders(directory: string): Promise<string[]> {
 /**
  * Detect project maturity level
  */
-async function detectMaturity(directory: string): Promise<'mvp' | 'pre-production' | 'production'> {
-  const indicators = await getMaturityIndicators(directory);
+function detectMaturity(directory: string): 'mvp' | 'pre-production' | 'production' {
+  const indicators = getMaturityIndicators(directory);
 
   // Production: version 1.x.x+, has CI/CD, Docker, tests, monitoring
   const majorVersion = indicators.version.split('.')[0];
@@ -272,14 +283,20 @@ async function detectMaturity(directory: string): Promise<'mvp' | 'pre-productio
 /**
  * Get maturity indicators from the project
  */
-async function getMaturityIndicators(directory: string): Promise<MaturityIndicators> {
+function getMaturityIndicators(directory: string): MaturityIndicators {
   let version = '0.1.0';
 
   // Get version from package.json
   const packageJsonPath = path.join(directory, 'package.json');
   if (fileExists(packageJsonPath)) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    version = packageJson.version || version;
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as {
+        version?: string;
+      };
+      version = packageJson.version || version;
+    } catch {
+      // Ignore malformed package.json
+    }
   }
 
   // Get version from pyproject.toml
@@ -375,8 +392,8 @@ function directoryContainsFiles(directory: string, patterns: string[]): boolean 
     if (!fs.existsSync(directory)) return false;
 
     const files = (fs.readdirSync(directory, { recursive: true }) as string[]) || [];
-    return files.some(file =>
-      patterns.some(pattern => file.toLowerCase().includes(pattern.toLowerCase()))
+    return files.some((file) =>
+      patterns.some((pattern) => file.toLowerCase().includes(pattern.toLowerCase()))
     );
   } catch {
     return false;

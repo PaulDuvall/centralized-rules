@@ -41,9 +41,7 @@ export async function handler(context: SkillContext): Promise<HookResult> {
     }
 
     // Get the user's last message
-    const lastUserMessage = context.messages
-      .filter(m => m.role === 'user')
-      .pop();
+    const lastUserMessage = context.messages.filter((m) => m.role === 'user').pop();
 
     if (!lastUserMessage) {
       return {
@@ -90,7 +88,7 @@ export async function handler(context: SkillContext): Promise<HookResult> {
 
     logger.debug('Rules selected', {
       count: selectedRuleInfos.length,
-      rules: selectedRuleInfos.map(r => r.path),
+      rules: selectedRuleInfos.map((r) => r.path),
       duration: formatDuration(timing.selection),
     });
 
@@ -152,7 +150,7 @@ export async function handler(context: SkillContext): Promise<HookResult> {
         projectContext,
         userIntent,
         rulesLoaded: rules.length,
-        rulesPaths: rules.map(r => r.path),
+        rulesPaths: rules.map((r) => r.path),
         timing,
       },
     };
