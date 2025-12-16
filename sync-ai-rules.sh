@@ -1005,12 +1005,12 @@ sync_rules() {
     mkdir -p "$CACHE_DIR"
 
     # Detect project configuration
-    local languages
-    mapfile -t languages < <(detect_language)
-    local frameworks
-    mapfile -t frameworks < <(detect_frameworks)
-    local cloud_providers
-    mapfile -t cloud_providers < <(detect_cloud_providers)
+    local languages=()
+    while IFS= read -r line; do languages+=("$line"); done < <(detect_language)
+    local frameworks=()
+    while IFS= read -r line; do frameworks+=("$line"); done < <(detect_frameworks)
+    local cloud_providers=()
+    while IFS= read -r line; do cloud_providers+=("$line"); done < <(detect_cloud_providers)
     local maturity_level
     maturity_level=$(detect_maturity_level)
 
