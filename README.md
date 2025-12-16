@@ -22,6 +22,22 @@ Instead of maintaining separate rule files in each project, this repository prov
 > **📚 Part of the [AI Development Patterns Experiments](https://github.com/PaulDuvall/ai-development-patterns/tree/main/experiments#centralized-rules)**
 > Exploring progressive disclosure as a solution to AI instruction saturation
 
+---
+
+## 🚀 Just Installed? Quick Verification
+
+**Test if it's working** - Try this prompt after installation:
+
+```
+"What coding rules are available?"
+```
+
+You should see context detection and a list of loaded rules.
+
+**See full verification guide:** [Jump to Verify It's Working →](#-verify-its-working)
+
+---
+
 ## Architecture
 
 ```
@@ -99,15 +115,20 @@ Choose your installation method based on your AI tool:
 
 ```bash
 # One-command installation
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/skill/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/skill/install.sh | bash
 ```
 
 This will:
 - Clone the repository to `~/centralized-rules`
 - Install and build the Claude Skill
-- Show you how to configure Claude
+- **Auto-detect** which Claude variant you're using:
+  - **Claude Code CLI**: Automatically creates symlink in `~/.claude/skills/`
+  - **Claude Desktop**: Shows config instructions for `~/.config/claude/claude_desktop_config.json`
+- Handle both if you have both installed
 
-Then add to your Claude configuration (`~/.config/claude/claude_desktop_config.json`):
+**Claude Code CLI** - Ready immediately after restart!
+
+**Claude Desktop** - Add to your config file:
 
 ```json
 {
@@ -128,6 +149,99 @@ Then add to your Claude configuration (`~/.config/claude/claude_desktop_config.j
 - Zero manual sync required
 
 **[Full Skill Documentation →](skill/README.md)**
+
+### ✅ Verify It's Working
+
+After installation and restart, test the skill with these prompts:
+
+#### Quick Test (Any Project)
+
+```
+"What coding rules are available?"
+```
+
+**Expected Response:**
+- Skill detects your project's language and framework
+- Lists relevant rule categories (base, language-specific, framework-specific)
+- Shows which rules are loaded for your context
+
+#### Example Output:
+
+```
+📋 Centralized Rules Loaded
+
+Detected Context:
+  Language: TypeScript
+  Framework: React
+
+Available Rules:
+  ✓ Base Rules (23 files)
+    - git-workflow, code-quality, testing-philosophy, security-principles...
+  ✓ TypeScript Rules (4 files)
+    - coding-standards, testing, error-handling, type-safety...
+  ✓ React Rules (3 files)
+    - component-patterns, hooks-best-practices, testing...
+
+Ready to provide context-aware guidance!
+```
+
+#### Test With Code Task
+
+```
+"Create a React component with a counter button"
+```
+
+**What to Look For:**
+- ✅ Component follows React functional component patterns
+- ✅ Uses proper TypeScript types
+- ✅ Includes PropTypes or TypeScript interfaces
+- ✅ Has meaningful variable names
+- ✅ Suggests writing tests
+
+#### Verify Progressive Disclosure
+
+```
+"Write a pytest test for a simple add function"
+```
+
+**Expected Behavior:**
+- Loads only testing rules (not all rules)
+- Applies Python-specific testing patterns
+- Suggests pytest best practices
+- Doesn't load unrelated rules (git, deployment, etc.)
+
+#### Visual Indicators
+
+When the skill is active, you'll see:
+- 🎯 **Context detection** - Mentions detected language/framework
+- 📋 **Rule citations** - References specific coding standards
+- ✨ **Best practices** - Applies rules automatically without being asked
+- 🔍 **Progressive loading** - Only loads relevant rules for the task
+
+#### Troubleshooting
+
+**Skill not loading?**
+
+```bash
+# Check symlink (Claude Code CLI)
+ls -la ~/.claude/skills/centralized-rules
+
+# Should output:
+# centralized-rules -> /Users/you/centralized-rules/skill
+
+# Verify skill.json exists
+cat ~/.claude/skills/centralized-rules/skill.json
+```
+
+**No context detection?**
+
+The skill requires a project with recognizable files:
+- Python: `pyproject.toml`, `requirements.txt`, `setup.py`
+- TypeScript/JS: `package.json`, `tsconfig.json`
+- Go: `go.mod`
+- Java: `pom.xml`, `build.gradle`
+
+Create a test project with one of these files and try again.
 
 ### Option 2: Sync Script (For Cursor, Copilot, or Manual Sync)
 
