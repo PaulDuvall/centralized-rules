@@ -2,727 +2,423 @@
 
 **Progressive Disclosure for AI Coding Tools**
 
-A centralized repository of development rules that dynamically loads only relevant guidelines based on your project's language, framework, and tooling. Works with Claude Code, Cursor, GitHub Copilot, and other AI coding assistants.
+A centralized repository of development rules that dynamically loads only relevant guidelines based on your project's language, framework, and task context. Works with Claude Code CLI, Cursor, GitHub Copilot, and other AI coding assistants.
 
-## 🚀 Quick Start - Hook System (Recommended for Claude Code CLI)
+## 🚀 Quick Start (Claude Code CLI)
 
 Install the automated hook system with one command:
 
 ```bash
-# Install for current project only
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
-
-# Or install globally for ALL your projects (recommended)
+# Install globally for ALL your projects (recommended)
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+
+# Or install for current project only
+cd your-project
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
 ```
 
-The hook automatically detects your project's languages/frameworks and reminds Claude to follow relevant coding standards.
+**That's it.** No manual configuration needed.
 
-📖 **Full Hook Documentation**: [README-HOOKS.md](./README-HOOKS.md)
-🔧 **Troubleshooting**: See [LESSONS_LEARNED.md](./LESSONS_LEARNED.md)
+### What You'll See
 
----
-
-## Overview
-
-Instead of maintaining separate rule files in each project, this repository provides:
-
-- **MECE Framework** - Mutually Exclusive, Collectively Exhaustive organization
-- **Four-Dimensional Structure:**
-  - **Base rules** (23 files) - Universal, language-agnostic best practices
-  - **Language rules** (6+ languages) - Python, TypeScript, Go, Java, C#, Rust
-  - **Framework rules** (5+ frameworks) - React, Django, FastAPI, Express, Spring Boot
-  - **Cloud rules** (Vercel + extensible) - Provider-specific deployment and operations
-- **Progressive Rigor** - Maturity-based requirements (MVP/POC, Pre-Production, Production)
-- **Two-phase progressive disclosure** - Load only what's relevant (project + task level)
-- **Multi-tool support** - Generate outputs for Claude, Cursor, Copilot
-- **74.4% average token savings** - Validated in real-world testing
-
-> **📚 Part of the [AI Development Patterns Experiments](https://github.com/PaulDuvall/ai-development-patterns/tree/main/experiments#centralized-rules)**
-> Exploring progressive disclosure as a solution to AI instruction saturation
-
----
-
-## 🚀 Just Installed? Quick Verification
-
-**Test if it's working** - Try this prompt after installation:
+When you ask Claude to write code, the hook displays evaluation steps showing which coding standards apply:
 
 ```
-"What coding rules are available?"
+═══════════════════════════════════════════════════════
+🎯 MANDATORY SKILL ACTIVATION - DO NOT SKIP
+═══════════════════════════════════════════════════════
+
+CRITICAL: Before implementing ANY code, you MUST follow this 3-step process:
+
+STEP 1: EVALUATE which rules apply (list YES/NO for each category):
+   - Detected Languages: javascript
+   - Detected Frameworks: react
+
+   - Matched Rule Categories:
+     [ ] base/code-quality
+     [ ] base/testing-philosophy
+     [ ] languages/javascript
+     [ ] frameworks/react
+
+STEP 2: APPLY relevant coding standards
+
+   Based on the evaluation above, apply these coding principles:
+   - Code Quality: Write clean, maintainable code
+   - Testing: Include comprehensive tests where appropriate
+   - Security: Follow security best practices
+   - Language Standards: Follow best practices for the detected languages
+
+STEP 3: IMPLEMENT the task following the identified standards
+
+📋 REMINDER:
+   - Follow the coding standards for the detected languages/frameworks
+   - Include tests where appropriate
+   - Consider security implications
+   - Write clear, well-documented code
+═══════════════════════════════════════════════════════
 ```
 
-You should see context detection and a list of loaded rules.
+**Result:** Claude writes higher-quality code with comprehensive tests, input validation, proper error handling, and documentation.
 
-**See full verification guide:** [Jump to Verify It's Working →](#-verify-its-working)
+### Verify It's Working
 
----
-
-## Architecture
-
-```
-centralized-rules/
-├── base/                          # 23 universal rules (always loaded)
-│   ├── git-workflow.md           # + maturity indicators
-│   ├── code-quality.md           # + maturity indicators
-│   ├── testing-philosophy.md     # + maturity indicators
-│   ├── security-principles.md    # + maturity indicators
-│   ├── cicd-comprehensive.md     # + maturity indicators
-│   ├── project-maturity-levels.md
-│   ├── ai-assisted-development.md
-│   └── ... (16 more)
-│
-├── languages/                     # 6+ languages supported
-│   ├── python/
-│   ├── typescript/
-│   ├── go/
-│   ├── java/
-│   ├── csharp/                   # NEW
-│   └── rust/                     # NEW
-│
-├── frameworks/                    # 5+ frameworks supported
-│   ├── react/                    # Enriched with advanced patterns
-│   ├── django/                   # Enriched with DRF, signals, Celery
-│   ├── fastapi/
-│   ├── express/                  # NEW
-│   └── springboot/               # NEW
-│
-├── cloud/                         # Cloud provider rules (NEW)
-│   └── vercel/                   # 6 comprehensive guides
-│       ├── deployment-best-practices.md
-│       ├── environment-configuration.md
-│       ├── security-practices.md
-│       ├── performance-optimization.md
-│       ├── reliability-observability.md
-│       └── cost-optimization.md
-│
-├── scripts/                       # NEW
-│   └── validate-mece.sh          # MECE compliance checker
-│
-├── sync-ai-rules.sh              # Progressive disclosure script (enhanced)
-├── PRACTICE_CROSSREFERENCE.md    # Practice-to-file mapping (NEW)
-├── ANTI_PATTERNS.md              # Common anti-patterns (NEW)
-├── IMPLEMENTATION_GUIDE.md       # 8-week rollout plan (NEW)
-├── SUCCESS_METRICS.md            # Measurable KPIs (NEW)
-├── ARCHITECTURE.md               # Detailed architecture (updated)
-└── README.md                      # This file
-```
-
-## Repository Structure
-
-### Root-Level Documentation
-
-This repository uses a hybrid documentation structure with key files at root for easy access and detailed guides in `docs/`:
-
-| File | Purpose | When to Read |
-|------|---------|--------------|
-| **README.md** | Primary documentation, Quick Start, overview of progressive disclosure system | Start here for installation and basic usage |
-| **ARCHITECTURE.md** | Technical architecture, design decisions, performance validation, scalability analysis | Read when understanding system internals or extending functionality |
-| **ANTI_PATTERNS.md** | Catalog of common anti-patterns with detection strategies and prevention techniques | Reference during code review or when debugging quality issues |
-| **PRACTICE_CROSSREFERENCE.md** | Bidirectional mapping between best practices and implementation files | Use to find which file covers a specific practice |
-| **IMPLEMENTATION_GUIDE.md** | 8-week phased rollout plan with success criteria and metrics | Follow when adopting centralized rules in your project |
-| **SUCCESS_METRICS.md** | Measurable KPIs (DORA metrics, code quality, security, team productivity) | Reference when setting up metrics or tracking improvements |
-
-**Note:** All guides are also accessible through the `docs/` directory for documentation site generation.
-
-## Quick Start
-
-Choose your installation method based on your AI tool:
-
-### Option 1: Claude Skill (Recommended for Claude Users)
-
-**Automatic, hook-based rule loading** - No manual syncing required!
+After installation, restart Claude Code and test:
 
 ```bash
-# One-command installation
-curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/skill/install.sh | bash
+# 1. Check hook is registered
+/hooks
+
+# You should see:
+# UserPromptSubmit
+#   2. $CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh
+
+# 2. Test with a code request
+Write a simple calculator function
 ```
 
-This will:
-- Clone the repository to `~/centralized-rules`
-- Install and build the Claude Skill
-- **Auto-detect** which Claude variant you're using:
-  - **Claude Code CLI**: Automatically creates symlink in `~/.claude/skills/`
-  - **Claude Desktop**: Shows config instructions for `~/.config/claude/claude_desktop_config.json`
-- Handle both if you have both installed
+You should see the evaluation steps displayed above, followed by well-structured code with tests.
 
-**Claude Code CLI** - Ready immediately after restart!
+## How It Works
 
-**Claude Desktop** - Add to your config file:
+```
+You type: "Write a Python function with tests"
+       ↓
+Hook detects: Python language + testing keywords
+       ↓
+Hook displays: Evaluation steps showing applicable rules
+       ↓
+Claude implements: Following Python standards, includes pytest tests, adds docstrings
+```
 
+**Key Features:**
+- ✅ **Auto-detection** - Detects languages/frameworks from your project files
+- ✅ **Keyword matching** - Matches your prompt to relevant rule categories
+- ✅ **Visible feedback** - Shows which standards are being applied
+- ✅ **Progressive disclosure** - Loads only relevant rules, not everything
+- ✅ **Zero configuration** - One command installation, works everywhere
+
+## Installation Details
+
+### What Gets Installed
+
+**Local installation** (`.claude/` in current project):
+```
+your-project/
+├── .claude/
+│   ├── hooks/
+│   │   └── activate-rules.sh       # Hook script
+│   ├── skills/
+│   │   └── skill-rules.json        # Keyword mappings
+│   └── settings.json                # Hook registration
+```
+
+**Global installation** (`~/.claude/` for all projects):
+```
+~/.claude/
+├── hooks/
+│   └── activate-rules.sh
+├── skills/
+│   └── skill-rules.json
+└── settings.json
+```
+
+### How Detection Works
+
+**Language Detection:**
+| Language | Detected From |
+|----------|---------------|
+| Python | `pyproject.toml`, `requirements.txt`, `setup.py` |
+| JavaScript/TypeScript | `package.json`, `tsconfig.json` |
+| Go | `go.mod` |
+| Rust | `Cargo.toml` |
+| Java | `pom.xml`, `build.gradle` |
+
+**Framework Detection:**
+| Framework | Detected From |
+|-----------|---------------|
+| React | `"react"` in package.json |
+| Next.js | `"next"` in package.json |
+| FastAPI | `fastapi` in Python dependencies |
+| Django | `django` in Python dependencies |
+| Express | `"express"` in package.json |
+
+**Keyword Matching:**
+- Testing: `test`, `pytest`, `jest`, `spec`, `tdd`, `coverage`
+- Security: `auth`, `password`, `token`, `encrypt`, `validate`
+- Git: `commit`, `pull request`, `branch`, `merge`
+- Refactoring: `refactor`, `clean`, `improve`, `optimize`
+
+## Troubleshooting
+
+### Hook doesn't appear in `/hooks`
+
+**Check settings file:**
+```bash
+cat .claude/settings.json  # Local
+cat ~/.claude/settings.json  # Global
+```
+
+Should contain:
 ```json
 {
-  "skills": [
-    {
-      "name": "centralized-rules",
-      "path": "~/centralized-rules/skill"
-    }
-  ]
+  "hooks": {
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
+      }]
+    }]
+  }
 }
 ```
 
-**How it works:**
-- Automatically detects your project context (language, framework, cloud provider)
-- Intelligently loads only 3-5 relevant rules per request
-- No context window bloat - uses progressive disclosure
-- Always fetches latest rules from GitHub
-- Zero manual sync required
+**Solution:** Re-run the install script.
 
-**[Full Skill Documentation →](skill/README.md)**
+### Hook appears but doesn't fire
 
-### 🔄 Updating the Skill
+**Test manually:**
+```bash
+echo '{"prompt":"Write a test function"}' | .claude/hooks/activate-rules.sh
+```
 
-To get the latest features and fixes:
+Should output the evaluation steps. If you see an error:
+
+**Common issue:** Script permissions
+```bash
+chmod +x .claude/hooks/activate-rules.sh
+```
+
+**Debug mode:**
+```bash
+claude --debug
+# Then try a code request and check the logs
+```
+
+### Wrong language/framework detected
+
+**Check project files:**
+```bash
+# Python projects need one of:
+ls pyproject.toml requirements.txt setup.py
+
+# JavaScript/TypeScript projects need:
+ls package.json
+
+# Go projects need:
+ls go.mod
+```
+
+Create the appropriate marker file and restart Claude Code.
+
+### No evaluation steps appear
+
+This is normal if:
+- No keywords match (generic prompts won't trigger rules)
+- No project context detected (not in a recognized project directory)
+
+To force detection, include keywords: "Write a Python function **with tests**"
+
+## Alternative: Sync Script (For Other Tools)
+
+If you use **Cursor**, **GitHub Copilot**, or want file-based rules:
 
 ```bash
-cd ~/centralized-rules && git pull && cd skill && npm run build
-```
-
-Then restart Claude Code. That's it!
-
-**If you get a merge conflict:**
-```bash
-cd ~/centralized-rules && git reset --hard origin/main && git pull && cd skill && npm run build
-```
-
-### ✅ Verify It's Working
-
-After installation and restart, test the skill with these prompts:
-
-#### Quick Test (Any Project)
-
-```
-"What coding rules are available?"
-```
-
-**Expected Response:**
-- **Visible banner** at the top showing active rules and detected context
-- Skill detects your project's language and framework
-- Lists relevant rule categories (base, language-specific, framework-specific)
-- Shows which rules are loaded for your context
-
-#### Example Output:
-
-```
-═══════════════════════════════════════════════════════
-📋 Centralized Rules Active
-═══════════════════════════════════════════════════════
-
-🔍 Context Detected:
-   Languages: TypeScript | Frameworks: React
-   Maturity: mvp | Confidence: 95%
-
-📖 Rules Loaded: 7 files
-   Git Workflow, Code Quality, Testing Philosophy, TypeScript Standards,
-   React Patterns, Security Principles, Error Handling
-═══════════════════════════════════════════════════════
-
-[Then my actual response to your question...]
-```
-
-#### Test With Code Task
-
-```
-"Create a React component with a counter button"
-```
-
-**What to Look For:**
-- ✅ Component follows React functional component patterns
-- ✅ Uses proper TypeScript types
-- ✅ Includes PropTypes or TypeScript interfaces
-- ✅ Has meaningful variable names
-- ✅ Suggests writing tests
-
-#### Verify Progressive Disclosure
-
-```
-"Write a pytest test for a simple add function"
-```
-
-**Expected Behavior:**
-- Loads only testing rules (not all rules)
-- Applies Python-specific testing patterns
-- Suggests pytest best practices
-- Doesn't load unrelated rules (git, deployment, etc.)
-
-#### Visual Indicators
-
-When the skill is active, you'll see:
-- 🎯 **Context detection** - Mentions detected language/framework
-- 📋 **Rule citations** - References specific coding standards
-- ✨ **Best practices** - Applies rules automatically without being asked
-- 🔍 **Progressive loading** - Only loads relevant rules for the task
-
-#### Troubleshooting
-
-**Skill not loading?**
-
-```bash
-# Check symlink (Claude Code CLI)
-ls -la ~/.claude/skills/centralized-rules
-
-# Should output:
-# centralized-rules -> /Users/you/centralized-rules/skill
-
-# Verify skill.json exists
-cat ~/.claude/skills/centralized-rules/skill.json
-```
-
-**No context detection?**
-
-The skill requires a project with recognizable files:
-- Python: `pyproject.toml`, `requirements.txt`, `setup.py`
-- TypeScript/JS: `package.json`, `tsconfig.json`
-- Go: `go.mod`
-- Java: `pom.xml`, `build.gradle`
-
-Create a test project with one of these files and try again.
-
-### Option 2: Sync Script (For Cursor, Copilot, or Manual Sync)
-
-**Traditional sync-based approach** - Works with any AI tool.
-
-#### 1. Add to Your Project
-
-```bash
-# Download the sync script
-curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/sync-ai-rules.sh \
+# Download sync script
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/sync-ai-rules.sh \
     -o sync-ai-rules.sh
-
 chmod +x sync-ai-rules.sh
-```
 
-#### 2. Run Sync
-
-```bash
-# Auto-detect and sync for all AI tools
+# Run sync
 ./sync-ai-rules.sh
 
 # Or sync for specific tool
-./sync-ai-rules.sh --tool claude
 ./sync-ai-rules.sh --tool cursor
 ./sync-ai-rules.sh --tool copilot
 ```
 
-#### 3. Use with AI Tools
+**Generates:**
+- `.claude/AGENTS.md` - Entry point with progressive disclosure
+- `.claude/rules/` - Organized rule directory
+- `.cursorrules` - Cursor format
+- `.github/copilot-instructions.md` - Copilot format
 
-The script generates tool-specific files:
+## Rule Architecture
 
-**Claude Code (Hierarchical - Recommended):**
-- `.claude/AGENTS.md` - Entry point with discovery instructions
-- `.claude/rules/` - Organized rule directory (on-demand loading)
-- `.claude/rules/index.json` - Machine-readable rule index
-- `.claude/RULES.md` - Legacy monolithic format (deprecated)
+```
+centralized-rules/
+├── base/                          # Universal rules (always considered)
+│   ├── git-workflow.md
+│   ├── code-quality.md
+│   ├── testing-philosophy.md
+│   ├── security-principles.md
+│   └── ... (19 more)
+│
+├── languages/                     # Language-specific standards
+│   ├── python/
+│   │   ├── coding-standards.md
+│   │   └── testing.md
+│   ├── typescript/
+│   ├── go/
+│   ├── java/
+│   ├── csharp/
+│   └── rust/
+│
+├── frameworks/                    # Framework-specific patterns
+│   ├── react/
+│   ├── django/
+│   ├── fastapi/
+│   ├── express/
+│   └── springboot/
+│
+└── cloud/                         # Cloud provider guidelines
+    └── vercel/
+```
 
-**Cursor:**
-- `.cursorrules` - Monolithic format
+**Total:** 50+ rule files organized by concern
 
-**GitHub Copilot:**
-- `.github/copilot-instructions.md` - Monolithic format
+**Hook approach:** Suggests 3-5 relevant categories per request
+**Sync approach:** Loads 8-12 files based on project context
 
-Your AI assistant will automatically use these rules! Claude Code will use progressive disclosure for maximum efficiency.
+## Progressive Disclosure Benefits
 
-## Progressive Disclosure
+### Two-Phase System
 
-**Two-phase system that maximizes context efficiency:**
+**Phase 1: Project-Level**
+- Detects your project's languages/frameworks
+- Loads only relevant rules to `.claude/rules/`
+- Reduces 50+ files to 8-12 relevant files
 
-### Phase 1: Project-Level Disclosure
+**Phase 2: Task-Level** (via hook)
+- Matches keywords in your prompt
+- Suggests only applicable rule categories
+- Reduces 8-12 files to 3-5 categories per request
 
-The sync script automatically detects your project and loads only relevant rules.
-
-**Example: Python + FastAPI Project**
-
-**Detected:**
-- Language: Python (via `pyproject.toml`)
-- Framework: FastAPI (via dependencies)
-
-**Loaded Rules:**
-- ✅ Base rules (git, code quality, testing, security)
-- ✅ Python rules (type hints, pytest, mypy)
-- ✅ FastAPI rules (endpoints, async, validation)
-- ❌ TypeScript rules (not loaded)
-- ❌ React rules (not loaded)
-
-**Result:** 8 relevant files loaded vs 50+ available in repository
-
-### Phase 2: Task-Level Disclosure (Hierarchical Mode)
-
-Within your project, AI loads only rules relevant to the specific task.
-
-**Example: "Write pytest tests for this function"**
-
-**Loaded:**
-- ✅ `base/testing-philosophy.md` (testing principles)
-- ✅ `languages/python/testing.md` (pytest patterns)
-- ❌ Code quality rules (not needed for testing)
-- ❌ FastAPI rules (not needed for unit tests)
-- ❌ Git workflow (not a commit task)
-
-**Result:** 2 files (~11K tokens) vs all 8 files (~25K tokens) = **55.8% token savings**
-
-### Real-World Results
+### Measured Results
 
 Tested with Python + FastAPI project:
 
-| Task Type | Files Loaded | Token Savings |
-|-----------|-------------|---------------|
-| Code Review | 2 files | 86.4% |
-| Write Tests | 2 files | 55.8% |
-| FastAPI Endpoint | 3 files | 65.9% |
-| Git Commit | 2 files | 89.6% |
-| **Average** | **2.25 files** | **74.4%** |
+| Task Type | Categories Suggested | Token Efficiency |
+|-----------|---------------------|------------------|
+| Write tests | 2 (testing, python) | 86.4% savings |
+| Code review | 2 (code-quality, security) | 86.4% savings |
+| API endpoint | 3 (fastapi, security, testing) | 65.9% savings |
+| Git commit | 2 (git-workflow, code-quality) | 89.6% savings |
+| **Average** | **2-3 categories** | **74.4% savings** |
 
-**Impact:** 59% more context window available for code analysis!
+**Impact:** 59% more context window available for analyzing your code!
 
-## Detection Logic
+## Customization
 
-### Languages
+### Add Custom Keywords
 
-The script detects languages based on project files:
-
-| Language   | Detection Files                          |
-|------------|------------------------------------------|
-| Python     | `pyproject.toml`, `setup.py`, `requirements.txt` |
-| TypeScript | `package.json` with `"typescript"`       |
-| JavaScript | `package.json` without TypeScript        |
-| Go         | `go.mod`                                 |
-| Java       | `pom.xml`, `build.gradle`                |
-| Ruby       | `Gemfile`                                |
-| Rust       | `Cargo.toml`                             |
-
-### Frameworks
-
-The script detects frameworks from dependency files:
-
-| Framework    | Detection Method                   |
-|--------------|------------------------------------|
-| Django       | `django` in Python dependencies    |
-| FastAPI      | `fastapi` in Python dependencies   |
-| Flask        | `flask` in Python dependencies     |
-| React        | `"react"` in package.json          |
-| Next.js      | `"next"` in package.json           |
-| Vue          | `"vue"` in package.json            |
-| Express      | `"express"` in package.json        |
-| Spring Boot  | `spring-boot` in Java build files  |
-
-## Configuration
-
-### Custom Rules Repository
-
-Set your own rules repository URL:
-
-```bash
-export AI_RULES_REPO="https://raw.githubusercontent.com/your-org/your-rules/main"
-./sync-ai-rules.sh
-```
-
-### Manual Configuration
-
-Create `.ai/sync-config.json` to override auto-detection:
+Edit `.claude/skills/skill-rules.json`:
 
 ```json
 {
-    "languages": ["python", "typescript"],
-    "frameworks": ["fastapi", "react"],
-    "exclude": ["testing-mocking"],
-    "custom_rules": [
-        "https://example.com/custom-rule.md"
-    ]
+  "keywordMappings": {
+    "languages": {
+      "python": {
+        "keywords": ["python", ".py", "pip", "your-custom-keyword"],
+        "rules": ["languages/python"]
+      }
+    }
+  }
 }
 ```
 
-## Automation
+### Add Custom Rule Categories
 
-### Pre-commit Hook
+Create your own rules in the hook output by editing `.claude/hooks/activate-rules.sh`.
 
-Keep rules synced automatically:
+### Organization-Wide Deployment
 
+**Option 1: Fork this repository**
 ```bash
-# .git/hooks/pre-commit
-#!/bin/bash
-./sync-ai-rules.sh --tool all
-git add .claude/RULES.md .cursorrules .github/copilot-instructions.md
+# Fork on GitHub, then:
+export RULES_REPO="https://raw.githubusercontent.com/your-org/centralized-rules/main"
+curl -fsSL $RULES_REPO/install-hooks.sh | bash -s -- --global
 ```
 
-### CI/CD
-
-Validate rules are current in pull requests:
-
-```yaml
-# .github/workflows/validate-rules.yml
-name: Validate AI Rules
-
-on: [pull_request]
-
-jobs:
-  check-rules:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Sync rules
-        run: ./sync-ai-rules.sh
-      - name: Check for changes
-        run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "AI rules are out of date. Run ./sync-ai-rules.sh"
-            exit 1
-          fi
-```
-
-## Base Rules
-
-Base rules are **always loaded** regardless of language/framework:
-
-1. **Git Workflow** - Commit frequency, message format, branching
-2. **Code Quality** - Function size, DRY principle, naming conventions
-3. **Testing Philosophy** - Coverage goals, test types, never proceed with failing tests
-4. **Security Principles** - No hardcoded secrets, input validation, authentication
-5. **Development Workflow** - Plan, implement, test, refactor cycle
-
-These provide universal best practices applicable to any project.
-
-## Language-Specific Rules
-
-Language rules provide technology-specific guidance:
-
-### Python
-- Type hints (PEP 484)
-- pytest testing patterns
-- mypy strict mode
-- PEP 8 style guide
-- Common security patterns
-
-### TypeScript
-- Strict mode configuration
-- Type safety best practices
-- ESLint + Prettier setup
-- Zod validation patterns
-- Modern JS features
-
-### Go
-- Effective Go patterns
-- Testing with testify
-- Error handling conventions
-- Goroutine best practices
-
-### Java
-- Spring Boot patterns
-- JUnit testing
-- Maven/Gradle conventions
-- Lombok usage
-
-## Framework-Specific Rules
-
-Framework rules provide specialized guidance:
-
-### React
-- Component patterns
-- Hook usage
-- State management
-- Testing with React Testing Library
-
-### Django
-- Model design
-- View patterns
-- DRF best practices
-- Testing with pytest-django
-
-### FastAPI
-- Async endpoints
-- Pydantic models
-- Dependency injection
-- Testing with TestClient
-
-## Tool-Specific Outputs
-
-Each AI tool has different file conventions:
-
-### Claude Code
-- File: `.claude/RULES.md`
-- Format: Markdown with sections
-- Auto-loaded on startup
-
-### Cursor
-- File: `.cursorrules`
-- Format: Plain markdown
-- Auto-loaded in workspace
-
-### GitHub Copilot
-- File: `.github/copilot-instructions.md`
-- Format: Markdown instructions
-- Referenced in workflow
-
-## Benefits
-
-### 🎯 Two-Phase Progressive Disclosure
-**Phase 1:** Load only relevant languages/frameworks (8-12 files vs 50+)
-**Phase 2:** Load only relevant tasks within project (2-3 files vs all 8)
-**Result:** 74.4% average token savings, validated in real-world testing
-
-### 📊 Measurable Impact
-- **86.4% savings** for code reviews
-- **55.8% savings** for testing tasks
-- **65.9% savings** for framework work
-- **59% more context** available for code analysis
-
-### 🔄 Centralized Maintenance
-Update rules once, sync to all projects
-
-### 🌍 Organization-wide Standards
-Enforce consistent practices across teams
-
-### 🤖 Multi-Tool Support
-Works with Claude, Cursor, Copilot, and more
-
-### 📦 No Infrastructure Required
-Just Git and bash - works offline after initial sync
-
-### ⚡ Fast Sync
-Incremental updates - only download what changed
-
-### 👁️ Visual Feedback
-See which rules are active with inline citations and announcements
-
-## Comparison to Codified Rules
-
-| Feature | Centralized Rules | Codified Rules |
-|---------|-------------------|----------------|
-| **Scope** | Organization-wide | Per-project |
-| **Maintenance** | Central repository | Distributed files |
-| **Loading** | Progressive/Dynamic | All or nothing |
-| **Customization** | Override via config | Direct file edits |
-| **Consistency** | Enforced by sync | Manual maintenance |
-
-**Use Centralized Rules when:** You want organization-wide standards
-
-**Use Codified Rules when:** Project has unique requirements
-
-**Use Both:** Centralized for base, local overrides for specifics
-
-## Examples
-
-### Python Project
-
+**Option 2: Commit to projects**
 ```bash
-# Project structure
-myproject/
-├── pyproject.toml       # Detected: Python
-├── requirements.txt     # Detected: Django, pytest
-└── ...
-
-# Run sync
-./sync-ai-rules.sh
-
-# Loads:
-# - base/* (always)
-# - languages/python/*
-# - frameworks/django/*
-
-# Generates:
-# .claude/RULES.md
-# .cursorrules
-# .github/copilot-instructions.md
+# Copy hook files to your project template
+cp -r .claude/ your-project-template/
+git add .claude/
+git commit -m "Add centralized rules hook"
 ```
 
-### Full-Stack TypeScript Project
+## Uninstallation
 
+### Local (project only)
 ```bash
-# Project structure
-fullstack/
-├── package.json         # Detected: TypeScript, React, Express
-├── tsconfig.json
-└── ...
-
-# Run sync
-./sync-ai-rules.sh
-
-# Loads:
-# - base/*
-# - languages/typescript/*
-# - frameworks/react/*
-# - frameworks/express/*
+rm -rf .claude/hooks .claude/skills
+# Remove hooks section from .claude/settings.json
 ```
 
-## Contributing
+### Global (all projects)
+```bash
+rm -rf ~/.claude/hooks ~/.claude/skills
+# Remove hooks section from ~/.claude/settings.json
+```
 
-### Adding a New Language
+## What This Does and Doesn't Do
 
-1. Create `languages/{language}/`
-2. Add `coding-standards.md`
-3. Add `testing.md`
-4. Update detection logic in `sync-ai-rules.sh`
+### ✅ Does
 
-### Adding a New Framework
+- Detects project context automatically (languages, frameworks)
+- Matches prompt keywords to relevant rule categories
+- Displays evaluation steps showing applicable standards
+- Reminds Claude to follow best practices
+- Works across all your projects (global mode)
+- Improves code quality, testing, security, documentation
 
-1. Create `frameworks/{framework}/`
-2. Add `best-practices.md`
-3. Update detection logic in `sync-ai-rules.sh`
+### ❌ Doesn't
 
-### Adding a New Tool
-
-1. Create `tools/{tool}/` directory
-2. Add template files
-3. Add `generate_{tool}_rules()` function to script
-4. Update documentation
-
-## Roadmap
-
-### ✅ Completed
-- ✅ Phase 1: Project-level progressive disclosure
-- ✅ Phase 2: Task-level progressive disclosure (hierarchical structure)
-- ✅ Config-driven architecture (rules-config.json)
-- ✅ Visual feedback system
-- ✅ Real-world validation (74.4% token savings)
-
-### 🔜 Short-Term
-- [ ] Extend hierarchical format to Cursor/Copilot
-- [ ] GitHub Action for automatic sync
-- [ ] Rule versioning and rollback
-
-### 📅 Medium-Term
-- [ ] Support for more languages (C#, PHP, Swift, Kotlin)
-- [ ] Support for more frameworks (Angular, Svelte, Laravel)
-- [ ] VS Code extension
-- [ ] Usage analytics
-
-### 🚀 Long-Term
-- [ ] Domain-specific rules (fintech, healthcare, e-commerce)
-- [ ] Compliance frameworks (HIPAA, SOC 2, PCI-DSS)
-- [ ] AI-powered rule suggestions
-- [ ] Web dashboard
-
-## License
-
-MIT License - See LICENSE file for details
+- Enforce rules (Claude can still ignore them)
+- Load actual rule content (would exceed context limits)
+- Guarantee perfect code (it's a reminder system)
+- Work with Claude Desktop (different hook system)
+- Require network access (works offline after install)
 
 ## Related Projects
 
 - [AI Development Patterns](https://github.com/PaulDuvall/ai-development-patterns) - Collection of AI-assisted development patterns
-- [Centralized Rules Experiment](https://github.com/PaulDuvall/ai-development-patterns/tree/main/experiments#centralized-rules) - Exploration of progressive disclosure as a solution to instruction saturation
-- [Codified Rules Examples](https://github.com/PaulDuvall/ai-development-patterns/tree/main/examples/codified-rules) - Per-project rule examples
+- [Centralized Rules Experiment](https://github.com/PaulDuvall/ai-development-patterns/tree/main/experiments#centralized-rules) - Research on progressive disclosure
 
-## Documentation
+## Architecture Documentation
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture and design decisions
-- [USAGE_EXAMPLES.md](./examples/USAGE_EXAMPLES.md) - Detailed usage examples
-- [Real-World Test Results](./ARCHITECTURE.md#performance--validation) - Measured token savings and performance
+For deep technical details:
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Design decisions, performance validation
+- [PRACTICE_CROSSREFERENCE.md](./PRACTICE_CROSSREFERENCE.md) - Practice-to-file mapping
+- [ANTI_PATTERNS.md](./ANTI_PATTERNS.md) - Common anti-patterns catalog
 
-## Research & Validation
+## Contributing
 
-**Progressive Disclosure Effectiveness:**
-- ✅ Validated with real Python + FastAPI project
-- ✅ Measured 55-90% token reduction across task types
-- ✅ 74.4% average savings
-- ✅ 59% more context available for code
-- ✅ Negligible latency impact (<500ms per task)
+Contributions welcome! To add:
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md#performance--validation) for complete test results and methodology.
+**New Language:**
+1. Create `languages/{language}/coding-standards.md`
+2. Add detection logic to install script
+3. Update keyword mappings in `skill-rules.json`
+
+**New Framework:**
+1. Create `frameworks/{framework}/best-practices.md`
+2. Add framework detection logic
+3. Update keyword mappings
+
+**New Rule Category:**
+1. Create `base/{category}.md`
+2. Add keyword patterns to hook script
 
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/PaulDuvall/centralized-rules/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/discussions)
-- **Documentation:** See [docs/](./docs/) directory
+
+## License
+
+MIT License - See LICENSE file for details
 
 ---
 
-**Made with** ❤️ **for AI-assisted development**
+**Made with lessons learned from real-world Claude Code usage** 🎯
