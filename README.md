@@ -4,6 +4,25 @@
 
 A centralized repository of development rules that dynamically loads only relevant guidelines based on your project's language, framework, and tooling. Works with Claude Code, Cursor, GitHub Copilot, and other AI coding assistants.
 
+## 🚀 Quick Start - Hook System (Recommended for Claude Code CLI)
+
+Install the automated hook system with one command:
+
+```bash
+# Install for current project only
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
+
+# Or install globally for ALL your projects (recommended)
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+```
+
+The hook automatically detects your project's languages/frameworks and reminds Claude to follow relevant coding standards.
+
+📖 **Full Hook Documentation**: [README-HOOKS.md](./README-HOOKS.md)
+🔧 **Troubleshooting**: See [LESSONS_LEARNED.md](./LESSONS_LEARNED.md)
+
+---
+
 ## Overview
 
 Instead of maintaining separate rule files in each project, this repository provides:
