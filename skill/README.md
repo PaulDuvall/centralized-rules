@@ -53,11 +53,70 @@ cd skill
 npm run build
 ```
 
+## Hook-Based Activation System
+
+### NEW: UserPromptSubmit Hook (Recommended)
+
+The centralized-rules skill now includes a **hook-based activation system** that achieves ~80%+ activation reliability. When you type a prompt, the hook automatically:
+
+1. Detects your project context (languages, frameworks)
+2. Matches keywords in your prompt against rule categories
+3. Injects a mandatory 3-step activation instruction into Claude's context
+4. Forces Claude to evaluate and load relevant rules before implementing
+
+**Setup:**
+
+The hook is configured in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
+      }]
+    }]
+  }
+}
+```
+
+**How it works:**
+
+```
+You: "Write pytest tests for my FastAPI endpoint"
+       ↓
+Hook fires → Detects: Python, FastAPI, testing keywords
+       ↓
+Injects mandatory activation instruction:
+  "STEP 1: EVALUATE which rules apply
+   STEP 2: ACTIVATE using Skill(centralized-rules)
+   STEP 3: IMPLEMENT only after activation"
+       ↓
+Claude follows the steps → Loads rules → Implements with guidelines
+```
+
+**Verification:**
+
+After restarting Claude Code, check hooks are active:
+
+```bash
+/hooks
+```
+
+You should see:
+```
+UserPromptSubmit:
+  - activate-rules.sh
+```
+
+See [SKILL.md](./SKILL.md) for detailed documentation on the hook system.
+
 ## Usage
 
 ### Automatic (Recommended)
 
-The skill automatically activates via the `beforeResponse` hook. Just use Claude normally:
+With the hook system enabled, just use Claude normally:
 
 ```
 You: "Help me add JWT authentication to my FastAPI app"
@@ -90,25 +149,41 @@ Claude: [Uses get_rules tool]
 User: "Add a login form to my React app"
 
 // Behind the scenes:
-1. beforeResponse hook fires
-2. Detects: TypeScript + React + Next.js
-3. Analyzes intent: "login form" → authentication, forms
-4. Scores all rules:
+1. UserPromptSubmit hook fires (.claude/hooks/activate-rules.sh)
+2. Hook detects: TypeScript + React + Next.js (from project files)
+3. Hook analyzes intent: "login form" → authentication, forms (keyword matching)
+4. Hook injects mandatory activation instruction into context
+5. Claude receives instruction, evaluates which rules apply
+6. Claude calls Skill("centralized-rules") tool
+7. Skill scores all rules:
    - react/forms.md: 150 points ⭐
    - react/auth-patterns.md: 130 points
    - typescript/coding-standards.md: 120 points
    - base/security-principles.md: 70 points
-5. Selects top 3 (token budget: 5K)
-6. Fetches from GitHub (cached)
-7. Injects into Claude's system prompt
+8. Skill selects top 3 (token budget: 5K)
+9. Skill fetches from GitHub (cached)
+10. Skill returns rules to Claude
 
 // Claude responds with rules applied:
-Claude: "For React forms with authentication, following your patterns:
+Claude: "📚 Rules Applied:
+         ✓ React Forms (framework-specific)
+         ✓ TypeScript Standards (language-specific)
+         ✓ Security Principles (base)
+
+         For React forms with authentication, following your patterns:
          1. Use React Hook Form (per your standards)
          2. Implement with TypeScript types
          3. Add Zod validation
          ..."
 ```
+
+### Progressive Disclosure Benefits
+
+- **Context Efficient**: Loads 3-5 rules (~10K tokens) instead of all 50+ rules (~40K tokens)
+- **Always Relevant**: Rules match your specific task, not generic guidelines
+- **Automatic**: No manual activation needed, hook handles everything
+- **Transparent**: Claude announces which rules are applied (look for 📚 Rules Applied banner)
+- **Cached**: Rules fetched from GitHub are cached for 1 hour
 
 ## Configuration
 
@@ -301,6 +376,162 @@ npm run build
 **Future Refactorings**
 - [ ] Replace hardcoded enums with dynamic values (rf4)
 - [ ] Review type definitions after implementation (rf5)
+
+## Verification & Testing
+
+### Verify Hook Installation
+
+After installing and restarting Claude Code, verify the hook is active:
+
+```bash
+# In Claude Code CLI
+/hooks
+```
+
+Expected output:
+```
+UserPromptSubmit:
+  - activate-rules.sh
+```
+
+### Test Hook Manually
+
+Test the hook script directly:
+
+```bash
+# Navigate to your project
+cd ~/centralized-rules
+
+# Test with sample prompt
+echo '{"prompt":"Write pytest tests for my FastAPI endpoint"}' | .claude/hooks/activate-rules.sh
+```
+
+Expected output: The 3-step activation instruction (EVALUATE → ACTIVATE → IMPLEMENT).
+
+### Test in Claude Code
+
+Try these test prompts:
+
+1. **Testing task:**
+   ```
+   "What testing rules are available for Python?"
+   ```
+   Expected: Hook triggers, Claude loads testing + Python rules
+
+2. **Framework-specific:**
+   ```
+   "Write a React component with TypeScript"
+   ```
+   Expected: Hook triggers, Claude loads React + TypeScript rules
+
+3. **Security task:**
+   ```
+   "Add authentication to my API"
+   ```
+   Expected: Hook triggers, Claude loads security + relevant framework rules
+
+### Verify Skill Activation
+
+Look for the **📚 Rules Applied** banner in Claude's response:
+
+```
+📚 Rules Applied:
+✓ Testing Philosophy (base)
+✓ Python Testing (language-specific)
+✓ FastAPI Best Practices (framework-specific)
+```
+
+If you see this banner, the skill activated successfully!
+
+## Troubleshooting
+
+### Issue: Hook Not Appearing in `/hooks`
+
+**Solution:**
+
+1. Check `.claude/settings.json` syntax:
+   ```bash
+   cat .claude/settings.json | jq .
+   ```
+
+2. Verify script is executable:
+   ```bash
+   chmod +x .claude/hooks/activate-rules.sh
+   ```
+
+3. Restart Claude Code completely
+
+### Issue: Hook Fires But Skill Doesn't Activate
+
+**Possible causes:**
+
+1. **Skill not installed**: Check `~/centralized-rules/skill/dist/` exists
+2. **Skill not configured**: Verify `~/.config/claude/claude_desktop_config.json` has skill entry
+3. **Claude ignoring instruction**: Try more specific prompts with clear keywords
+
+**Debug steps:**
+
+```bash
+# 1. Verify skill installation
+ls -la ~/centralized-rules/skill/dist/
+
+# 2. Check skill config
+cat ~/.config/claude/claude_desktop_config.json
+
+# 3. Test hook manually
+echo '{"prompt":"test"}' | .claude/hooks/activate-rules.sh
+
+# 4. Enable verbose logging
+export VERBOSE=true
+echo '{"prompt":"test"}' | .claude/hooks/activate-rules.sh
+```
+
+### Issue: Wrong Rules Being Loaded
+
+**Solution:** Update keyword mappings in `.claude/skills/skill-rules.json`:
+
+```json
+{
+  "keywordMappings": {
+    "base": {
+      "your_category": {
+        "keywords": ["your", "custom", "keywords"],
+        "rules": ["path/to/your/rule"]
+      }
+    }
+  }
+}
+```
+
+### Issue: Hook Causes Errors
+
+**Solution:** Check hook script logs:
+
+```bash
+# Test with verbose output
+VERBOSE=true echo '{"prompt":"test"}' | .claude/hooks/activate-rules.sh 2>&1
+```
+
+Common issues:
+- Missing dependencies (jq, sed, grep) - script uses basic bash only
+- Permission issues - ensure script is executable
+- JSON parsing errors - verify input format
+
+## Best Practices
+
+1. **Trust the Automation**: Let the hook system work automatically, don't manually invoke unless debugging
+2. **Use Clear Keywords**: More specific prompts → better rule matching
+   - ✅ "Write pytest tests for FastAPI endpoint"
+   - ❌ "Make some tests"
+
+3. **Check Rules Applied**: Look for the 📚 banner to verify correct rules loaded
+
+4. **Keep Updated**: Pull latest rules regularly:
+   ```bash
+   cd ~/centralized-rules && git pull && cd skill && npm run build
+   ```
+
+5. **Customize for Your Team**: Fork the repo and add your own rules/keywords
 
 ## Contributing
 

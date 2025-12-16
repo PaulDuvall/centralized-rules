@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Claude Code settings for centralized-rules repository",
+  "version": "1.0.0",
+  "updated": "2025-12-16",
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "Activate centralized-rules skill via progressive disclosure",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
+          }
+        ]
+      }
+    ]
+  },
+
+  "settings": {
+    "description": "Additional Claude Code settings",
+    "autoActivateRules": true,
+    "verboseLogging": false
+  },
+
+  "skill": {
+    "name": "centralized-rules",
+    "description": "Smart coding rules that automatically load based on project context",
+    "activation": {
+      "method": "hook",
+      "hookType": "UserPromptSubmit",
+      "hookScript": ".claude/hooks/activate-rules.sh"
+    },
+    "configuration": {
+      "rulesRepo": "paulduvall/centralized-rules",
+      "rulesBranch": "main",
+      "enableAutoLoad": true,
+      "cacheEnabled": true,
+      "cacheTTL": 3600,
+      "maxRules": 5,
+      "maxTokens": 5000,
+      "verbose": false
+    }
+  }
+}
