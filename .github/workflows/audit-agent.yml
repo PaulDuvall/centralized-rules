@@ -54,7 +54,7 @@ with open('scripts/audit-agent/audit-report.json') as f:
 
 print('### Project Context')
 ctx = report['context']
-print(f\"- Languages: {', '.join(ctx['languages']) or 'None'}\")"
+print(f\"- Languages: {', '.join(ctx['languages']) or 'None'}\")
 print(f\"- Frameworks: {', '.join(ctx['frameworks']) or 'None'}\")
 print(f\"- Cloud Providers: {', '.join(ctx['cloud_providers']) or 'None'}\")
 print(f\"- Maturity: {ctx['maturity']}\")
