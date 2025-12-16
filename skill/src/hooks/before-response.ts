@@ -186,6 +186,32 @@ function formatRulesForInjection(
 ): string {
   const sections: string[] = [];
 
+  // INSTRUCTION: Tell Claude to display a visible banner
+  sections.push('---\n');
+  sections.push('**IMPORTANT INSTRUCTION FOR CLAUDE:**\n');
+  sections.push(
+    'Start your response with the following visible banner to inform the user that centralized rules are active:\n'
+  );
+  sections.push('```');
+  sections.push('═══════════════════════════════════════════════════════');
+  sections.push('📋 Centralized Rules Active');
+  sections.push('═══════════════════════════════════════════════════════');
+  sections.push('');
+  sections.push('🔍 Context Detected:');
+  sections.push(
+    `   Languages: ${projectContext.languages.join(', ') || 'None'} | Frameworks: ${projectContext.frameworks.join(', ') || 'None'}`
+  );
+  sections.push(
+    `   Maturity: ${projectContext.maturity} | Confidence: ${Math.round(projectContext.confidence * 100)}%`
+  );
+  sections.push('');
+  sections.push(`📖 Rules Loaded: ${rules.length} files`);
+  sections.push(`   ${rules.map((r) => r.title).join(', ')}`);
+  sections.push('═══════════════════════════════════════════════════════');
+  sections.push('```');
+  sections.push('\nAfter showing this banner, proceed with your normal response.\n');
+  sections.push('---\n');
+
   // Header
   sections.push('# 📚 Relevant Coding Rules\n');
   sections.push(
