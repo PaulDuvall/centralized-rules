@@ -1057,7 +1057,7 @@ sync_rules() {
     # Generate tool-specific outputs
     case "$tool" in
         claude)
-            generate_claude_rules_hierarchical
+            generate_claude_rules_monolithic
             ;;
         cursor)
             generate_cursor_rules
@@ -1069,7 +1069,7 @@ sync_rules() {
             generate_gemini_rules
             ;;
         all)
-            generate_claude_rules_hierarchical
+            generate_claude_rules_monolithic
             generate_cursor_rules
             generate_copilot_rules
             generate_gemini_rules
