@@ -154,8 +154,10 @@ match_keywords() {
 
     log_debug "Matched rules: ${matched_rules[*]:-none}"
 
-    # Return unique rules
-    printf '%s\n' "${matched_rules[@]}" | sort -u
+    # Return unique rules (handle empty array)
+    if [[ ${#matched_rules[@]} -gt 0 ]]; then
+        printf '%s\n' "${matched_rules[@]}" | sort -u
+    fi
 }
 
 # Generate activation instruction with forced evaluation pattern
