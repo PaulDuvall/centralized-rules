@@ -112,13 +112,15 @@ install_local() {
         if command -v jq >/dev/null 2>&1; then
             jq -s '.[0] * .[1]' .claude/settings.json.backup - > .claude/settings.json <<'EOF'
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh",
+            "description": "Activate centralized-rules skill"
           }
         ]
       }
@@ -133,13 +135,15 @@ EOF
 Add this to your .claude/settings.json:
 
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh",
+            "description": "Activate centralized-rules skill"
           }
         ]
       }
@@ -151,13 +155,15 @@ EOF
     else
         cat > .claude/settings.json <<'EOF'
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh",
+            "description": "Activate centralized-rules skill"
           }
         ]
       }
@@ -204,13 +210,15 @@ install_global() {
         if command -v jq >/dev/null 2>&1; then
             jq -s '.[0] * .[1]' "$settings_file.backup" - > "$settings_file" <<'EOF'
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/activate-rules.sh"
+            "command": "$HOME/.claude/hooks/activate-rules.sh",
+            "description": "Activate centralized-rules skill"
           }
         ]
       }
@@ -225,13 +233,15 @@ EOF
     else
         cat > "$settings_file" <<'EOF'
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/activate-rules.sh"
+            "command": "$HOME/.claude/hooks/activate-rules.sh",
+            "description": "Activate centralized-rules skill"
           }
         ]
       }

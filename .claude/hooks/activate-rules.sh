@@ -176,58 +176,72 @@ generate_activation_instruction() {
         matched_rules="base/code-quality"
     fi
 
+    # Get current commit hash for version tracking
+    local commit_hash
+    commit_hash=$(git -C "${CLAUDE_PROJECT_DIR:-.}" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
+    local repo_name="paulduvall/centralized-rules"
+    local repo_url="https://github.com/${repo_name}"
+
     # Build the activation instruction
+    cat <<EOF
+═══════════════════════════════════════════════════════
+🎯 SKILL ACTIVATION - Centralized Rules Loaded
+═══════════════════════════════════════════════════════
+📦 Source: ${repo_name}
+🔗 Repo: ${repo_url}
+📌 Commit: ${commit_hash}
+───────────────────────────────────────────────────────
+EOF
+
     cat <<'EOF'
-═══════════════════════════════════════════════════════
-🎯 MANDATORY SKILL ACTIVATION - DO NOT SKIP
-═══════════════════════════════════════════════════════
 
-CRITICAL: Before implementing ANY code, you MUST follow this 3-step process:
+📚 Before implementing, follow this 3-step process:
 
-STEP 1: EVALUATE which rules apply (list YES/NO for each category):
+STEP 1: 🔍 EVALUATE which rules apply
 EOF
 
     # List detected context
     if [[ -n "${languages}" ]]; then
-        echo "   - Detected Languages: ${languages// /, }"
+        echo "   🔹 Detected Languages: ${languages// /, }"
     fi
     if [[ -n "${frameworks}" ]]; then
-        echo "   - Detected Frameworks: ${frameworks// /, }"
+        echo "   🔹 Detected Frameworks: ${frameworks// /, }"
     fi
 
     cat <<EOF
 
-   - Matched Rule Categories:
+   📋 Matched Rule Categories:
 EOF
 
     # List matched rules with checkbox format
     while IFS= read -r rule; do
-        [[ -n "${rule}" ]] && echo "     [ ] ${rule}"
+        [[ -n "${rule}" ]] && echo "     ☐ ${rule}"
     done <<< "${matched_rules}"
 
     cat <<'EOF'
 
-STEP 2: APPLY relevant coding standards
+STEP 2: 🔧 APPLY relevant coding standards
 
    Based on the evaluation above, apply these coding principles:
-   - Code Quality: Write clean, maintainable code
-   - Testing: Include comprehensive tests where appropriate
-   - Security: Follow security best practices
-   - Language Standards: Follow best practices for the detected languages
+   ✓ Code Quality: Write clean, maintainable code
+   ✓ Testing: Include comprehensive tests where appropriate
+   ✓ Security: Follow security best practices
+   ✓ Language Standards: Follow best practices for the detected languages
 
-STEP 3: IMPLEMENT the task following the identified standards
+STEP 3: ⚡ IMPLEMENT the task following the identified standards
 
-📋 REMINDER:
-   - Follow the coding standards for the detected languages/frameworks
-   - Include tests where appropriate
-   - Consider security implications
-   - Write clear, well-documented code
+💡 REMINDER:
+   • Follow the coding standards for the detected languages/frameworks
+   • Include tests where appropriate
+   • Consider security implications
+   • Write clear, well-documented code
 
-Why this matters:
-   - Consistent code quality across the project
-   - Security best practices from the start
-   - Maintainable, testable code
-   - Prevents common anti-patterns
+🎯 Why this matters:
+   • Consistent code quality across the project
+   • Security best practices from the start
+   • Maintainable, testable code
+   • Prevents common anti-patterns
 
 ═══════════════════════════════════════════════════════
 EOF

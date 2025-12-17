@@ -40,36 +40,47 @@ When you ask Claude to write code, the hook displays evaluation steps showing wh
 
 ```
 ═══════════════════════════════════════════════════════
-🎯 MANDATORY SKILL ACTIVATION - DO NOT SKIP
+🎯 SKILL ACTIVATION - Centralized Rules Loaded
 ═══════════════════════════════════════════════════════
+📦 Source: paulduvall/centralized-rules
+🔗 Repo: https://github.com/paulduvall/centralized-rules
+📌 Commit: be4533b
+───────────────────────────────────────────────────────
 
-CRITICAL: Before implementing ANY code, you MUST follow this 3-step process:
+📚 Before implementing, follow this 3-step process:
 
-STEP 1: EVALUATE which rules apply (list YES/NO for each category):
-   - Detected Languages: javascript
-   - Detected Frameworks: react
+STEP 1: 🔍 EVALUATE which rules apply
+   🔹 Detected Languages: javascript
+   🔹 Detected Frameworks: react
 
-   - Matched Rule Categories:
-     [ ] base/code-quality
-     [ ] base/testing-philosophy
-     [ ] languages/javascript
-     [ ] frameworks/react
+   📋 Matched Rule Categories:
+     ☐ base/code-quality
+     ☐ base/testing-philosophy
+     ☐ languages/javascript
+     ☐ frameworks/react
 
-STEP 2: APPLY relevant coding standards
+STEP 2: 🔧 APPLY relevant coding standards
 
    Based on the evaluation above, apply these coding principles:
-   - Code Quality: Write clean, maintainable code
-   - Testing: Include comprehensive tests where appropriate
-   - Security: Follow security best practices
-   - Language Standards: Follow best practices for the detected languages
+   ✓ Code Quality: Write clean, maintainable code
+   ✓ Testing: Include comprehensive tests where appropriate
+   ✓ Security: Follow security best practices
+   ✓ Language Standards: Follow best practices for the detected languages
 
-STEP 3: IMPLEMENT the task following the identified standards
+STEP 3: ⚡ IMPLEMENT the task following the identified standards
 
-📋 REMINDER:
-   - Follow the coding standards for the detected languages/frameworks
-   - Include tests where appropriate
-   - Consider security implications
-   - Write clear, well-documented code
+💡 REMINDER:
+   • Follow the coding standards for the detected languages/frameworks
+   • Include tests where appropriate
+   • Consider security implications
+   • Write clear, well-documented code
+
+🎯 Why this matters:
+   • Consistent code quality across the project
+   • Security best practices from the start
+   • Maintainable, testable code
+   • Prevents common anti-patterns
+
 ═══════════════════════════════════════════════════════
 ```
 
@@ -108,6 +119,8 @@ Claude implements: Following Python standards, includes pytest tests, adds docst
 **Key Features:**
 - ✅ **Auto-detection** - Detects languages/frameworks from your project files
 - ✅ **Keyword matching** - Matches your prompt to relevant rule categories
+- ✅ **Version tracking** - Shows repo source and commit hash for transparency
+- ✅ **Visual indicators** - Icons throughout for easy scanning (🔍 🔧 ⚡ 📋 ✓)
 - ✅ **Visible feedback** - Shows which standards are being applied
 - ✅ **Progressive disclosure** - Loads only relevant rules, not everything
 - ✅ **Zero configuration** - One command installation, works everywhere
@@ -176,18 +189,26 @@ cat ~/.claude/settings.json  # Global
 Should contain:
 ```json
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
-    "UserPromptSubmit": [{
-      "hooks": [{
-        "type": "command",
-        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh"
-      }]
-    }]
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/activate-rules.sh",
+            "description": "Activate centralized-rules skill"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
-**Solution:** Re-run the install script.
+**Important:** The hook format requires nested structure. See [.claude/SETTINGS.md](./.claude/SETTINGS.md) for detailed explanation.
+
+**Solution:** Re-run the install script or manually update to the correct format (see SETTINGS.md).
 
 ### Hook appears but doesn't fire
 
@@ -406,6 +427,7 @@ For deep technical details:
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Design decisions, performance validation
 - [PRACTICE_CROSSREFERENCE.md](./PRACTICE_CROSSREFERENCE.md) - Practice-to-file mapping
 - [ANTI_PATTERNS.md](./ANTI_PATTERNS.md) - Common anti-patterns catalog
+- [.claude/SETTINGS.md](./.claude/SETTINGS.md) - Claude Code settings format reference
 
 ## Contributing
 
