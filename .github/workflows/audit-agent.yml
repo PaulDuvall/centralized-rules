@@ -45,7 +45,7 @@ jobs:
         run: |
           if [ -f scripts/audit-agent/audit-report.json ]; then
             echo "## Audit Summary"
-            python3 -c "
+            python3 <<'PYTHON_SCRIPT'
 import json
 import sys
 
@@ -54,34 +54,34 @@ with open('scripts/audit-agent/audit-report.json') as f:
 
 print('### Project Context')
 ctx = report['context']
-print(f\"- Languages: {', '.join(ctx['languages']) or 'None'}\")
-print(f\"- Frameworks: {', '.join(ctx['frameworks']) or 'None'}\")
-print(f\"- Cloud Providers: {', '.join(ctx['cloud_providers']) or 'None'}\")
-print(f\"- Maturity: {ctx['maturity']}\")
+print(f"- Languages: {', '.join(ctx['languages']) or 'None'}")
+print(f"- Frameworks: {', '.join(ctx['frameworks']) or 'None'}")
+print(f"- Cloud Providers: {', '.join(ctx['cloud_providers']) or 'None'}")
+print(f"- Maturity: {ctx['maturity']}")
 print()
 
 print('### Rules Selection')
 rules = report['rules_selection_report']
-print(f\"- Total rules available: {rules['total_rules_available']}\")
-print(f\"- Rules selected: {rules['total_rules_selected']}\")
-print(f\"- Estimated tokens: {rules['total_estimated_tokens']}\")
-print(f\"- Selection efficiency: {rules['selection_efficiency']}\")
+print(f"- Total rules available: {rules['total_rules_available']}")
+print(f"- Rules selected: {rules['total_rules_selected']}")
+print(f"- Estimated tokens: {rules['total_estimated_tokens']}")
+print(f"- Selection efficiency: {rules['selection_efficiency']}")
 print()
 
 if report.get('mece_content_map'):
     print('### MECE Analysis')
     mece = report['mece_content_map']
-    print(f\"- Files analyzed: {mece.get('files_analyzed', 0)}\")
+    print(f"- Files analyzed: {mece.get('files_analyzed', 0)}")
     print()
 
 if report.get('file_disposition'):
     print('### File Disposition')
     disp = report['file_disposition']
-    print(f\"- Total files: {disp.get('total_files', 0)}\")
-    print(f\"- Redundant: {disp.get('redundant', 0)}\")
-    print(f\"- Obsolete: {disp.get('obsolete', 0)}\")
+    print(f"- Total files: {disp.get('total_files', 0)}")
+    print(f"- Redundant: {disp.get('redundant', 0)}")
+    print(f"- Obsolete: {disp.get('obsolete', 0)}")
     print()
-            "
+PYTHON_SCRIPT
           else
             echo "Audit report not found"
             exit 1
@@ -101,7 +101,7 @@ if report.get('file_disposition'):
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -f scripts/audit-agent/audit-report.json ]; then
-            python3 -c "
+            python3 <<'PYTHON_SCRIPT' || echo "Issue creation skipped or failed"
 import json
 import os
 import subprocess
@@ -116,7 +116,7 @@ redundant_count = disposition.get('redundant', 0)
 
 if obsolete_count > 0 or redundant_count > 0:
     # Create GitHub issue
-    title = f'Repository Audit Findings - {report[\"timestamp\"][:10]}'
+    title = f'Repository Audit Findings - {report["timestamp"][:10]}'
 
     body = f'''## Audit Report
 
@@ -139,11 +139,11 @@ if obsolete_count > 0 or redundant_count > 0:
     if disposition.get('recommendations'):
         body += '### Recommendations\n\n'
         for rec in disposition['recommendations'][:5]:
-            body += f\"- {rec['file']}: {rec['action']} ({rec['status']})\n\"
+            body += f"- {rec['file']}: {rec['action']} ({rec['status']})\n"
 
     body += f'''
 
-View full report in [artifacts](https://github.com/${{os.environ['GITHUB_REPOSITORY']}}/actions/runs/${{os.environ['GITHUB_RUN_ID']}})
+View full report in [artifacts](https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']})
 '''
 
     # Use gh CLI to create issue
@@ -158,7 +158,7 @@ View full report in [artifacts](https://github.com/${{os.environ['GITHUB_REPOSIT
     print(f'Created issue: {title}')
 else:
     print('No actionable findings - skipping issue creation')
-            " || echo "Issue creation skipped or failed"
+PYTHON_SCRIPT
           fi
 
       - name: Comment on PR (if triggered by PR)
