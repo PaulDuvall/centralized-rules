@@ -17,6 +17,21 @@ cd your-project
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
 ```
 
+> **📍 What Actually Happens During Installation**
+>
+> **Global Install** (recommended):
+> - Adds hook to `~/.claude/settings.json`
+> - **Automatically applies to ALL projects** that use Claude Code CLI
+> - One-time setup, works everywhere instantly
+> - No per-project configuration needed
+> - **To uninstall**: Remove hooks section from `~/.claude/settings.json` and delete `~/.claude/hooks/`
+>
+> **Local Install**:
+> - Adds hook to `.claude/settings.json` in current project only
+> - Only affects this specific project
+> - Useful for project-specific customization
+> - **To uninstall**: Remove hooks section from `.claude/settings.json` and delete `.claude/hooks/`
+
 **That's it.** No manual configuration needed.
 
 ### What You'll See
