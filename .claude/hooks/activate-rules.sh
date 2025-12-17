@@ -271,7 +271,8 @@ main() {
     context=$(detect_project_context)
 
     # Generate and output activation instruction
-    generate_activation_instruction "${prompt}" "${context}"
+    # Output to both stdout (for Claude) and stderr (for user terminal)
+    generate_activation_instruction "${prompt}" "${context}" | tee /dev/stderr
 
     log_debug "Activation instruction generated successfully"
     exit 0
