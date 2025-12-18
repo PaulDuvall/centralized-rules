@@ -153,6 +153,18 @@ detect_cloud_providers() {
     echo "${providers[@]:-}"
 }
 
+# Detect development tools
+detect_tools() {
+    local tools=()
+
+    # Beads issue tracker
+    if [[ -d ".beads" ]]; then
+        tools+=("beads")
+    fi
+
+    echo "${tools[@]:-}"
+}
+
 # Detect project maturity level
 detect_maturity_level() {
     local production_indicators=0
@@ -332,18 +344,35 @@ load_cloud_rules() {
     done
 }
 
+# Load development tool rules
+load_tool_rules() {
+    local tool="$1"
+    log_info "Loading $tool tool rules..."
+
+    local tool_rule="tools/${tool}/issue-tracking.md"
+    local output="${CACHE_DIR}/${tool_rule}"
+
+    if download_rule "$tool_rule" "$output"; then
+        log_success "Loaded ${tool} issue tracking rules"
+    else
+        log_warn "No tool rules for $tool"
+    fi
+}
+
 # Generate hierarchical rule structure
 generate_claude_rules_hierarchical() {
     log_info "Generating Claude Code rules (hierarchical structure)..."
 
     # Create directory structure
-    mkdir -p .claude/rules/{base,languages,frameworks,cloud}
+    mkdir -p .claude/rules/{base,languages,frameworks,cloud,tools}
 
     # Detect what was loaded for the index
     local languages_loaded
     local frameworks_loaded
+    local tools_loaded
     read -ra languages_loaded <<< "$(detect_language)"
     read -ra frameworks_loaded <<< "$(detect_frameworks)"
+    read -ra tools_loaded <<< "$(detect_tools)"
 
     # Copy base rules
     if [[ -d "${CACHE_DIR}/base" ]]; then
@@ -370,6 +399,14 @@ generate_claude_rules_hierarchical() {
     if [[ -d "${CACHE_DIR}/cloud" ]]; then
         cp -r "${CACHE_DIR}/cloud/"* .claude/rules/cloud/ 2>/dev/null || true
     fi
+
+    # Copy tool rules
+    for tool in "${tools_loaded[@]:-}"; do
+        if [[ -n "$tool" ]] && [[ -d "${CACHE_DIR}/tools/${tool}" ]]; then
+            mkdir -p ".claude/rules/tools/${tool}"
+            cp -r "${CACHE_DIR}/tools/${tool}/"*.md ".claude/rules/tools/${tool}/" 2>/dev/null || true
+        fi
+    done
 
     # Generate index.json
     generate_rule_index "${languages_loaded[@]:-}" "${frameworks_loaded[@]:-}"
@@ -536,6 +573,11 @@ EOF
         echo "- Languages: None detected (base rules only)" >> "$output"
     fi
 
+    # Add detected tools
+    if [[ ${#tools_loaded[@]} -gt 0 ]]; then
+        echo "- Development Tools: ${tools_loaded[*]}" >> "$output"
+    fi
+
     cat >> "$output" <<'EOF'
 
 **Available Rules:**
@@ -583,6 +625,23 @@ EOF
 **Go:**
 - `languages/go/coding-standards.md` - Effective Go, conventions
 - `languages/go/testing.md` - Table-driven tests, testify
+
+EOF
+        fi
+    fi
+
+    # Add tool rules if detected
+    if [[ ${#tools_loaded[@]} -gt 0 ]]; then
+        cat >> "$output" <<'EOF'
+### Development Tools
+
+EOF
+        if [[ " ${tools_loaded[*]} " =~ " beads " ]]; then
+            cat >> "$output" <<'EOF'
+**Beads (Issue Tracking):**
+- `tools/beads/issue-tracking.md` - Session protocols, issue creation, workflow management
+- **When to load**: Session start/end, issue tracking, discovered work patterns
+- **Integration**: Works alongside git-workflow.md and TodoWrite tool
 
 EOF
         fi
@@ -656,6 +715,35 @@ EOF
    ```
 3. Announce what's loaded for each part
 4. Apply appropriate rules to each codebase
+
+---
+
+### Example 4: Beads Session Workflow (If .beads/ detected)
+
+**User**: "Let's start working on the authentication feature"
+
+**Your workflow**:
+1. Identify: Session start with beads issue tracking
+2. Load rules:
+   ```
+   Read .claude/rules/tools/beads/issue-tracking.md
+   Read .claude/rules/base/git-workflow.md
+   ```
+3. Follow session start protocol:
+   ```bash
+   bd ready --json
+   ```
+4. Show available issues and help user claim work
+5. During session: File discovered work with `bd create`
+6. At session end: Follow "Land the Plane" protocol (sync, push, suggest next work)
+
+**When to load beads rule:**
+- User mentions "bd", "beads", "beas" (misspelling), or "session"
+- Session start/end workflows
+- Issue tracking tasks
+- Discovered work patterns
+
+**Token usage**: ~20K (beads rule alone), use selectively for session boundaries
 
 ---
 
@@ -1011,6 +1099,8 @@ sync_rules() {
     while IFS= read -r line; do frameworks+=("$line"); done < <(detect_frameworks)
     local cloud_providers=()
     while IFS= read -r line; do cloud_providers+=("$line"); done < <(detect_cloud_providers)
+    local tools=()
+    while IFS= read -r line; do tools+=("$line"); done < <(detect_tools)
     local maturity_level
     maturity_level=$(detect_maturity_level)
 
@@ -1026,6 +1116,10 @@ sync_rules() {
 
     if [[ ${#cloud_providers[@]} -gt 0 ]]; then
         log_info "Detected cloud providers: ${cloud_providers[*]}"
+    fi
+
+    if [[ ${#tools[@]} -gt 0 ]]; then
+        log_info "Detected development tools: ${tools[*]}"
     fi
 
     log_info "Detected maturity level: $maturity_level"
@@ -1051,6 +1145,12 @@ sync_rules() {
     # Load cloud provider rules
     for provider in "${cloud_providers[@]:-}"; do
         [[ -n "$provider" ]] && load_cloud_rules "$provider"
+        echo ""
+    done
+
+    # Load development tool rules
+    for tool in "${tools[@]:-}"; do
+        [[ -n "$tool" ]] && load_tool_rules "$tool"
         echo ""
     done
 
