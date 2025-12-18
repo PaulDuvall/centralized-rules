@@ -271,8 +271,11 @@ main() {
     context=$(detect_project_context)
 
     # Generate and output activation instruction
-    # Output to both stdout (for Claude) and stderr (for user terminal)
-    generate_activation_instruction "${prompt}" "${context}" | tee /dev/stderr
+    # Send to both user terminal (stderr) and Claude context (stdout)
+    local output
+    output=$(generate_activation_instruction "${prompt}" "${context}")
+    echo "${output}" >&2  # Show to user immediately
+    echo "${output}"      # Add to Claude context
 
     log_debug "Activation instruction generated successfully"
     exit 0
