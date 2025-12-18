@@ -271,11 +271,35 @@ main() {
     context=$(detect_project_context)
 
     # Generate and output activation instruction
-    # Send to both user terminal (stderr) and Claude context (stdout)
+    # Use JSON format with systemMessage (visible to user) and additionalContext (for Claude)
     local output
     output=$(generate_activation_instruction "${prompt}" "${context}")
-    echo "${output}" >&2  # Show to user immediately
-    echo "${output}"      # Add to Claude context
+
+    # Check if jq is available for safe JSON escaping
+    if command -v jq &> /dev/null; then
+        # Use jq for proper JSON escaping
+        echo "${output}" | jq -Rs . | jq -s -c "{
+            systemMessage: .[0],
+            hookSpecificOutput: {
+                hookEventName: \"UserPromptSubmit\",
+                additionalContext: .[0]
+            }
+        }"
+    else
+        # Fallback: Manual JSON escaping (basic but functional)
+        local escaped_output
+        escaped_output=$(printf '%s' "${output}" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed '$ s/\\n$//')
+
+        cat <<EOF
+{
+    "systemMessage": "${escaped_output}",
+    "hookSpecificOutput": {
+        "hookEventName": "UserPromptSubmit",
+        "additionalContext": "${escaped_output}"
+    }
+}
+EOF
+    fi
 
     log_debug "Activation instruction generated successfully"
     exit 0
