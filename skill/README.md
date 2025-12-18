@@ -349,33 +349,33 @@ npm run build
 ### ✅ Completed
 
 **Core Setup (cs1, cs2, cs8)**
-- [x] Development environment setup (cs1)
-- [x] TypeScript configuration with strict mode (cs1)
-- [x] Testing framework - Vitest with coverage (cs1)
-- [x] ESLint & Prettier configuration (cs1)
-- [x] Skill manifest (skill.json) (cs2)
-- [x] Type definitions (cs2)
-- [x] Project structure (cs2)
-- [x] Git-based distribution with install script (cs8)
+- ✅ Development environment setup (cs1)
+- ✅ TypeScript configuration with strict mode (cs1)
+- ✅ Testing framework - Vitest with coverage (cs1)
+- ✅ ESLint & Prettier configuration (cs1)
+- ✅ Skill manifest (skill.json) (cs2)
+- ✅ Type definitions (cs2)
+- ✅ Project structure (cs2)
+- ✅ Git-based distribution with install script (cs8)
 
 **Refactorings (rf1, rf2, rf3)**
-- [x] Removed validate_code tool (YAGNI) (rf1)
-- [x] Removed NPM publishing cruft from package.json (rf2)
-- [x] Added implementation status section to README (rf3)
+- ✅ Removed validate_code tool (YAGNI) (rf1)
+- ✅ Removed NPM publishing cruft from package.json (rf2)
+- ✅ Added implementation status section to README (rf3)
 
 ### 🚧 Not Yet Implemented
 
 **Core Features**
-- [ ] Context detection tool - detect languages, frameworks, cloud providers (cs3)
-- [ ] Rule selection algorithm - scoring and ranking (cs4)
-- [ ] GitHub fetching with caching - fetch rules from repo (cs5)
-- [ ] beforeResponse hook - automatic rule injection (cs6)
-- [ ] Comprehensive test suite - unit, integration, E2E (cs7)
-- [ ] Migration guide for sync script users (cs9)
+- ☐ Context detection tool - detect languages, frameworks, cloud providers (cs3)
+- ☐ Rule selection algorithm - scoring and ranking (cs4)
+- ☐ GitHub fetching with caching - fetch rules from repo (cs5)
+- ☐ beforeResponse hook - automatic rule injection (cs6)
+- ☐ Comprehensive test suite - unit, integration, E2E (cs7)
+- ☐ Migration guide for sync script users (cs9)
 
 **Future Refactorings**
-- [ ] Replace hardcoded enums with dynamic values (rf4)
-- [ ] Review type definitions after implementation (rf5)
+- ☐ Replace hardcoded enums with dynamic values (rf4)
+- ☐ Review type definitions after implementation (rf5)
 
 ## Verification & Testing
 
