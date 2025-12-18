@@ -6,49 +6,100 @@ This repository implements a **progressive disclosure** system for AI developmen
 
 ## Core Concepts
 
-### 1. Progressive Disclosure
+### 1. Progressive Disclosure: Two-Tier Architecture
 
 **Problem:** Loading all rules overwhelms AI assistants and creates instruction saturation.
 
-**Solution:** Two-phase progressive disclosure system that loads only relevant rules at both project and task levels.
+**Solution:** Two-tier progressive disclosure system that balances minimal overhead with contextual depth.
 
-#### Phase 1: Project-Level Disclosure (Implemented)
+#### Tier 1: Bash Hook (Metadata Reminder)
 
-Dynamically loads only rules relevant to the current project's detected language, framework, and tooling.
+Provides immediate, lightweight behavioral prompts on every request.
 
-**Example:**
-```
-Python + FastAPI project → loads Python + FastAPI rules only
-TypeScript + React project → loads TypeScript + React rules only
-```
-
-**How it works:**
-1. Sync script detects project configuration (pyproject.toml, package.json, etc.)
-2. Identifies languages and frameworks
-3. Downloads only relevant rules from centralized repository
-4. Generates project-specific rule files
-
-**Outcome:** Only 8-12 rule files loaded vs 50+ available in repository
-
-#### Phase 2: Task-Level Disclosure (Implemented)
-
-Within a project, loads only rules relevant to the specific task being performed.
+**Purpose:** Quick reminder of which coding standards might apply
+**Mechanism:** UserPromptSubmit hook (`.claude/hooks/activate-rules.sh`)
+**Timing:** Runs immediately when user sends prompt
+**Content:** Metadata only - shows category names, no actual rule content
+**Output:** Visual feedback to user + context injection to Claude
+**Token Cost:** ~500 tokens (fixed overhead)
 
 **Example:**
 ```
-Task: "Write pytest tests" → loads base/testing + python/testing only
-Task: "Review this function" → loads base/code-quality + python/coding-standards only
-Task: "Commit changes" → loads base/git-workflow only
+User prompt: "Write pytest tests"
+       ↓
+Hook detects: Python project (pyproject.toml) + "test" keyword
+       ↓
+Hook outputs:
+   📋 Matched Rule Categories:
+     ☐ base/testing-philosophy
+     ☐ languages/python/testing
+   [Generic reminders about testing, code quality, etc.]
+       ↓
+Claude receives: 500 token behavioral prompt
 ```
 
-**How it works:**
-1. AI agent receives hierarchical `.claude/rules/` directory structure
-2. Entry point (`.claude/AGENTS.md`) provides discovery instructions
-3. Agent analyzes user request to identify task type
-4. Uses Read tool to load only relevant 2-3 rule files
-5. Announces which rules are loaded (visual feedback)
+**Outcome:** Consistent behavioral nudging with minimal context cost
 
-**Outcome:** 55-90% token reduction per task (measured in real-world testing)
+#### Tier 2: TypeScript Skill (Progressive Content Loading)
+
+Fetches and injects actual rule content based on relevance scoring.
+
+**Purpose:** Provide specific implementation guidance
+**Mechanism:** beforeResponse hook (`skill/src/hooks/before-response.ts`)
+**Timing:** Runs after user prompt, before Claude responds
+**Content:** Full markdown rule files from GitHub
+**Selection:** Relevance-scored with token budgets
+**Token Cost:** 0-5,000 tokens (configurable via maxTokens)
+
+**How it works:**
+1. **Context Detection** (20-50ms): Scans filesystem for language/framework markers
+2. **Intent Analysis** (5-10ms): Extracts keywords and topics from user prompt
+3. **Relevance Scoring** (5-10ms): Scores each rule file:
+   - Language match: +100 points
+   - Framework match: +100 points
+   - Topic match: +80 points
+   - Base rules: +20 points
+4. **Selection** (1ms): Picks top 5 rules within 5000 token budget
+5. **Fetching** (100-500ms): Retrieves from GitHub (cached for 1 hour)
+6. **Injection** (1ms): Adds to Claude's system prompt
+
+**Example:**
+```
+User prompt: "Write FastAPI endpoint with auth"
+       ↓
+Context: Python + FastAPI project
+Intent: implementation + authentication
+       ↓
+Scored rules:
+  - frameworks/fastapi/best-practices.md: 200 pts
+  - languages/python/coding-standards.md: 120 pts
+  - base/security-principles.md: 100 pts
+  - base/testing-philosophy.md: 100 pts
+       ↓
+Selected (top 4, ~3800 tokens):
+  ✓ frameworks/fastapi/best-practices.md (~1500 tokens)
+  ✓ languages/python/coding-standards.md (~1100 tokens)
+  ✓ base/security-principles.md (~800 tokens)
+  ✓ base/testing-philosophy.md (~400 tokens)
+       ↓
+Claude receives: Hook metadata (500) + Rule content (3800) = 4300 tokens
+```
+
+**Outcome:** Context-aware guidance without saturation
+
+#### Combined Token Efficiency
+
+**Per-Request Costs:**
+- Hook only: ~500 tokens (always runs)
+- Hook + Skill: ~500-5,500 tokens (depends on relevance matches)
+- Maximum: 5,500 tokens = 2.75% of 200K context window
+- Compared to loading all rules: ~200,000 tokens (catastrophic)
+
+**Efficiency Gains:**
+- 96-97% reduction vs. loading entire repository
+- Smart selection: only most relevant 3-5 rules load
+- Caching: No repeated GitHub fetches within 1 hour
+- Fail-safe: Errors never block Claude's response
 
 ### 2. MECE Framework: Four-Dimensional Organization
 

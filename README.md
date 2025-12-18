@@ -104,25 +104,45 @@ Write a simple calculator function
 
 You should see the evaluation steps displayed above, followed by well-structured code with tests.
 
-## How It Works
+## How It Works: Two-Tier Architecture
 
+The system uses two complementary mechanisms to provide both quick reminders and detailed guidance:
+
+**Tier 1: Instant Reminder (Bash Hook) - ~500 tokens**
+- Runs immediately when you send a prompt
+- Shows which rule categories might be relevant
+- Provides visible feedback to you (the colored box you see)
+- Minimal overhead, always runs
+
+**Tier 2: Progressive Content Loading (TypeScript Skill) - up to 5,000 tokens**
+- Runs before Claude responds
+- Fetches actual rule content from GitHub based on relevance
+- Smart selection: only loads rules matching your project + prompt
+- Cached for performance (1 hour TTL)
+
+**Combined Flow:**
 ```
 You type: "Write a Python function with tests"
        ↓
 Hook detects: Python language + testing keywords
+Hook displays: Evaluation steps (visible to you)
        ↓
-Hook displays: Evaluation steps showing applicable rules
+Skill fetches: python/testing.md, python/coding-standards.md, base/testing-philosophy.md
+Skill injects: ~3,000 tokens of actual guidance into Claude's context
        ↓
-Claude implements: Following Python standards, includes pytest tests, adds docstrings
+Claude implements: Following specific Python standards from loaded rules
 ```
 
+**Total Context Cost:** 500-5,500 tokens per request (2.75% of 200K context window)
+
 **Key Features:**
+- ✅ **Two-tier efficiency** - Quick metadata + deep content when needed
 - ✅ **Auto-detection** - Detects languages/frameworks from your project files
-- ✅ **Keyword matching** - Matches your prompt to relevant rule categories
+- ✅ **Smart selection** - Relevance scoring ensures most useful rules load first
+- ✅ **Token budgets** - maxRules (5) and maxTokens (5000) prevent context saturation
 - ✅ **Version tracking** - Shows repo source and commit hash for transparency
-- ✅ **Visual indicators** - Icons throughout for easy scanning (🔍 🔧 ⚡ 📋 ✓)
 - ✅ **Visible feedback** - Shows which standards are being applied
-- ✅ **Progressive disclosure** - Loads only relevant rules, not everything
+- ✅ **Progressive disclosure** - Loads only relevant rules based on project + prompt
 - ✅ **Zero configuration** - One command installation, works everywhere
 
 ## Installation Details
