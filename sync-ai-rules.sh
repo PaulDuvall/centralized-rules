@@ -1149,8 +1149,8 @@ sync_rules() {
     done
 
     # Load development tool rules
-    for tool in "${tools[@]:-}"; do
-        [[ -n "$tool" ]] && load_tool_rules "$tool"
+    for dev_tool in "${tools[@]:-}"; do
+        [[ -n "$dev_tool" ]] && load_tool_rules "$dev_tool"
         echo ""
     done
 
