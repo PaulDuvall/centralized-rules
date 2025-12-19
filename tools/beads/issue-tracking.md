@@ -27,9 +27,35 @@ See `base/project-maturity-levels.md` for detailed maturity framework.
 
 Beads is a lightweight, git-based issue tracking system designed for AI agents and developers to manage work seamlessly within the repository.
 
+### ⚠️ CRITICAL DATABASE SAFETY WARNING
+
+**NEVER EDIT `.beads/issues.jsonl` OR `.beads/beads.db` DIRECTLY!**
+
+The `.beads/issues.jsonl` file is a **GENERATED EXPORT** from the `beads.db` database.
+- ❌ Manually editing JSONL will NOT update the database
+- ❌ Direct edits to JSONL are **silently ignored**
+- ✅ **ALWAYS use `bd` commands** (`bd create`, `bd update`, `bd close`)
+- ✅ **ALWAYS verify** issues were created correctly using `bd list` or `bd show`
+
+**Wrong approach (will not work):**
+```bash
+# ❌ This does nothing - changes are ignored
+echo '{"id":"bd-99"...}' >> .beads/issues.jsonl
+```
+
+**Correct approach:**
+```bash
+# ✅ Use bd commands - they update the database
+bd create "Task title" --description "Details" -p 1 -t task --json
+
+# ✅ Verify it was created
+bd list --status open | grep "bd-"
+```
+
 ### Key Principles:
 
 - **Always use --json flag** for programmatic parsing by AI agents
+- **Always verify after creating** issues using `bd list` or `bd show`
 - **Session protocols** ensure clean state transitions and prevent data loss
 - **Discovered work pattern** captures bugs and tasks found during other work
 - **Dependency tracking** manages relationships between issues
@@ -148,6 +174,110 @@ bd create "Update dependencies to latest versions" \
 - **At session end**: Filing remaining work for future sessions
 - **Code review**: Issues found during review
 - **Testing**: Bugs discovered during testing
+
+### ✅ MANDATORY Verification After Creating Issues
+
+**CRITICAL:** After every `bd create` command, you MUST verify the issue was created correctly.
+
+#### Verification Protocol:
+
+1. **Capture the issue ID from output**
+   ```bash
+   bd create "Task title" -t task -p 1 --json
+   # Output: {"id": "centralized-rules-abc", ...}
+   ```
+
+2. **Verify using bd list**
+   ```bash
+   bd list --status open | grep "centralized-rules-abc"
+   ```
+
+   **Expected output:**
+   ```
+   centralized-rules-abc [P1] [task] open - Task title
+   ```
+
+3. **Or verify using bd show**
+   ```bash
+   bd show centralized-rules-abc --json
+   ```
+
+   **Expected output:**
+   ```json
+   {
+     "id": "centralized-rules-abc",
+     "title": "Task title",
+     "status": "open",
+     "type": "task",
+     "priority": 1
+   }
+   ```
+
+#### If Issue Doesn't Appear:
+
+**Problem:** `bd list` doesn't show the issue you just created.
+
+**Common causes:**
+- ❌ Edited `.beads/issues.jsonl` directly instead of using `bd create`
+- ❌ Database not synchronized
+- ❌ Wrong status filter (issue is in different status than expected)
+- ❌ Daemon not running
+
+**Solution steps:**
+
+1. **Check with all statuses**
+   ```bash
+   bd list --status all | grep "task title"
+   ```
+
+2. **Check daemon status**
+   ```bash
+   ps aux | grep "bd.*daemon"
+   ```
+
+3. **Restart daemon if needed**
+   ```bash
+   pkill -f "bd.*daemon"
+   bd list --json  # Auto-starts daemon
+   ```
+
+4. **Check database directly**
+   ```bash
+   bd export | grep "task title"
+   ```
+
+5. **If issue is truly missing, recreate it**
+   ```bash
+   bd create "Task title" -t task -p 1 --json
+   # Verify immediately
+   bd list --status open | grep "task title"
+   ```
+
+#### Best Practice Pattern:
+
+**Always combine create + verify in sequence:**
+
+```bash
+# Create issue
+ISSUE_OUTPUT=$(bd create "Implement user authentication" \
+  --description "Add JWT-based auth with refresh tokens" \
+  -t feature \
+  -p 1 \
+  --json)
+
+# Extract ID
+ISSUE_ID=$(echo "$ISSUE_OUTPUT" | jq -r '.id')
+
+# Verify it exists
+bd show "$ISSUE_ID" --json | jq -r '.id, .title, .status'
+
+# Expected output:
+# centralized-rules-xyz
+# Implement user authentication
+# open
+```
+
+**This verification is NON-NEGOTIABLE.** If you cannot verify the issue exists, the task has NOT been completed.
 
 ## Claiming Work
 
@@ -738,11 +868,51 @@ bd show bd-42 --json | jq '.dependencies'
 
 ### Database Safety
 
-1. **Never edit .beads/ manually** - Use bd commands only
-2. **Always resolve conflicts** - Use `git checkout --theirs` + `bd import`
-3. **Install git hooks** - Automatic synchronization
-4. **Sync before major operations** - Prevent conflicts
-5. **Backup regularly** - `.beads/` is in git, but extra backups don't hurt
+⚠️ **CRITICAL - DO NOT EDIT `.beads/issues.jsonl` DIRECTLY**
+
+The `.beads/issues.jsonl` file is a **GENERATED EXPORT** from the `beads.db` database.
+Manually editing it will **NOT** update the database!
+
+**Wrong approach (will not work):**
+```bash
+# ❌ This does nothing - changes are ignored
+echo '{"id":"bd-99"...}' >> .beads/issues.jsonl
+vim .beads/issues.jsonl  # Edits are silently ignored
+```
+
+**Correct approach:**
+```bash
+# ✅ Use bd commands - they update the database
+bd create "Task title" --description "Details" -p 1 -t task --json
+
+# ✅ Always verify
+bd list --status open | grep "Task title"
+```
+
+**Why this matters:**
+- Beads uses `beads.db` as the single source of truth
+- `issues.jsonl` is **exported FROM** the database, not imported TO it
+- Direct edits to JSONL are **silently ignored** by the database
+- You will think the issue exists, but it doesn't
+- Always use `bd create`, `bd update`, `bd close` commands
+
+**If you see issues.jsonl out of sync:**
+```bash
+# Export fresh copy from database
+bd export > .beads/issues.jsonl
+
+# Or force a sync
+bd sync
+```
+
+**Core safety rules:**
+
+1. **NEVER edit `.beads/` files manually** - Use `bd` commands only
+2. **ALWAYS verify after creating** - Use `bd list` or `bd show` to confirm
+3. **Always resolve conflicts** - Use `git checkout --theirs` + `bd import`
+4. **Install git hooks** - Automatic synchronization
+5. **Sync before major operations** - Prevent conflicts
+6. **Backup regularly** - `.beads/` is in git, but extra backups don't hurt
 
 ## Integration with Development Workflow
 
@@ -971,8 +1141,9 @@ This rule is ~20KB. Load it selectively at session boundaries or when explicitly
 # Session start
 bd ready --json
 
-# Create issue
+# Create issue (ALWAYS with verification)
 bd create "Title" --description "Details" -t TYPE -p PRIORITY --json
+bd list --status open | grep "Title"  # ✅ MANDATORY: Verify it was created
 
 # Claim work
 bd update <id> --status in_progress --json
@@ -1012,12 +1183,14 @@ git push
 ### Critical Rules
 
 1. ✅ **Always use --json flag** for agent compatibility
-2. ✅ **Session start with bd ready** to review work
-3. ✅ **Session end with bd sync + git push** (non-negotiable)
-4. ✅ **One issue in_progress** at a time
-5. ✅ **File discovered work** immediately
-6. ✅ **Detailed close reasons** document what was done
-7. ✅ **Tests must pass** before closing issues
+2. ✅ **NEVER edit `.beads/issues.jsonl` directly** - Use `bd` commands only
+3. ✅ **ALWAYS verify after creating** - Use `bd list` or `bd show` to confirm issue exists
+4. ✅ **Session start with bd ready** to review work
+5. ✅ **Session end with bd sync + git push** (non-negotiable)
+6. ✅ **One issue in_progress** at a time
+7. ✅ **File discovered work** immediately
+8. ✅ **Detailed close reasons** document what was done
+9. ✅ **Tests must pass** before closing issues
 
 ---
 
