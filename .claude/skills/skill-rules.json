@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "description": "Keyword and pattern mappings for centralized-rules skill activation",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "updated": "2025-12-20",
 
   "projectMarkers": {
@@ -127,8 +127,7 @@
             "rules": ["frameworks/django"]
           },
           "flask": {
-            "keywords": ["flask", "route", "blueprint", "jinja"],
-            "rules": ["frameworks/flask"]
+            "keywords": ["flask", "route", "blueprint", "jinja"]
           }
         }
       },
@@ -142,12 +141,10 @@
             "rules": ["frameworks/react"]
           },
           "nextjs": {
-            "keywords": ["next.js", "nextjs", "getserversideprops", "getstaticprops", "app router", "pages router"],
-            "rules": ["frameworks/nextjs"]
+            "keywords": ["next.js", "nextjs", "getserversideprops", "getstaticprops", "app router", "pages router"]
           },
           "nestjs": {
-            "keywords": ["nestjs", "controller", "service", "module", "provider", "decorator"],
-            "rules": ["frameworks/nestjs"]
+            "keywords": ["nestjs", "controller", "service", "module", "provider", "decorator"]
           },
           "express": {
             "keywords": ["express", "middleware", "router", "req", "res"],
@@ -156,9 +153,7 @@
         }
       },
       "javascript": {
-        "keywords": ["javascript", ".js", "node", "npm", "yarn", "eslint"],
-        "rules": ["languages/javascript"],
-        "testing_rules": ["languages/javascript/testing"]
+        "keywords": ["javascript", ".js", "node", "npm", "yarn", "eslint"]
       },
       "go": {
         "keywords": ["go", "golang", ".go", "goroutine", "channel", "defer", "go mod"],
@@ -182,12 +177,10 @@
         "rules": ["cloud/aws"]
       },
       "azure": {
-        "keywords": ["azure", "function app", "blob storage", "cosmos db", "arm template"],
-        "rules": ["cloud/azure"]
+        "keywords": ["azure", "function app", "blob storage", "cosmos db", "arm template"]
       },
       "gcp": {
-        "keywords": ["gcp", "google cloud", "cloud function", "firestore", "pub/sub"],
-        "rules": ["cloud/gcp"]
+        "keywords": ["gcp", "google cloud", "cloud function", "firestore", "pub/sub"]
       },
       "vercel": {
         "keywords": ["vercel", "edge function", "serverless"],
@@ -287,7 +280,6 @@
       },
       {
         "pattern": "\\.(js|jsx)$",
-        "rules": ["languages/javascript"],
         "description": "JavaScript files"
       },
       {
