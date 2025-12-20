@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "description": "Keyword and pattern mappings for centralized-rules skill activation",
-  "version": "1.0.0",
-  "updated": "2025-12-16",
+  "version": "1.1.0",
+  "updated": "2025-12-20",
 
   "projectMarkers": {
     "description": "File markers that indicate project language/framework",
@@ -75,23 +75,23 @@
     "description": "Maps keywords in prompts to rule categories",
     "base": {
       "testing": {
-        "keywords": ["test", "pytest", "jest", "mocha", "unittest", "spec", "tdd", "bdd", "coverage", "mock", "stub", "fixture", "/xtest", "/test", "/xtdd"],
+        "keywords": ["test", "pytest", "jest", "mocha", "unittest", "spec", "tdd", "bdd", "coverage", "mock", "stub", "fixture"],
         "slashCommands": ["/xtest", "/test", "/xtdd"],
         "rules": ["base/testing-philosophy"]
       },
       "security": {
-        "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability", "/xsecurity", "/security", "/xaudit"],
+        "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability"],
         "slashCommands": ["/xsecurity", "/security", "/xaudit"],
         "rules": ["base/security-principles"]
       },
       "git": {
-        "keywords": ["commit", "pull request", "pr", "merge", "branch", "git", "rebase", "cherry-pick", "push", "/xgit", "/git", "/xcommit", "/commit", "/push"],
+        "keywords": ["commit", "pull request", "pr", "merge", "branch", "git", "rebase", "cherry-pick", "push"],
         "slashCommands": ["/xgit", "/git", "/xcommit", "/commit", "/push"],
         "rules": ["base/git-workflow"],
         "description": "Detects git operations including slash commands like /xgit that perform commits/pushes"
       },
       "refactoring": {
-        "keywords": ["refactor", "clean", "improve", "optimize", "simplify", "restructure", "extract", "inline", "rename", "/xrefactor", "/xquality", "/xoptimize"],
+        "keywords": ["refactor", "clean", "improve", "optimize", "simplify", "restructure", "extract", "inline", "rename"],
         "slashCommands": ["/xrefactor", "/xquality", "/xoptimize"],
         "rules": ["base/refactoring-patterns"]
       },
@@ -108,7 +108,7 @@
         "rules": ["base/development-workflow"]
       },
       "beads": {
-        "keywords": ["beads", "beas", "bd", "bd-", "issue tracking", "session start", "session end", "create issue", "close issue", "create task", "close task"],
+        "keywords": ["beads", "bd", "bd-"],
         "rules": ["tools/beads/issue-tracking"]
       }
     },
@@ -201,45 +201,68 @@
     "patterns": [
       {
         "name": "create_test",
-        "regex": "(write|create|add|generate)\\s+(test|tests|unit test|integration test)",
+        "regex": "\\b(write|create|add|generate)\\s+(test|tests|unit test|integration test)\\b",
+        "flags": "i",
         "rules": ["base/testing-philosophy"],
         "context_dependent": true
       },
       {
         "name": "implement_feature",
-        "regex": "(implement|add|create|build)\\s+(feature|functionality|endpoint|api)",
+        "regex": "\\b(implement|add|create|build)\\s+(feature|functionality|endpoint|api)\\b",
+        "flags": "i",
         "rules": ["base/code-quality"],
         "context_dependent": true
       },
       {
         "name": "fix_bug",
-        "regex": "(fix|debug|resolve|solve)\\s+(bug|issue|error|problem)",
+        "regex": "\\b(fix|debug|resolve|solve)\\s+(this|the|a|an)?\\s*(bug|issue|error|problem)\\b",
+        "flags": "i",
         "rules": ["base/code-quality"],
         "context_dependent": true
       },
       {
         "name": "review_code",
-        "regex": "(review|check|analyze|audit)\\s+(code|implementation|changes)",
+        "regex": "\\b(review|check|analyze|audit)\\s+(code|implementation|changes)\\b",
+        "flags": "i",
         "rules": ["base/code-quality"],
         "context_dependent": true
       },
       {
         "name": "refactor",
-        "regex": "(refactor|clean up|improve|optimize|restructure)",
+        "regex": "\\b(refactor|clean up|improve|optimize|restructure)\\b",
+        "flags": "i",
         "rules": ["base/refactoring-patterns"],
         "context_dependent": false
       },
       {
         "name": "security_task",
-        "regex": "(secure|protect|authenticate|authorize|encrypt|validate)",
+        "regex": "\\b(secure|protect|authenticate|authorize|encrypt|validate)\\b",
+        "flags": "i",
         "rules": ["base/security-principles"],
         "context_dependent": false
       },
       {
         "name": "commit_changes",
-        "regex": "(commit|create (pr|pull request)|merge)",
+        "regex": "\\b(commit|create (pr|pull request)|merge)\\b",
+        "flags": "i",
         "rules": ["base/git-workflow"],
         "context_dependent": false
+      }
+    ],
+    "exclusions": [
+      {
+        "name": "test_data_not_testing",
+        "regex": "\\btest\\s+(data|file|input|case|fixture)\\b",
+        "flags": "i",
+        "excludes_rules": ["base/testing-philosophy"],
+        "description": "Prevents 'test data' or 'test file' from triggering testing rules"
+      },
+      {
+        "name": "import_not_implement",
+        "regex": "\\bimport\\s+(feature|module|library|package)\\b",
+        "flags": "i",
+        "excludes_rules": ["base/code-quality"],
+        "description": "Prevents 'import feature' from triggering feature implementation rules"
       }
     ]
   },
@@ -313,6 +336,13 @@
         "threshold": 1,
         "description": "1 signal"
       }
+    },
+    "rulePriority": {
+      "description": "Priority weights for resolving conflicts when multiple rules match",
+      "explicit_slash_command": 100,
+      "file_context": 80,
+      "intent_pattern": 60,
+      "keyword_match": 40
     }
   },
 
