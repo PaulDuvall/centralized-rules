@@ -75,19 +75,24 @@
     "description": "Maps keywords in prompts to rule categories",
     "base": {
       "testing": {
-        "keywords": ["test", "pytest", "jest", "mocha", "unittest", "spec", "tdd", "bdd", "coverage", "mock", "stub", "fixture"],
+        "keywords": ["test", "pytest", "jest", "mocha", "unittest", "spec", "tdd", "bdd", "coverage", "mock", "stub", "fixture", "/xtest", "/test", "/xtdd"],
+        "slashCommands": ["/xtest", "/test", "/xtdd"],
         "rules": ["base/testing-philosophy"]
       },
       "security": {
-        "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability"],
+        "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability", "/xsecurity", "/security", "/xaudit"],
+        "slashCommands": ["/xsecurity", "/security", "/xaudit"],
         "rules": ["base/security-principles"]
       },
       "git": {
-        "keywords": ["commit", "pull request", "pr", "merge", "branch", "git", "rebase", "cherry-pick"],
-        "rules": ["base/git-workflow"]
+        "keywords": ["commit", "pull request", "pr", "merge", "branch", "git", "rebase", "cherry-pick", "push", "/xgit", "/git", "/xcommit", "/commit", "/push"],
+        "slashCommands": ["/xgit", "/git", "/xcommit", "/commit", "/push"],
+        "rules": ["base/git-workflow"],
+        "description": "Detects git operations including slash commands like /xgit that perform commits/pushes"
       },
       "refactoring": {
-        "keywords": ["refactor", "clean", "improve", "optimize", "simplify", "restructure", "extract", "inline", "rename"],
+        "keywords": ["refactor", "clean", "improve", "optimize", "simplify", "restructure", "extract", "inline", "rename", "/xrefactor", "/xquality", "/xoptimize"],
+        "slashCommands": ["/xrefactor", "/xquality", "/xoptimize"],
         "rules": ["base/refactoring-patterns"]
       },
       "architecture": {

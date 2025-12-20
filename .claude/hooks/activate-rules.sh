@@ -92,23 +92,36 @@ match_keywords() {
     local prompt_lower
     prompt_lower=$(echo "${prompt}" | tr '[:upper:]' '[:lower:]')
 
-    # Test-related keywords
+    # Test-related keywords (including slash commands)
     if echo "${prompt_lower}" | grep -qE '(test|pytest|unittest|spec|tdd|coverage|mock)'; then
+        matched_rules+=("base/testing-philosophy")
+    # Detect test-related slash commands (e.g., /xtest, /test)
+    elif echo "${prompt_lower}" | grep -qE '/(x?test|x?tdd)(\s|$)'; then
         matched_rules+=("base/testing-philosophy")
     fi
 
-    # Security keywords
+    # Security keywords (including slash commands)
     if echo "${prompt_lower}" | grep -qE '(auth|security|password|token|jwt|oauth|permission|encrypt|hash|sanitize|validate|injection)'; then
+        matched_rules+=("base/security-principles")
+    # Detect security-related slash commands (e.g., /xsecurity, /security)
+    elif echo "${prompt_lower}" | grep -qE '/(x?security|x?audit)(\s|$)'; then
         matched_rules+=("base/security-principles")
     fi
 
-    # Git/commit keywords
-    if echo "${prompt_lower}" | grep -qE '(commit|pull request|pr|merge|branch|git)'; then
+    # Git/commit keywords (including slash commands)
+    # Detect both explicit keywords and slash commands that imply git operations
+    if echo "${prompt_lower}" | grep -qE '(commit|pull request|pr|merge|branch|push|rebase|cherry-pick)'; then
+        matched_rules+=("base/git-workflow")
+    # Detect git-related slash commands (e.g., /xgit, /commit, /xcommit, /git)
+    elif echo "${prompt_lower}" | grep -qE '/(x?git|x?commit|push)(\s|$)'; then
         matched_rules+=("base/git-workflow")
     fi
 
-    # Refactoring keywords
+    # Refactoring keywords (including slash commands)
     if echo "${prompt_lower}" | grep -qE '(refactor|clean|improve|optimize|simplify|restructure)'; then
+        matched_rules+=("base/refactoring-patterns")
+    # Detect refactoring-related slash commands (e.g., /xrefactor, /xquality)
+    elif echo "${prompt_lower}" | grep -qE '/(x?refactor|x?quality|x?optimize)(\s|$)'; then
         matched_rules+=("base/refactoring-patterns")
     fi
 
@@ -165,6 +178,23 @@ match_keywords() {
     fi
 }
 
+# Check if prompt indicates git operation (commit/push intent)
+is_git_operation() {
+    local prompt_lower="$1"
+
+    # Check for git keywords
+    if echo "${prompt_lower}" | grep -qE '(commit|push|pull request|pr|merge|branch|rebase|cherry-pick|git add)'; then
+        return 0
+    fi
+
+    # Check for git-related slash commands
+    if echo "${prompt_lower}" | grep -qE '/(x?git|x?commit|push)(\s|$)'; then
+        return 0
+    fi
+
+    return 1
+}
+
 # Generate activation instruction with forced evaluation pattern
 generate_activation_instruction() {
     local prompt="$1"
@@ -179,6 +209,16 @@ generate_activation_instruction() {
     # If no specific rules matched, use base rules only
     if [[ -z "${matched_rules}" ]]; then
         matched_rules="base/code-quality"
+    fi
+
+    # Convert prompt to lowercase for git operation detection
+    local prompt_lower
+    prompt_lower=$(echo "${prompt}" | tr '[:upper:]' '[:lower:]')
+
+    # Check if this is a git operation
+    local is_git_op=false
+    if is_git_operation "${prompt_lower}"; then
+        is_git_op=true
     fi
 
     # Get current commit hash for version tracking
@@ -198,6 +238,30 @@ generate_activation_instruction() {
 📌 Commit: ${commit_hash}
 ───────────────────────────────────────────────────────
 EOF
+
+    # Add pre-commit quality gates if this is a git operation
+    if [[ "${is_git_op}" == "true" ]]; then
+        cat <<'EOF'
+
+🚦 PRE-COMMIT QUALITY GATES DETECTED
+───────────────────────────────────────────────────────
+⚠️  IMPORTANT: Before committing/pushing, run these checks:
+
+REQUIRED CHECKS (run in this order):
+  1️⃣  Run tests        - Ensure all tests pass
+  2️⃣  Security scan    - Check for vulnerabilities
+  3️⃣  Code quality     - Verify code meets standards
+  4️⃣  Refactoring      - Check for code smells
+
+💡 Workflow:
+   • Announce: "Running pre-commit checks..."
+   • Execute each check and report results
+   • Only proceed with commit/push if ALL checks pass
+   • If any check fails, fix issues before committing
+
+───────────────────────────────────────────────────────
+EOF
+    fi
 
     cat <<'EOF'
 
