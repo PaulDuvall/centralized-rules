@@ -3,7 +3,10 @@
 
 # IDE
 .vscode/
+.vscode/claude-skill.json
 .idea/
+.cursor/
+.continue/
 *.swp
 *.swo
 
@@ -26,6 +29,8 @@ validation-results/
 
 # Generated scripts
 scripts/add-*.py
+*-tasks-*.sh
+cleanup-deprecated.sh
 
 # Build artifacts (skill/)
 skill/dist/
@@ -33,6 +38,8 @@ skill/build/
 skill/node_modules/
 skill/coverage/
 skill/.turbo/
+node_modules/
+package-lock.json
 
 # Python artifacts
 __pycache__/

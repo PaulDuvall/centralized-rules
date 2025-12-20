@@ -1,0 +1,23 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https://github.com/.*/pull/.*"
+    },
+    {
+      "pattern": "^https://github.com/.*/issues/.*"
+    },
+    {
+      "pattern": "^http://localhost"
+    },
+    {
+      "pattern": "^#"
+    }
+  ],
+  "replacementPatterns": [],
+  "httpHeaders": [],
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 3,
+  "fallbackRetryDelay": "30s",
+  "aliveStatusCodes": [200, 206, 301, 302, 307, 308]
+}

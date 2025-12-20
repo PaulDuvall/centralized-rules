@@ -1,0 +1,54 @@
+name: Check Broken Links
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.claude/**'
+      - '**.md'
+      - 'base/**'
+      - 'frameworks/**'
+      - 'languages/**'
+      - 'cloud/**'
+      - 'scripts/check-json-references.sh'
+  pull_request:
+    paths:
+      - '.claude/**'
+      - '**.md'
+      - 'base/**'
+      - 'frameworks/**'
+      - 'languages/**'
+      - 'cloud/**'
+      - 'scripts/check-json-references.sh'
+  workflow_dispatch:
+
+jobs:
+  check-json-references:
+    name: Check JSON File References
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Check JSON file references
+        run: |
+          chmod +x scripts/check-json-references.sh
+          ./scripts/check-json-references.sh
+
+  check-markdown-links:
+    name: Check Markdown Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'no'
+          use-verbose-mode: 'yes'
+          config-file: '.github/markdown-link-check-config.json'
+          check-modified-files-only: 'no'
