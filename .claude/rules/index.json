@@ -8,61 +8,61 @@
     "base": [
       {
         "name": "Code Quality",
-        "file": ".claude/rules/base/code-quality.md",
+        "file": "base/code-quality.md",
         "when": "Every task",
         "always_load": true
       },
       {
         "name": "Security Principles",
-        "file": ".claude/rules/base/security-principles.md",
+        "file": "base/security-principles.md",
         "when": "Security-relevant tasks",
         "always_load": false
       },
       {
         "name": "Testing Philosophy",
-        "file": ".claude/rules/base/testing-philosophy.md",
+        "file": "base/testing-philosophy.md",
         "when": "Testing tasks",
         "always_load": false
       },
       {
         "name": "Git Workflow",
-        "file": ".claude/rules/base/git-workflow.md",
+        "file": "base/git-workflow.md",
         "when": "Commits/PRs",
         "always_load": false
       },
       {
         "name": "Development Workflow",
-        "file": ".claude/rules/base/development-workflow.md",
+        "file": "base/development-workflow.md",
         "when": "Development process",
         "always_load": false
       },
       {
         "name": "Architecture Principles",
-        "file": ".claude/rules/base/architecture-principles.md",
+        "file": "base/architecture-principles.md",
         "when": "Architecture discussions",
         "always_load": false
       },
       {
         "name": "12-Factor App",
-        "file": ".claude/rules/base/12-factor-app.md",
+        "file": "base/12-factor-app.md",
         "when": "Architecture/deployment discussions",
         "always_load": false
       },
       {
         "name": "Refactoring Patterns",
-        "file": ".claude/rules/base/refactoring-patterns.md",
+        "file": "base/refactoring-patterns.md",
         "when": "Refactoring tasks",
         "always_load": false
       },
       {
         "name": "Ai Assisted Development",
-        "file": ".claude/rules/base/ai-assisted-development.md",
+        "file": "base/ai-assisted-development.md",
         "when": "AI-assisted development",
         "always_load": false
       },
       {
         "name": "Metrics Standards",
-        "file": ".claude/rules/base/metrics-standards.md",
+        "file": "base/metrics-standards.md",
         "when": "Metrics/monitoring tasks",
         "always_load": false
       }
