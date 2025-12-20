@@ -101,6 +101,10 @@
       "development": {
         "keywords": ["workflow", "process", "development", "ci/cd", "pipeline", "deploy"],
         "rules": ["base/development-workflow"]
+      },
+      "beads": {
+        "keywords": ["beads", "beas", "bd", "bd-", "issue tracking", "session start", "session end", "create issue", "close issue", "create task", "close task"],
+        "rules": ["tools/beads/issue-tracking"]
       }
     },
     "languages": {

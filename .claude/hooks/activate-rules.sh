@@ -152,6 +152,11 @@ match_keywords() {
         matched_rules+=("cloud/aws")
     fi
 
+    # Beads/issue tracking keywords
+    if echo "${prompt_lower}" | grep -qE '(beads|beas|bd-[0-9]+|\bbd\b|issue.track|session (start|end)|create.*(issue|task)|close.*(issue|task))'; then
+        matched_rules+=("tools/beads/issue-tracking")
+    fi
+
     log_debug "Matched rules: ${matched_rules[*]:-none}"
 
     # Return unique rules (handle empty array)
