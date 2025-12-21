@@ -310,7 +310,7 @@ test_installation() {
     local test_output
     test_output=$(echo '{"prompt":"Write a test function"}' | "$hook_script" 2>&1)
 
-    if echo "$test_output" | grep -q "STEP 1:.*EVALUATE"; then
+    if echo "$test_output" | grep -q "IMPLEMENTATION WORKFLOW"; then
         success "Hook test passed!"
         return 0
     else
