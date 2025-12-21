@@ -165,6 +165,10 @@ match_keywords() {
         matched_rules+=("cloud/aws")
     fi
 
+    if echo "${prompt_lower}" | grep -qE '(vercel|edge function|serverless)'; then
+        matched_rules+=("cloud/vercel")
+    fi
+
     # Beads/issue tracking keywords
     if echo "${prompt_lower}" | grep -qE '(beads|beas|bd-[0-9]+|\bbd\b|issue.track|session (start|end)|create.*(issue|task)|close.*(issue|task))'; then
         matched_rules+=("tools/beads/issue-tracking")
