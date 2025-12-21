@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "description": "Keyword and pattern mappings for centralized-rules skill activation",
-  "version": "1.3.1",
   "updated": "2025-12-21",
 
   "projectMarkers": {
@@ -16,7 +15,7 @@
         "patterns": ["interface\\s+\\w+", "type\\s+\\w+\\s*=", "import.*from"]
       },
       "javascript": {
-        "files": ["package.json", "*.js"],
+        "files": ["package.json", "*.js", "*.mjs", "*.cjs"],
         "patterns": ["require\\(", "module\\.exports", "export\\s+(default|const)"]
       },
       "go": {
@@ -102,6 +101,11 @@
       "metrics": {
         "keywords": ["metric", "monitoring", "observability", "logging", "tracing", "alert", "dashboard", "prometheus", "grafana"],
         "rules": ["base/metrics-standards"]
+      },
+      "cicd": {
+        "keywords": ["github actions", "gha", ".github/workflows", "gitlab ci", "gitlab", ".gitlab-ci.yml", "circleci", "jenkins", "github workflow", "actions", "ci pipeline", "cd pipeline", "continuous integration", "continuous deployment", "continuous", "integration", "deployment"],
+        "slashCommands": ["/xcicd"],
+        "rules": ["base/cicd-comprehensive"]
       },
       "development": {
         "keywords": ["workflow", "process", "development", "ci/cd", "pipeline", "deploy"],
@@ -306,6 +310,21 @@
         "pattern": "terraform\\.tf|cloudformation\\.(yml|json)",
         "rules": ["cloud/aws"],
         "description": "Infrastructure as Code"
+      },
+      {
+        "pattern": "\\.github/workflows/.*\\.(yml|yaml)$",
+        "rules": ["base/cicd-comprehensive"],
+        "description": "GitHub Actions workflow files"
+      },
+      {
+        "pattern": "\\.gitlab-ci\\.(yml|yaml)$",
+        "rules": ["base/cicd-comprehensive"],
+        "description": "GitLab CI configuration files"
+      },
+      {
+        "pattern": "\\.circleci/config\\.(yml|yaml)$",
+        "rules": ["base/cicd-comprehensive"],
+        "description": "CircleCI configuration files"
       }
     ]
   },
