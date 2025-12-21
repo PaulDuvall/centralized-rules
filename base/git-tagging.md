@@ -99,37 +99,49 @@ git tag -v v1.2.3
 
 ## Naming Conventions
 
-### Convention 1: Date-Based Versioning with Description (Recommended for This Repository)
+### Convention 1: Date-Based Semantic Versioning with Description (Recommended for This Repository)
 
-**Format:** `YYYY-MM-DD-vN-brief-description`
+**Format:** `YYYY-MM-DD-vMAJOR.MINOR.PATCH-brief-description`
 
 **Structure:**
 - `YYYY-MM-DD`: Release date (ISO 8601)
-- `vN`: Version increment for that day (v1, v2, v3, etc.)
+- `vMAJOR.MINOR.PATCH`: Semantic version following [SemVer 2.0.0](https://semver.org/)
+  - **MAJOR**: Breaking changes or incompatible API changes (v1.0.0, v2.0.0)
+  - **MINOR**: New features, backward compatible (v0.1.0, v0.2.0)
+  - **PATCH**: Bug fixes, backward compatible (v0.0.1, v0.0.2)
 - `brief-description`: Hyphenated description of changes (kebab-case)
 
 **Examples:**
 
 ```bash
-# First release of the day - new feature
-git tag -a 2025-12-21-v1-add-user-authentication -m "Add user authentication with JWT"
+# First release of the day - new feature (minor version)
+git tag -a 2025-12-21-v0.1.0-add-user-authentication -m "Add user authentication with JWT"
 
-# Second release same day - bug fix
-git tag -a 2025-12-21-v2-fix-login-validation -m "Fix login validation for edge cases"
+# Bug fix same day - patch version
+git tag -a 2025-12-21-v0.1.1-fix-login-validation -m "Fix login validation for edge cases"
 
-# Major feature release
-git tag -a 2025-12-21-v3-implement-payment-gateway -m "Implement Stripe payment gateway integration"
+# Major feature release with breaking changes
+git tag -a 2025-12-21-v1.0.0-implement-payment-gateway -m "Implement Stripe payment gateway integration with breaking API changes"
 
 # Security patch
-git tag -a 2025-12-21-v4-security-patch-xss -m "Security patch: Fix XSS vulnerability in comment system"
+git tag -a 2025-12-21-v0.1.2-security-patch-xss -m "Security patch: Fix XSS vulnerability in comment system"
 ```
 
 **Benefits:**
 - ✅ Chronological ordering
 - ✅ Self-documenting with descriptions
+- ✅ Semantic versioning clarity (breaking changes, features, fixes)
 - ✅ Multiple releases per day supported
-- ✅ Easy to understand what changed
+- ✅ Easy to understand what changed and impact level
 - ✅ Searchable by date or topic
+- ✅ Compatible with automated tooling expecting SemVer
+
+**Semantic Version Guidelines:**
+- Start at `v0.0.1` for initial development
+- Increment **PATCH** (v0.0.X) for bug fixes and minor updates
+- Increment **MINOR** (v0.X.0) for new features (backward compatible)
+- Increment **MAJOR** (vX.0.0) for breaking changes
+- Use `v1.0.0` for first production-ready release
 
 **Description Guidelines:**
 - Keep it under 50 characters
@@ -233,15 +245,15 @@ git tag -a v1.2.3-20251221-auth-improvements -m "Version 1.2.3: Authentication i
 # 1. Ensure you're on the right commit
 git log --oneline -5
 
-# 2. Create annotated tag with date-based naming
-git tag -a 2025-12-21-v1-add-api-logging -m "Add comprehensive API request logging"
+# 2. Create annotated tag with date-based semantic versioning
+git tag -a 2025-12-21-v0.1.0-add-api-logging -m "Add comprehensive API request logging"
 
 # 3. Verify tag was created
 git tag -l "2025-12-21*"
-git show 2025-12-21-v1-add-api-logging
+git show 2025-12-21-v0.1.0-add-api-logging
 
 # 4. Push tag to remote
-git push origin 2025-12-21-v1-add-api-logging
+git push origin 2025-12-21-v0.1.0-add-api-logging
 
 # Or push all tags
 git push origin --tags
@@ -252,19 +264,20 @@ git push origin --tags
 For major releases, include detailed information:
 
 ```bash
-git tag -a 2025-12-21-v1-major-release
+git tag -a 2025-12-21-v2.0.0-major-release
 
 # In editor, write detailed message:
 # Major Release: API v2.0 Launch
+#
+# BREAKING CHANGES (v2.0.0):
+# - REST API v1 deprecated
+# - Authentication now requires OAuth2
+# - Response format changed from XML to JSON
 #
 # New Features:
 # - GraphQL API endpoint
 # - Real-time subscriptions
 # - Advanced filtering
-#
-# Breaking Changes:
-# - REST API v1 deprecated
-# - Authentication now requires OAuth2
 #
 # Bug Fixes:
 # - Fixed race condition in cache
@@ -283,11 +296,11 @@ If you forgot to tag a release:
 # Find the commit hash
 git log --oneline
 
-# Tag that specific commit
-git tag -a 2025-12-20-v1-hotfix-auth abc1234 -m "Hotfix: Authentication bypass vulnerability"
+# Tag that specific commit (patch version for hotfix)
+git tag -a 2025-12-20-v0.0.2-hotfix-auth abc1234 -m "Hotfix: Authentication bypass vulnerability"
 
 # Push the tag
-git push origin 2025-12-20-v1-hotfix-auth
+git push origin 2025-12-20-v0.0.2-hotfix-auth
 ```
 
 ### Creating Signed Tags
@@ -298,14 +311,14 @@ For production releases requiring verification:
 # Ensure GPG key is configured
 git config --global user.signingkey YOUR_GPG_KEY_ID
 
-# Create signed tag
-git tag -s 2025-12-21-v1-production-release -m "Production release with security patches"
+# Create signed tag (v1.0.0 for production-ready release)
+git tag -s 2025-12-21-v1.0.0-production-release -m "Production release with security patches"
 
 # Verify signature
-git tag -v 2025-12-21-v1-production-release
+git tag -v 2025-12-21-v1.0.0-production-release
 
 # Push (signatures are preserved)
-git push origin 2025-12-21-v1-production-release
+git push origin 2025-12-21-v1.0.0-production-release
 ```
 
 ---
@@ -323,7 +336,7 @@ git tag -l "2025-12-21*"
 git tag -l "*security*"
 
 # Show tag details
-git show 2025-12-21-v1-add-logging
+git show 2025-12-21-v0.1.0-add-logging
 
 # List tags with messages
 git tag -n5  # Show first 5 lines of message
@@ -333,13 +346,13 @@ git tag -n5  # Show first 5 lines of message
 
 ```bash
 # Delete local tag
-git tag -d 2025-12-21-v1-wrong-tag
+git tag -d 2025-12-21-v0.1.0-wrong-tag
 
 # Delete remote tag
-git push origin --delete 2025-12-21-v1-wrong-tag
+git push origin --delete 2025-12-21-v0.1.0-wrong-tag
 
 # Or using colon syntax
-git push origin :refs/tags/2025-12-21-v1-wrong-tag
+git push origin :refs/tags/2025-12-21-v0.1.0-wrong-tag
 ```
 
 ### Updating Tags
@@ -349,11 +362,11 @@ git push origin :refs/tags/2025-12-21-v1-wrong-tag
 If you must update a tag locally (before pushing):
 
 ```bash
-# Force update local tag
-git tag -fa 2025-12-21-v1-updated -m "Updated message"
+# Force update local tag (increment semantic version instead)
+git tag -fa 2025-12-21-v0.1.1-updated -m "Updated message"
 
 # This is BAD practice for shared tags
-# Instead, create a new tag with incremented version
+# Instead, create a new tag with incremented semantic version (e.g., v0.1.1 instead of v0.1.0)
 ```
 
 ### Tag Retention Policy
@@ -401,19 +414,19 @@ git tag 2025-12-21-v1-release
 ### 2. Write Meaningful Tag Messages
 
 ```bash
-# ✅ Good: Descriptive message
-git tag -a 2025-12-21-v1-auth-fix -m "Fix authentication bypass in admin panel (CVE-2025-1234)"
+# ✅ Good: Descriptive message with semantic version
+git tag -a 2025-12-21-v0.0.2-auth-fix -m "Fix authentication bypass in admin panel (CVE-2025-1234)"
 
 # ❌ Bad: Vague message
-git tag -a 2025-12-21-v1-auth-fix -m "updates"
+git tag -a 2025-12-21-v0.0.2-auth-fix -m "updates"
 ```
 
 ### 3. Tag Before Deploying
 
 ```bash
-# Correct workflow
-git tag -a 2025-12-21-v1-deploy-prod -m "Production deployment"
-git push origin 2025-12-21-v1-deploy-prod
+# Correct workflow (v1.0.0 for production-ready release)
+git tag -a 2025-12-21-v1.0.0-deploy-prod -m "Production deployment"
+git push origin 2025-12-21-v1.0.0-deploy-prod
 ./deploy-to-production.sh
 
 # Not after deploying
@@ -424,7 +437,7 @@ git push origin 2025-12-21-v1-deploy-prod
 Update `CHANGELOG.md` with each tagged release:
 
 ```markdown
-## [2025-12-21-v1-api-improvements] - 2025-12-21
+## [2025-12-21-v0.2.0-api-improvements] - 2025-12-21
 
 ### Added
 - New API endpoint for bulk operations
@@ -441,8 +454,8 @@ Update `CHANGELOG.md` with each tagged release:
 ### 5. Use Tags for Deployment References
 
 ```bash
-# Deploy specific tag to production
-kubectl set image deployment/app app=registry/myapp:2025-12-21-v1-stable
+# Deploy specific tag to production (using semantic version)
+kubectl set image deployment/app app=registry/myapp:2025-12-21-v1.0.0-stable
 
 # Reference tag in CI/CD
 docker build -t myapp:$(git describe --tags --always) .
@@ -454,8 +467,8 @@ On GitHub/GitLab, protect production tags from deletion:
 
 ```yaml
 # GitHub: Repository Settings → Tags → Protected tags
-# Pattern: 2025-*-v*-production-*
-# Or: v[0-9]*.[0-9]*.[0-9]*
+# Pattern for semantic versions: *-v[0-9]*.[0-9]*.[0-9]*-*
+# Pattern for production: *-v[0-9]*.[0-9]*.[0-9]*-production-*
 
 # GitLab: Settings → Repository → Protected tags
 ```
@@ -467,11 +480,17 @@ In your `README.md` or `CONTRIBUTING.md`:
 ```markdown
 ## Release Tagging
 
-We use date-based versioning: `YYYY-MM-DD-vN-description`
+We use date-based semantic versioning: `YYYY-MM-DD-vMAJOR.MINOR.PATCH-description`
+
+Version increment rules:
+- **PATCH** (v0.0.X): Bug fixes, backward compatible
+- **MINOR** (v0.X.0): New features, backward compatible
+- **MAJOR** (vX.0.0): Breaking changes
 
 Examples:
-- `2025-12-21-v1-add-user-auth`
-- `2025-12-21-v2-fix-security-issue`
+- `2025-12-21-v0.1.0-add-user-auth` (new feature)
+- `2025-12-21-v0.1.1-fix-security-issue` (bug fix)
+- `2025-12-21-v1.0.0-breaking-api-changes` (breaking change)
 
 See `base/git-tagging.md` for complete guidelines.
 ```
@@ -483,12 +502,20 @@ See `base/git-tagging.md` for complete guidelines.
 ### Automated Tagging in CI/CD
 
 ```yaml
-# GitHub Actions: Auto-tag on release
+# GitHub Actions: Auto-tag on release with semantic versioning
 name: Create Release Tag
 
 on:
   workflow_dispatch:
     inputs:
+      version_type:
+        description: 'Version increment type'
+        required: true
+        type: choice
+        options:
+          - patch  # Bug fixes (v0.0.X)
+          - minor  # New features (v0.X.0)
+          - major  # Breaking changes (vX.0.0)
       description:
         description: 'Brief description of changes'
         required: true
@@ -502,18 +529,40 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create tag
+      - name: Create semantic version tag
         run: |
           DATE=$(date +%Y-%m-%d)
-          # Find next version number for today
-          LAST_VERSION=$(git tag -l "${DATE}-v*" | sort -V | tail -1 | grep -oP 'v\K[0-9]+' || echo 0)
-          NEXT_VERSION=$((LAST_VERSION + 1))
-          TAG_NAME="${DATE}-v${NEXT_VERSION}-${{ inputs.description }}"
+
+          # Get latest tag and extract semantic version
+          LATEST_TAG=$(git tag -l "${DATE}-v*" | sort -V | tail -1)
+          if [ -z "$LATEST_TAG" ]; then
+            # No tag for today, start with appropriate version
+            case "${{ inputs.version_type }}" in
+              patch) VERSION="0.0.1" ;;
+              minor) VERSION="0.1.0" ;;
+              major) VERSION="1.0.0" ;;
+            esac
+          else
+            # Extract version from tag (e.g., 2025-12-21-v0.1.2-description -> 0.1.2)
+            CURRENT_VERSION=$(echo "$LATEST_TAG" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
+            MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+
+            # Increment based on type
+            case "${{ inputs.version_type }}" in
+              patch) VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+              minor) VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
+              major) VERSION="$((MAJOR + 1)).0.0" ;;
+            esac
+          fi
+
+          TAG_NAME="${DATE}-v${VERSION}-${{ inputs.description }}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git tag -a "${TAG_NAME}" -m "Release: ${{ inputs.description }}"
+          git tag -a "${TAG_NAME}" -m "Release: ${{ inputs.description }} (v${VERSION})"
           git push origin "${TAG_NAME}"
 
           echo "Created tag: ${TAG_NAME}"
@@ -523,11 +572,11 @@ jobs:
 
 ```bash
 # Deploy specific tagged version
-./deploy.sh --tag 2025-12-21-v1-production-release
+./deploy.sh --tag 2025-12-21-v1.0.0-production-release
 
 # Rollback to previous tag
 git tag -l --sort=-creatordate | head -2 | tail -1
-./deploy.sh --tag 2025-12-20-v3-stable
+./deploy.sh --tag 2025-12-20-v0.9.3-stable
 ```
 
 ### Generate Release Notes from Tags
@@ -537,10 +586,10 @@ git tag -l --sort=-creatordate | head -2 | tail -1
 git tag -l --sort=-creatordate | grep "^2025-12"
 
 # Show changes between tags
-git log 2025-12-20-v1-release..2025-12-21-v1-release --oneline
+git log 2025-12-20-v0.9.0-release..2025-12-21-v1.0.0-release --oneline
 
 # Generate changelog
-git log 2025-12-20-v1-release..2025-12-21-v1-release --pretty=format:"- %s (%h)" > RELEASE_NOTES.md
+git log 2025-12-20-v0.9.0-release..2025-12-21-v1.0.0-release --pretty=format:"- %s (%h)" > RELEASE_NOTES.md
 ```
 
 ### Automated Version Detection
@@ -562,8 +611,17 @@ echo "export const VERSION = '$VERSION';" > src/version.ts
 
 **Create release tag:**
 ```bash
-git tag -a 2025-12-21-v1-brief-description -m "Detailed message"
-git push origin 2025-12-21-v1-brief-description
+# For features (minor version)
+git tag -a 2025-12-21-v0.1.0-brief-description -m "Detailed message"
+git push origin 2025-12-21-v0.1.0-brief-description
+
+# For bug fixes (patch version)
+git tag -a 2025-12-21-v0.0.1-brief-description -m "Detailed message"
+git push origin 2025-12-21-v0.0.1-brief-description
+
+# For breaking changes (major version)
+git tag -a 2025-12-21-v1.0.0-brief-description -m "Detailed message"
+git push origin 2025-12-21-v1.0.0-brief-description
 ```
 
 **List recent tags:**
@@ -579,20 +637,21 @@ git push origin --delete tag-name
 
 **Deploy from tag:**
 ```bash
-git checkout 2025-12-21-v1-production-release
+git checkout 2025-12-21-v1.0.0-production-release
 ./deploy.sh
 ```
 
 ### The Golden Rules
 
 1. ✅ **Always use annotated tags** for releases (`-a` flag)
-2. ✅ **Write descriptive messages** explaining what changed
-3. ✅ **Follow naming convention** consistently (date-based or semantic)
-4. ✅ **Tag before deploying** to production
-5. ✅ **Never modify pushed tags** - create new ones instead
-6. ✅ **Document tags in changelog**
-7. ✅ **Sign production tags** for security (when required)
-8. ❌ **Never tag broken code** - all tests must pass
+2. ✅ **Use semantic versioning** in format `vMAJOR.MINOR.PATCH` (e.g., v0.0.1, v1.2.3)
+3. ✅ **Write descriptive messages** explaining what changed
+4. ✅ **Follow naming convention** consistently (date-based semantic versioning)
+5. ✅ **Tag before deploying** to production
+6. ✅ **Never modify pushed tags** - increment version and create new ones instead
+7. ✅ **Document tags in changelog**
+8. ✅ **Sign production tags** for security (when required)
+9. ❌ **Never tag broken code** - all tests must pass
 
 ---
 
