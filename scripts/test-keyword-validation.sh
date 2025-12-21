@@ -296,11 +296,12 @@ test_category() {
             local num_to_test=$((NUM_TESTS < ${#keywords_array[@]} ? NUM_TESTS : ${#keywords_array[@]}))
             local tested=0
 
-            # Shuffle and take first N
-            for keyword in $(printf '%s\n' "${keywords_array[@]}" | shuf | head -n "$num_to_test"); do
+            # Shuffle and take first N (preserve multi-word keywords)
+            while IFS= read -r keyword; do
+                [[ -n "$keyword" ]] || continue
                 test_keyword "$keyword" "$rules" "$category_name"
                 tested=$((tested + 1))
-            done
+            done < <(printf '%s\n' "${keywords_array[@]}" | shuf | head -n "$num_to_test")
         fi
     done
 }
