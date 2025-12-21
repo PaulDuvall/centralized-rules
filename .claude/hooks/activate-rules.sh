@@ -390,92 +390,60 @@ generate_activation_instruction() {
     fi
 
     local repo_name="paulduvall/centralized-rules"
-    local repo_url="https://github.com/${repo_name}"
 
     # Build the activation instruction
     cat <<EOF
 ═══════════════════════════════════════════════════════
-🎯 SKILL ACTIVATION - Centralized Rules Loaded
+🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}
 ═══════════════════════════════════════════════════════
-📦 Source: ${repo_name}
-🔗 Repo: ${repo_url}
-📌 Commit: ${installed_commit}
-───────────────────────────────────────────────────────
 EOF
 
     # Add pre-commit quality gates if this is a git operation
     if [[ "${is_git_op}" == "true" ]]; then
         cat <<'EOF'
-
-🚦 PRE-COMMIT QUALITY GATES DETECTED
-───────────────────────────────────────────────────────
-⚠️  IMPORTANT: Before committing/pushing, run these checks:
-
-REQUIRED CHECKS (run in this order):
-  1️⃣  Run tests        - Ensure all tests pass
-  2️⃣  Security scan    - Check for vulnerabilities
-  3️⃣  Code quality     - Verify code meets standards
-  4️⃣  Refactoring      - Check for code smells
-
-💡 Workflow:
-   • Announce: "Running pre-commit checks..."
-   • Execute each check and report results
-   • Only proceed with commit/push if ALL checks pass
-   • If any check fails, fix issues before committing
-
+🚦 PRE-COMMIT GATES: Run tests → Security scan → Code quality → Refactoring
+   ⚠️  ALL checks must pass before committing/pushing
 ───────────────────────────────────────────────────────
 EOF
     fi
 
     cat <<'EOF'
-
-📚 Before implementing, follow this 3-step process:
-
-STEP 1: 🔍 EVALUATE which rules apply
+🔍 DETECTED CONTEXT
 EOF
 
-    # List detected context
+    # Build single-line context with pipe separator
+    local context_line=""
     if [[ -n "${languages}" ]]; then
-        echo "   🔹 Detected Languages: ${languages// /, }"
+        context_line="   Languages: ${languages// /, }"
     fi
     if [[ -n "${frameworks}" ]]; then
-        echo "   🔹 Detected Frameworks: ${frameworks// /, }"
+        if [[ -n "${context_line}" ]]; then
+            context_line="${context_line} | Frameworks: ${frameworks// /, }"
+        else
+            context_line="   Frameworks: ${frameworks// /, }"
+        fi
+    fi
+    [[ -n "${context_line}" ]] && echo "${context_line}"
+
+    # Inline rules list (comma-separated)
+    local rules_inline
+    rules_inline=$(echo "${matched_rules}" | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+    if [[ -n "${rules_inline}" ]]; then
+        echo "   Rules: ${rules_inline}"
     fi
 
-    cat <<EOF
-
-   📋 Matched Rule Categories:
+    cat <<'EOF'
+───────────────────────────────────────────────────────
 EOF
 
-    # List matched rules with checkbox format
-    while IFS= read -r rule; do
-        [[ -n "${rule}" ]] && echo "     ☐ ${rule}"
-    done <<< "${matched_rules}"
-
     cat <<'EOF'
+📚 IMPLEMENTATION WORKFLOW
 
-STEP 2: 🔧 APPLY relevant coding standards
+1. EVALUATE: Review matched rules above for your task context
+2. IMPLEMENT: Apply relevant standards from matched rule categories
+3. VERIFY: Ensure code meets quality, testing, and security standards
 
-   Based on the evaluation above, apply these coding principles:
-   ✓ Code Quality: Write clean, maintainable code
-   ✓ Testing: Include comprehensive tests where appropriate
-   ✓ Security: Follow security best practices
-   ✓ Language Standards: Follow best practices for the detected languages
-
-STEP 3: ⚡ IMPLEMENT the task following the identified standards
-
-💡 REMINDER:
-   • Follow the coding standards for the detected languages/frameworks
-   • Include tests where appropriate
-   • Consider security implications
-   • Write clear, well-documented code
-
-🎯 Why this matters:
-   • Consistent code quality across the project
-   • Security best practices from the start
-   • Maintainable, testable code
-   • Prevents common anti-patterns
-
+💡 Quick Reference: Follow detected language/framework standards • Include tests • Consider security
 ═══════════════════════════════════════════════════════
 EOF
 }
