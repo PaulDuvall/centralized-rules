@@ -14,6 +14,9 @@
     },
     {
       "pattern": "^https://ai\\.google\\.dev"
+    },
+    {
+      "pattern": "^https://www\\.gnu\\.org"
     }
   ],
   "replacementPatterns": [],
