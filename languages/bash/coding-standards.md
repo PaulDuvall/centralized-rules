@@ -631,5 +631,5 @@ See [testing.md](./testing.md) for detailed Bash testing guidelines using bats-c
 
 - **ShellCheck** - https://www.shellcheck.net/
 - **Google Shell Style Guide** - https://google.github.io/styleguide/shellguide.html
-- **Bash Reference Manual** - https://www.gnu.org/software/bash/manual/
+- **Bash Reference Manual** - https://www.gnu.org/software/bash/manual/bash.html
 - **Advanced Bash-Scripting Guide** - https://tldp.org/LDP/abs/html/
