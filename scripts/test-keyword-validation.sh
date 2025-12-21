@@ -179,10 +179,29 @@ test_keyword() {
         # JSON output - extract from systemMessage
         local system_message
         system_message=$(echo "$hook_output" | jq -r '.systemMessage // empty')
-        matched_rules=$(echo "$system_message" | grep -A 100 "Matched Rule Categories:" | grep "☐" | sed 's/.*☐ //' | sed 's/\\n.*//' || echo "")
+
+        # Parse new compact format: "   Rules: rule1, rule2, rule3"
+        # Extract the rules line, split by comma, and trim whitespace
+        matched_rules=$(echo "$system_message" | \
+            grep "^   Rules:" | \
+            sed 's/^   Rules: //' | \
+            tr ',' '\n' | \
+            sed 's/^ *//' | \
+            sed 's/ *$//' || echo "")
     else
         # Plain text output (fallback for testing)
-        matched_rules=$(echo "$hook_output" | grep -A 100 "Matched Rule Categories:" | grep "☐" | sed 's/.*☐ //' || echo "")
+        # Try new format first
+        matched_rules=$(echo "$hook_output" | \
+            grep "^   Rules:" | \
+            sed 's/^   Rules: //' | \
+            tr ',' '\n' | \
+            sed 's/^ *//' | \
+            sed 's/ *$//' || echo "")
+
+        # Fallback to old format if new format not found
+        if [[ -z "$matched_rules" ]]; then
+            matched_rules=$(echo "$hook_output" | grep -A 100 "Matched Rule Categories:" | grep "☐" | sed 's/.*☐ //' || echo "")
+        fi
     fi
 
     # Check if expected rules are present
