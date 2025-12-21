@@ -31,6 +31,11 @@ jobs:
     name: Claude Skill
     uses: ./.github/workflows/ci-skill.yml
 
+  # Keyword Validation Tests
+  keyword-validation:
+    name: Keyword Validation
+    uses: ./.github/workflows/ci-keyword-validation.yml
+
   # Generate comprehensive test report
   report:
     name: Test Report
@@ -40,6 +45,7 @@ jobs:
       - quality
       - sync-script
       - skill
+      - keyword-validation
     if: always()
 
     steps:

@@ -1,0 +1,51 @@
+name: Keyword Validation Tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test-keyword-validation:
+    name: Test Keyword Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Run keyword validation tests
+        id: test
+        run: |
+          chmod +x scripts/test-keyword-validation.sh
+          ./scripts/test-keyword-validation.sh --num-tests 10
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keyword-validation-results
+          path: |
+            scripts/test-keyword-validation.sh
+          retention-days: 30
+
+      - name: Check test results
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "::error::Keyword validation tests failed!"
+          echo "Some keywords in skill-rules.json are not correctly triggering their expected rules."
+          echo "Run './scripts/test-keyword-validation.sh --verbose' locally to see details."
+          exit 1
+
+      - name: Report success
+        if: steps.test.outcome == 'success'
+        run: |
+          echo "✅ All keyword validation tests passed!"
+          echo "All keywords in skill-rules.json correctly trigger their expected rules."
