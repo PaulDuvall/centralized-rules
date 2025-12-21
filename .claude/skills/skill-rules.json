@@ -173,6 +173,11 @@
         "keywords": ["java", ".java", "maven", "gradle", "spring", "jvm"],
         "rules": ["languages/java"],
         "testing_rules": ["languages/java/testing"]
+      },
+      "bash": {
+        "keywords": ["bash", "shell", "sh", ".sh", ".bash", "#!/bin/bash", "shellcheck", "shell script", "bash script", "bats-core", "shunit2", "zsh", "posix"],
+        "rules": ["languages/bash"],
+        "testing_rules": ["languages/bash/testing"]
       }
     },
     "cloud": {

@@ -8,7 +8,7 @@ A Claude skill that intelligently detects your project's language, framework, an
 
 ## Features
 
-- **🎯 Context-Aware**: Automatically detects Python, TypeScript, Java, Go, Rust, and more
+- **🎯 Context-Aware**: Automatically detects Python, TypeScript, Java, Go, Rust, Bash/Shell, and more
 - **🧠 Smart Selection**: Loads only the 3-5 most relevant rules per request (not all 50+)
 - **⚡ Fast & Cached**: Rules are cached for 1 hour, typical load time <500ms
 - **🔄 Always Fresh**: Fetches latest rules from GitHub automatically

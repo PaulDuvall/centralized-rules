@@ -317,7 +317,8 @@ centralized-rules/
 │   ├── go/
 │   ├── java/
 │   ├── csharp/
-│   └── rust/
+│   ├── rust/
+│   └── bash/
 │
 ├── frameworks/                    # Framework-specific patterns
 │   ├── react/
