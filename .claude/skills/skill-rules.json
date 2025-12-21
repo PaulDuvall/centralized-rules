@@ -85,7 +85,7 @@
         "rules": ["base/security-principles"]
       },
       "git": {
-        "keywords": ["commit", "pull request", "pr", "merge", "branch", "git", "rebase", "cherry-pick", "push"],
+        "keywords": ["commit", "pr", "pullrequest", "merge", "branch", "git", "rebase", "cherry-pick", "push"],
         "slashCommands": ["/xgit", "/git", "/xcommit", "/commit", "/push"],
         "rules": ["base/git-workflow"],
         "description": "Detects git operations including slash commands like /xgit that perform commits/pushes"
@@ -114,7 +114,7 @@
     },
     "languages": {
       "python": {
-        "keywords": ["python", ".py", "pip", "pyproject", "virtualenv", "conda", "pep8", "pylint", "black", "mypy", "type hint"],
+        "keywords": ["python", ".py", "pip", "pyproject", "virtualenv", "conda", "pep8", "pylint", "black", "mypy", "typehint"],
         "rules": ["languages/python"],
         "testing_rules": ["languages/python/testing"],
         "frameworks": {
@@ -156,7 +156,7 @@
         "keywords": ["javascript", ".js", "node", "npm", "yarn", "eslint"]
       },
       "go": {
-        "keywords": ["go", "golang", ".go", "goroutine", "channel", "defer", "go mod"],
+        "keywords": ["go", "golang", ".go", "goroutine", "channel", "defer", "gomod"],
         "rules": ["languages/go"],
         "testing_rules": ["languages/go/testing"]
       },

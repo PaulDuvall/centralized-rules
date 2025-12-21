@@ -79,26 +79,57 @@ jobs:
           echo "::error::Keyword validation tests failed!"
           echo ""
 
-          if [ -f failed-keywords.txt ]; then
-            echo "Failed keywords:"
+          if [ -f failed-keywords.txt ] && [ -s failed-keywords.txt ]; then
+            echo "❌ FAILED KEYWORDS:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            # Show failed keywords in output
             cat failed-keywords.txt | while read keyword; do
-              echo "  - $keyword"
+              echo "  ✗ $keyword"
+              # Also create individual error annotations
+              echo "::error file=.claude/skills/skill-rules.json::Keyword '$keyword' failed validation - not triggering expected rules"
             done
+
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo ""
             echo "These keywords in skill-rules.json are not correctly triggering their expected rules."
+            echo ""
+
+            # Show excerpt from test log with failures
+            if [ -f test-output.log ]; then
+              echo "Test failure details:"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              grep -A 3 "✗.*failed to trigger" test-output.log || true
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            fi
           else
-            echo "Some keywords in skill-rules.json are not correctly triggering their expected rules."
+            echo "⚠️  Test failed but could not extract failed keywords from output."
+            echo "Full test log available in artifacts."
           fi
 
           echo ""
-          echo "To debug locally, run:"
-          echo "  ./scripts/test-keyword-validation.sh --verbose"
+          echo "🔧 To debug locally, run:"
+          echo "   ./scripts/test-keyword-validation.sh --verbose"
           echo ""
-          echo "See the job summary for detailed test results."
+          echo "📊 See the job summary tab above for detailed test results."
+          echo "📦 Download test-output.log artifact for full details."
           exit 1
 
       - name: Report success
         if: steps.test.outcome == 'success'
         run: |
           echo "✅ All keyword validation tests passed!"
+          echo ""
+
+          if [ -f test-output.log ]; then
+            # Extract and show test statistics
+            total=$(grep "Total Tests:" test-output.log | awk '{print $3}' || echo "unknown")
+            echo "📊 Test Statistics:"
+            echo "   Total keywords tested: $total"
+            echo "   Result: All passed ✅"
+            echo ""
+          fi
+
           echo "All keywords in skill-rules.json correctly trigger their expected rules."
+          echo ""
+          echo "See the job summary tab for detailed test results."

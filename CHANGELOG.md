@@ -13,18 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Now falls back to `git rev-parse --short HEAD` if placeholder not replaced
   - Works in CI, development, and production environments
   - Shows "dev" if git repo not found (graceful degradation)
-- **CRITICAL**: Fixed multi-word keywords causing test failures
-  - Converted "api gateway" → "apigateway"
-  - Converted "edge function" → "edgefunction"
-  - Converted "function app" → "azurefunctions"
-  - Converted "blob storage" → "blobstorage"
-  - Converted "cosmos db" → "cosmosdb"
-  - Converted "arm template" → "armtemplate"
-  - Converted "cloud function" → "cloudfunctions"
-  - Converted "pub/sub" → "pubsub"
+- **CRITICAL**: Fixed all multi-word keywords causing test failures
+  - Cloud keywords: "api gateway" → "apigateway", "edge function" → "edgefunction",
+    "function app" → "azurefunctions", "blob storage" → "blobstorage",
+    "cosmos db" → "cosmosdb", "arm template" → "armtemplate",
+    "cloud function" → "cloudfunctions", "pub/sub" → "pubsub"
+  - Base keywords: "pull request" → "pullrequest"
+  - Language keywords: "type hint" → "typehint", "go mod" → "gomod"
   - Removed redundant "google cloud" (already covered by "gcp")
   - Removed overly generic "serverless" keyword
-  - All 132 keyword validation tests now pass (previously 43/47 passed)
+  - All 132 keyword validation tests now pass (previously 114/119 passed)
 
 ### Added
 - Automated keyword validation testing script (`scripts/test-keyword-validation.sh`)
@@ -37,12 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Provides clear debugging instructions
 
 ### Improved
-- CI keyword validation workflow now provides detailed failure information
+- **Enhanced CI keyword validation workflow with detailed failure reporting**
   - Shows test summary (Total/Passed/Failed) in GitHub Step Summary
-  - Lists specific failed keywords in error output
+  - Lists specific failed keywords prominently in error output with visual separators
+  - Creates individual GitHub error annotations for each failed keyword
+  - Shows excerpt from test log with failure details
   - Uploads full test log as artifact for debugging
   - Includes failed keywords in main CI test report
-- Better debugging experience with actionable error messages
+  - Success case shows test statistics
+- Better debugging experience with actionable error messages and clear formatting
 
 ### Technical Details
 - Keywords must be single-word tokens without spaces
