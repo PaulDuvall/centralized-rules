@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.1] - 2025-12-21
 
 ### Fixed
+- **CRITICAL**: Hook script now auto-detects commit hash in CI/dev environments
+  - Previously showed placeholder `__CENTRALIZED_RULES_COMMIT__` when run directly
+  - Now falls back to `git rev-parse --short HEAD` if placeholder not replaced
+  - Works in CI, development, and production environments
+  - Shows "dev" if git repo not found (graceful degradation)
 - **CRITICAL**: Fixed multi-word keywords causing test failures
   - Converted "api gateway" → "apigateway"
   - Converted "edge function" → "edgefunction"

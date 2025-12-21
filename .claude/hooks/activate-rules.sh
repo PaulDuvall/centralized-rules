@@ -364,6 +364,19 @@ generate_activation_instruction() {
     # Commit hash embedded at installation time (replaced by install script)
     local installed_commit="__CENTRALIZED_RULES_COMMIT__"
 
+    # If placeholder wasn't replaced (e.g., in CI/dev), try to get commit from git
+    if [[ "$installed_commit" == "__CENTRALIZED_RULES_COMMIT__" ]]; then
+        # Try to find the centralized-rules repo and get the current commit
+        # Script is at .claude/hooks/activate-rules.sh, so go up 2 levels to repo root
+        local script_dir
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+        if [[ -d "$script_dir/.git" ]]; then
+            installed_commit=$(cd "$script_dir" && git rev-parse --short HEAD 2>/dev/null || echo "dev")
+        else
+            installed_commit="dev"
+        fi
+    fi
+
     local repo_name="paulduvall/centralized-rules"
     local repo_url="https://github.com/${repo_name}"
 
