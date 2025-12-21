@@ -304,10 +304,11 @@ chmod +x sync-ai-rules.sh
 centralized-rules/
 ├── base/                          # Universal rules (always considered)
 │   ├── git-workflow.md
+│   ├── git-tagging.md
 │   ├── code-quality.md
 │   ├── testing-philosophy.md
 │   ├── security-principles.md
-│   └── ... (19 more)
+│   └── ... (18 more)
 │
 ├── languages/                     # Language-specific standards
 │   ├── python/

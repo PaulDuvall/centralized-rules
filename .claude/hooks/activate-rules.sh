@@ -251,9 +251,13 @@ match_keywords() {
             matched_rules+=("base/security-principles")
         fi
 
-        # Git/commit keywords
-        if echo "${prompt_lower}" | grep -qE '(commit|pull request|pr|merge|branch|push|rebase|cherry-pick)'; then
+        # Git/commit/tagging keywords
+        if echo "${prompt_lower}" | grep -qE '(commit|pull request|pr|merge|branch|push|rebase|cherry-pick|tag|tagging|release|version|semver)'; then
             matched_rules+=("base/git-workflow")
+            # Add git-tagging for tagging/versioning related keywords
+            if echo "${prompt_lower}" | grep -qE '(tag|tagging|release|version|semver)'; then
+                matched_rules+=("base/git-tagging")
+            fi
         elif echo "${prompt_lower}" | grep -qE '/(x?git|x?commit|push)(\s|$)'; then
             matched_rules+=("base/git-workflow")
         fi
@@ -307,12 +311,12 @@ match_keywords() {
     fi
 }
 
-# Check if prompt indicates git operation (commit/push intent)
+# Check if prompt indicates git operation (commit/push/tag intent)
 is_git_operation() {
     local prompt_lower="$1"
 
     # Check for git keywords
-    if echo "${prompt_lower}" | grep -qE '(commit|push|pull request|pr|merge|branch|rebase|cherry-pick|git add)'; then
+    if echo "${prompt_lower}" | grep -qE '(commit|push|pull request|pr|merge|branch|rebase|cherry-pick|git add|tag|tagging|release)'; then
         return 0
     fi
 

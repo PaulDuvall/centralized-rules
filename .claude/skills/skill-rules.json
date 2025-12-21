@@ -84,10 +84,10 @@
         "rules": ["base/security-principles"]
       },
       "git": {
-        "keywords": ["commit", "pr", "pullrequest", "merge", "branch", "git", "rebase", "cherry-pick", "push"],
+        "keywords": ["commit", "pr", "pullrequest", "merge", "branch", "git", "rebase", "cherry-pick", "push", "tag", "tagging", "release", "version", "semver", "semantic versioning"],
         "slashCommands": ["/xgit", "/git", "/xcommit", "/commit", "/push"],
-        "rules": ["base/git-workflow"],
-        "description": "Detects git operations including slash commands like /xgit that perform commits/pushes"
+        "rules": ["base/git-workflow", "base/git-tagging"],
+        "description": "Detects git operations including commits, pushes, tagging, and versioning"
       },
       "refactoring": {
         "keywords": ["refactor", "clean", "improve", "optimize", "simplify", "restructure", "extract", "inline", "rename"],

@@ -215,3 +215,11 @@ git push origin feature/dynamic-categories
 **The Golden Rule:** Commit early, commit often, push regularly.
 
 Small, frequent commits with clear messages create a better development experience and safer codebase than large, infrequent commits.
+
+---
+
+## Related Resources
+
+- See `base/git-tagging.md` for comprehensive git tagging and versioning rules
+- See `base/cicd-comprehensive.md` for CI/CD pipeline integration
+- See `base/project-maturity-levels.md` for maturity framework
