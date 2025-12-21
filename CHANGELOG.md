@@ -5,6 +5,35 @@ All notable changes to centralized-rules will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-12-21
+
+### Fixed
+- **CRITICAL**: Fixed multi-word keywords causing test failures
+  - Converted "api gateway" → "apigateway"
+  - Converted "edge function" → "edgefunction"
+  - Converted "function app" → "azurefunctions"
+  - Converted "blob storage" → "blobstorage"
+  - Converted "cosmos db" → "cosmosdb"
+  - Converted "arm template" → "armtemplate"
+  - Converted "cloud function" → "cloudfunctions"
+  - Converted "pub/sub" → "pubsub"
+  - Removed redundant "google cloud" (already covered by "gcp")
+  - Removed overly generic "serverless" keyword
+  - All 132 keyword validation tests now pass (previously 43/47 passed)
+
+### Added
+- Automated keyword validation testing script (`scripts/test-keyword-validation.sh`)
+- CI integration for keyword validation (`ci-keyword-validation.yml`)
+- Comprehensive test documentation (`scripts/README.md`)
+
+### Technical Details
+- Keywords must be single-word tokens without spaces
+- Multi-word service names converted to camelCase or single-word variants
+- Test suite validates all keywords trigger expected rules
+- CI runs 10 random keyword tests on every push/PR
+
+---
+
 ## [1.3.0] - 2025-12-20
 
 ### Fixed

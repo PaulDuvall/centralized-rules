@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "description": "Keyword and pattern mappings for centralized-rules skill activation",
-  "version": "1.3.0",
-  "updated": "2025-12-20",
+  "version": "1.3.1",
+  "updated": "2025-12-21",
 
   "projectMarkers": {
     "description": "File markers that indicate project language/framework",
@@ -173,17 +173,17 @@
     },
     "cloud": {
       "aws": {
-        "keywords": ["aws", "lambda", "s3", "dynamodb", "cloudformation", "terraform", "cdk", "ec2", "ecs", "fargate", "api gateway"],
+        "keywords": ["aws", "lambda", "s3", "dynamodb", "cloudformation", "terraform", "cdk", "ec2", "ecs", "fargate", "apigateway"],
         "rules": ["cloud/aws"]
       },
       "azure": {
-        "keywords": ["azure", "function app", "blob storage", "cosmos db", "arm template"]
+        "keywords": ["azure", "azurefunctions", "blobstorage", "cosmosdb", "armtemplate"]
       },
       "gcp": {
-        "keywords": ["gcp", "google cloud", "cloud function", "firestore", "pub/sub"]
+        "keywords": ["gcp", "cloudfunctions", "firestore", "pubsub"]
       },
       "vercel": {
-        "keywords": ["vercel", "edge function", "serverless"],
+        "keywords": ["vercel", "edgefunction"],
         "rules": ["cloud/vercel"]
       }
     }
