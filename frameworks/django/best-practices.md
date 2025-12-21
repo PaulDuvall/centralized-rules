@@ -949,4 +949,4 @@ volumes:
 
 - **Django Documentation:** https://docs.djangoproject.com
 - **Django REST Framework:** https://www.django-rest-framework.org
-- **Two Scoops of Django:** https://www.feldroy.com/books/two-scoops-of-django-3-x
+- **Two Scoops of Django:** https://www.feldroy.com/products/two-scoops-of-django-3-x

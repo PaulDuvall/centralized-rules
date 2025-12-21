@@ -226,7 +226,7 @@ Should contain:
 }
 ```
 
-**Important:** The hook format requires nested structure. See [.claude/SETTINGS.md](./.claude/SETTINGS.md) for detailed explanation.
+**Important:** The hook format requires nested structure. See the Claude Code documentation for detailed explanation.
 
 **Solution:** Re-run the install script or manually update to the correct format (see SETTINGS.md).
 
@@ -447,7 +447,7 @@ For deep technical details:
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Design decisions, performance validation
 - [PRACTICE_CROSSREFERENCE.md](./PRACTICE_CROSSREFERENCE.md) - Practice-to-file mapping
 - [ANTI_PATTERNS.md](./ANTI_PATTERNS.md) - Common anti-patterns catalog
-- [.claude/SETTINGS.md](./.claude/SETTINGS.md) - Claude Code settings format reference
+- Claude Code documentation - Settings format reference
 
 ## Contributing
 
@@ -470,7 +470,7 @@ Contributions welcome! To add:
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/PaulDuvall/centralized-rules/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/discussions)
+- **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/issues)
 
 ## License
 

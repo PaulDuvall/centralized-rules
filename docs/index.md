@@ -121,7 +121,7 @@ Unlike traditional rule files that load everything at once, this system:
 
 ## 🤝 Contributing
 
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Open an issue or pull request on [GitHub](https://github.com/PaulDuvall/centralized-rules).
 
 ## 📖 Documentation
 

@@ -306,8 +306,8 @@ npm run build
 ## Support
 
 - **Issues**: https://github.com/paulduvall/centralized-rules/issues
-- **Discussions**: https://github.com/paulduvall/centralized-rules/discussions
-- **Contributing**: See CONTRIBUTING.md
+- **Discussions**: https://github.com/paulduvall/centralized-rules/issues
+- **Contributing**: Open an issue or pull request on GitHub
 
 ---
 

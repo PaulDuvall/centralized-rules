@@ -331,17 +331,17 @@ See `examples/` directory for:
 
 ## Related Documentation
 
-- [Google Gemini Documentation](https://ai.google.dev/docs)
-- [Codegemma Documentation](https://ai.google.dev/gemma/docs/codegemma)
+- [Google Gemini Documentation](https://ai.google.dev/gemini-api/docs)
+- [Codegemma Documentation](https://ai.google.dev/gemini-api/docs)
 - [Centralized Rules Architecture](../../ARCHITECTURE.md)
-- [API Integration Guide](./examples/API_INTEGRATION.md)
+- Centralized Rules on GitHub
 
 ## Support
 
 - **Repository:** https://github.com/PaulDuvall/centralized-rules
 - **Issues:** https://github.com/PaulDuvall/centralized-rules/issues
-- **Gemini Support:** https://ai.google.dev/support
-- **Codegemma Community:** https://github.com/google/gemma
+- **Gemini Support:** https://ai.google.dev/gemini-api/docs/support
+- **Gemma on GitHub:** https://github.com/google-deepmind/gemma
 
 ---
 

@@ -110,7 +110,7 @@ UserPromptSubmit:
   - activate-rules.sh
 ```
 
-See [SKILL.md](./SKILL.md) for detailed documentation on the hook system.
+See the documentation for detailed information on the hook system.
 
 ## Usage
 
@@ -535,7 +535,7 @@ Common issues:
 
 ## Contributing
 
-Contributions welcome! Please see [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+Contributions welcome! Please open an issue or pull request on GitHub.
 
 ## License
 
@@ -551,7 +551,7 @@ MIT - see [LICENSE](../LICENSE)
 
 Need help? Found a bug?
 - 📝 [Open an issue](https://github.com/paulduvall/centralized-rules/issues)
-- 💬 [GitHub Discussions](https://github.com/paulduvall/centralized-rules/discussions)
+- 💬 [GitHub Issues](https://github.com/paulduvall/centralized-rules/issues)
 
 ---
 

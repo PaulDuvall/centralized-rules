@@ -173,4 +173,4 @@ Potential improvements for Cursor integration:
 
 - **Repository:** https://github.com/PaulDuvall/centralized-rules
 - **Issues:** https://github.com/PaulDuvall/centralized-rules/issues
-- **Cursor Support:** https://cursor.sh/support
+- **Cursor Docs:** https://docs.cursor.com

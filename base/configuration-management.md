@@ -685,4 +685,4 @@ spec:
 - See `cloud/aws/security-best-practices.md` for AWS secrets management
 - See `base/cicd-comprehensive.md` for CI/CD configuration management
 - **12-Factor App Config:** https://12factor.net/config
-- **OWASP Configuration Management:** https://cheatsheetseries.owasp.org/cheatsheets/Configuration_Management_Cheat_Sheet.html
+- **OWASP Secure Configuration:** https://cheatsheetseries.owasp.org/cheatsheets/Secure_Cloud_Architecture_Cheat_Sheet.html

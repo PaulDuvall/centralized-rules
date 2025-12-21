@@ -330,12 +330,12 @@ rm -rf ~/centralized-rules
 - [Usage Examples](../examples/USAGE_EXAMPLES.md) - See real-world examples
 - [Architecture Overview](../ARCHITECTURE.md) - Understand how it works
 - [Implementation Guide](../IMPLEMENTATION_GUIDE.md) - Plan your rollout
-- [Contributing](../CONTRIBUTING.md) - Contribute improvements
+- [Contributing](https://github.com/PaulDuvall/centralized-rules/issues) - Contribute improvements
 
 ---
 
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/PaulDuvall/centralized-rules/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/discussions)
-- **Documentation:** See [docs/](../../docs/) directory
+- **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/issues)
+- **Documentation:** See the docs directory in the repository
