@@ -365,15 +365,38 @@ generate_activation_instruction() {
     local installed_commit="__CENTRALIZED_RULES_COMMIT__"
 
     # If placeholder wasn't replaced (e.g., in CI/dev), try to get commit from git
-    if [[ "$installed_commit" == "__CENTRALIZED_RULES_COMMIT__" ]]; then
-        # Try to find the centralized-rules repo and get the current commit
-        # Script is at .claude/hooks/activate-rules.sh, so go up 2 levels to repo root
-        local script_dir
-        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-        if [[ -d "$script_dir/.git" ]]; then
-            installed_commit=$(cd "$script_dir" && git rev-parse --short HEAD 2>/dev/null || echo "dev")
+    # Note: Using a pattern that won't be replaced by sed during installation
+    local placeholder="__CENTRALIZED_RULES_""COMMIT__"
+    if [[ "$installed_commit" == "$placeholder" ]]; then
+        # Try multiple methods to find the centralized-rules repo
+        local repo_dir=""
+
+        # Method 1: Use BASH_SOURCE if available
+        if [[ -n "${BASH_SOURCE[0]}" ]]; then
+            local script_dir
+            script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)"
+            if [[ -d "$script_dir/.git" ]]; then
+                repo_dir="$script_dir"
+            fi
+        fi
+
+        # Method 2: Check current working directory
+        if [[ -z "$repo_dir" ]] && [[ -f ".claude/hooks/activate-rules.sh" ]]; then
+            repo_dir="$(pwd)"
+        fi
+
+        # Method 3: Check if we're in the .claude/hooks directory
+        if [[ -z "$repo_dir" ]] && [[ "$(basename "$(pwd)")" == "hooks" ]] && [[ -d "../../.git" ]]; then
+            repo_dir="$(cd ../.. 2>/dev/null && pwd)"
+        fi
+
+        # Get commit hash if we found the repo
+        if [[ -n "$repo_dir" ]] && [[ -d "$repo_dir/.git" ]]; then
+            installed_commit=$(cd "$repo_dir" && git rev-parse --short HEAD 2>/dev/null || echo "dev")
+            log_debug "Found repo at: $repo_dir, commit: $installed_commit"
         else
             installed_commit="dev"
+            log_debug "Could not find centralized-rules repo, using 'dev'"
         fi
     fi
 
