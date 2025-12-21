@@ -844,7 +844,7 @@ Use this checklist for AWS security review:
 
 ## Related Resources
 
-- **AWS Security Best Practices:** https://aws.amazon.com/security/best-practices/
+- **AWS Security Best Practices:** https://aws.amazon.com/architecture/security-identity-compliance/
 - **AWS Well-Architected Security Pillar:** https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/
 - **IAM Best Practices:** https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
 - See `cloud/aws/well-architected.md` for ML-specific security

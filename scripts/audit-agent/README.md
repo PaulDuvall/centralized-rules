@@ -232,7 +232,7 @@ See `.github/workflows/audit-agent.yml` for the workflow configuration.
 
 ## Contributing
 
-See the main repository [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
+See the main repository for contribution guidelines.
 
 ## License
 

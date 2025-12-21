@@ -940,7 +940,7 @@ aws iam create-role \
 
 - See `cloud/aws/security-best-practices.md` for broader AWS security
 - See `cloud/aws/well-architected.md` for ML security patterns
-- **AWS IAM Documentation:** https://docs.aws.amazon.com/IAM/
+- **AWS IAM Documentation:** https://docs.aws.amazon.com/iam/
 - **Cedar Policy Language:** https://www.cedarpolicy.com/
 - **Open Policy Agent:** https://www.openpolicyagent.org/
 - **Parliament (IAM Linter):** https://github.com/duo-labs/parliament
