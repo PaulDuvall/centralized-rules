@@ -367,7 +367,9 @@ Tested with Python + FastAPI project:
 
 ### Add Custom Keywords
 
-Edit `.claude/skills/skill-rules.json`:
+**⭐ NEW in v1.3.0**: `skill-rules.json` is now the single source of truth for all keyword mappings!
+
+Simply edit `.claude/skills/skill-rules.json` to add keywords - no need to edit bash scripts:
 
 ```json
 {
@@ -382,9 +384,32 @@ Edit `.claude/skills/skill-rules.json`:
 }
 ```
 
+**How it works:**
+- Hook script dynamically reads keywords from JSON file on every prompt
+- Changes take effect immediately (no restart required)
+- Supports base rules, languages, frameworks, cloud providers, and slash commands
+- Falls back to hardcoded patterns if JSON unavailable
+
+**Requirements:**
+- `jq` must be installed: `brew install jq` (macOS) or `apt-get install jq` (Linux)
+
 ### Add Custom Rule Categories
 
-Create your own rules in the hook output by editing `.claude/hooks/activate-rules.sh`.
+Add new categories to `skill-rules.json` under the appropriate section:
+
+```json
+{
+  "keywordMappings": {
+    "base": {
+      "your-category": {
+        "keywords": ["keyword1", "keyword2"],
+        "slashCommands": ["/your-command"],
+        "rules": ["base/your-rule-file"]
+      }
+    }
+  }
+}
+```
 
 ### Organization-Wide Deployment
 

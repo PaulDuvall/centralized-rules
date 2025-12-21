@@ -83,7 +83,30 @@ detect_project_context() {
     echo "${languages[*]:-}|${frameworks[*]:-}"
 }
 
-# Match keywords in prompt against rule categories
+# Load keyword mappings from skill-rules.json
+load_keyword_mappings() {
+    local json_file="$1"
+
+    # Check if jq is available
+    if ! command -v jq &> /dev/null; then
+        log_debug "jq not available, using fallback keyword matching"
+        return 1
+    fi
+
+    # Check if JSON file exists
+    if [[ ! -f "$json_file" ]]; then
+        log_debug "skill-rules.json not found at $json_file"
+        return 1
+    fi
+
+    # Export the JSON content as a variable
+    SKILL_RULES_JSON=$(cat "$json_file")
+    export SKILL_RULES_JSON
+
+    return 0
+}
+
+# Match keywords in prompt against rule categories (reading from skill-rules.json)
 match_keywords() {
     local prompt="$1"
     local -a matched_rules=()
@@ -92,86 +115,188 @@ match_keywords() {
     local prompt_lower
     prompt_lower=$(echo "${prompt}" | tr '[:upper:]' '[:lower:]')
 
-    # Test-related keywords (including slash commands)
-    if echo "${prompt_lower}" | grep -qE '(test|pytest|unittest|spec|tdd|coverage|mock)'; then
-        matched_rules+=("base/testing-philosophy")
-    # Detect test-related slash commands (e.g., /xtest, /test)
-    elif echo "${prompt_lower}" | grep -qE '/(x?test|x?tdd)(\s|$)'; then
-        matched_rules+=("base/testing-philosophy")
+    # Try to load keywords from JSON file first
+    local json_file="${CLAUDE_PROJECT_DIR:-.}/.claude/skills/skill-rules.json"
+    if [[ ! -f "$json_file" ]]; then
+        # Try global location
+        json_file="$HOME/.claude/skills/skill-rules.json"
     fi
 
-    # Security keywords (including slash commands)
-    if echo "${prompt_lower}" | grep -qE '(auth|security|password|token|jwt|oauth|permission|encrypt|hash|sanitize|validate|injection)'; then
-        matched_rules+=("base/security-principles")
-    # Detect security-related slash commands (e.g., /xsecurity, /security)
-    elif echo "${prompt_lower}" | grep -qE '/(x?security|x?audit)(\s|$)'; then
-        matched_rules+=("base/security-principles")
-    fi
+    if load_keyword_mappings "$json_file"; then
+        log_debug "Using skill-rules.json for keyword matching"
 
-    # Git/commit keywords (including slash commands)
-    # Detect both explicit keywords and slash commands that imply git operations
-    if echo "${prompt_lower}" | grep -qE '(commit|pull request|pr|merge|branch|push|rebase|cherry-pick)'; then
-        matched_rules+=("base/git-workflow")
-    # Detect git-related slash commands (e.g., /xgit, /commit, /xcommit, /git)
-    elif echo "${prompt_lower}" | grep -qE '/(x?git|x?commit|push)(\s|$)'; then
-        matched_rules+=("base/git-workflow")
-    fi
+        # Extract all base category keywords and rules
+        local base_categories
+        base_categories=$(echo "$SKILL_RULES_JSON" | jq -r '.keywordMappings.base | keys[]' 2>/dev/null)
 
-    # Refactoring keywords (including slash commands)
-    if echo "${prompt_lower}" | grep -qE '(refactor|clean|improve|optimize|simplify|restructure)'; then
-        matched_rules+=("base/refactoring-patterns")
-    # Detect refactoring-related slash commands (e.g., /xrefactor, /xquality)
-    elif echo "${prompt_lower}" | grep -qE '/(x?refactor|x?quality|x?optimize)(\s|$)'; then
-        matched_rules+=("base/refactoring-patterns")
-    fi
+        while IFS= read -r category; do
+            [[ -z "$category" ]] && continue
 
-    # Architecture keywords
-    if echo "${prompt_lower}" | grep -qE '(architect|design|pattern|structure|12-factor|scalab|deployment)'; then
-        matched_rules+=("base/architecture-principles")
-    fi
+            # Get keywords for this category and escape special characters
+            local keywords
+            keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.keywords[]?" 2>/dev/null | sed 's/\./\\./g' | tr '\n' '|' | sed 's/|$//')
 
-    # Language-specific rules (add when available in your repo)
-    if echo "${prompt_lower}" | grep -qE '(python|\.py|pip|pyproject|django|flask|fastapi)'; then
-        matched_rules+=("languages/python")
-        # Add testing rules if testing keywords were also matched
+            # Get slash commands for this category
+            local slash_cmds
+            slash_cmds=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.slashCommands[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//' | sed 's|/||g')
+
+            # Get rules for this category
+            local category_rules
+            category_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.rules[]?" 2>/dev/null)
+
+            # Match keywords
+            if [[ -n "$keywords" ]] && echo "${prompt_lower}" | grep -qE "(${keywords})"; then
+                while IFS= read -r rule; do
+                    [[ -n "$rule" ]] && matched_rules+=("$rule")
+                done <<< "$category_rules"
+            fi
+
+            # Match slash commands
+            if [[ -n "$slash_cmds" ]] && echo "${prompt_lower}" | grep -qE "/(${slash_cmds})(\s|$)"; then
+                while IFS= read -r rule; do
+                    [[ -n "$rule" ]] && matched_rules+=("$rule")
+                done <<< "$category_rules"
+            fi
+        done <<< "$base_categories"
+
+        # Extract language-specific keywords and rules
+        local languages
+        languages=$(echo "$SKILL_RULES_JSON" | jq -r '.keywordMappings.languages | keys[]' 2>/dev/null)
+
+        while IFS= read -r lang; do
+            [[ -z "$lang" ]] && continue
+
+            # Get keywords for this language
+            local lang_keywords
+            lang_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.keywords[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+
+            # Get rules for this language
+            local lang_rules
+            lang_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.rules[]?" 2>/dev/null)
+
+            # Get testing rules for this language
+            local lang_testing_rules
+            lang_testing_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.testing_rules[]?" 2>/dev/null)
+
+            # Match language keywords
+            if [[ -n "$lang_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${lang_keywords})"; then
+                while IFS= read -r rule; do
+                    [[ -n "$rule" ]] && matched_rules+=("$rule")
+                done <<< "$lang_rules"
+
+                # Add testing rules if testing keywords also matched
+                if echo "${prompt_lower}" | grep -qE '(test|pytest|jest|mocha|unittest|spec|tdd|coverage|mock)'; then
+                    while IFS= read -r rule; do
+                        [[ -n "$rule" ]] && matched_rules+=("$rule")
+                    done <<< "$lang_testing_rules"
+                fi
+            fi
+
+            # Check framework-specific keywords within this language
+            local frameworks
+            frameworks=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks | keys[]?" 2>/dev/null)
+
+            while IFS= read -r framework; do
+                [[ -z "$framework" ]] && continue
+
+                local framework_keywords
+                framework_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.keywords[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+
+                local framework_rules
+                framework_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.rules[]?" 2>/dev/null)
+
+                if [[ -n "$framework_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${framework_keywords})"; then
+                    while IFS= read -r rule; do
+                        [[ -n "$rule" ]] && matched_rules+=("$rule")
+                    done <<< "$framework_rules"
+                fi
+            done <<< "$frameworks"
+        done <<< "$languages"
+
+        # Extract cloud provider keywords and rules
+        local cloud_providers
+        cloud_providers=$(echo "$SKILL_RULES_JSON" | jq -r '.keywordMappings.cloud | keys[]' 2>/dev/null)
+
+        while IFS= read -r provider; do
+            [[ -z "$provider" ]] && continue
+
+            local provider_keywords
+            provider_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.keywords[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+
+            local provider_rules
+            provider_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.rules[]?" 2>/dev/null)
+
+            if [[ -n "$provider_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${provider_keywords})"; then
+                while IFS= read -r rule; do
+                    [[ -n "$rule" ]] && matched_rules+=("$rule")
+                done <<< "$provider_rules"
+            fi
+        done <<< "$cloud_providers"
+
+    else
+        # Fallback: Use hardcoded patterns if JSON not available
+        log_debug "Falling back to hardcoded keyword patterns"
+
+        # Test-related keywords
         if echo "${prompt_lower}" | grep -qE '(test|pytest|unittest|spec|tdd|coverage|mock)'; then
-            matched_rules+=("languages/python/testing")
+            matched_rules+=("base/testing-philosophy")
+        elif echo "${prompt_lower}" | grep -qE '/(x?test|x?tdd)(\s|$)'; then
+            matched_rules+=("base/testing-philosophy")
         fi
-    fi
 
-    if echo "${prompt_lower}" | grep -qE '(typescript|javascript|\.ts|\.js|npm|node)'; then
-        matched_rules+=("languages/typescript")
-        # Add testing rules if testing keywords were also matched
-        if echo "${prompt_lower}" | grep -qE '(test|jest|vitest|spec|tdd|coverage|mock)'; then
-            matched_rules+=("languages/typescript/testing")
+        # Security keywords
+        if echo "${prompt_lower}" | grep -qE '(auth|security|password|token|jwt|oauth|permission|encrypt|hash|sanitize|validate|injection)'; then
+            matched_rules+=("base/security-principles")
+        elif echo "${prompt_lower}" | grep -qE '/(x?security|x?audit)(\s|$)'; then
+            matched_rules+=("base/security-principles")
         fi
-    fi
 
-    # Framework-specific rules
-    if echo "${prompt_lower}" | grep -qE '(react|jsx|tsx|component|hook|usestate)'; then
-        matched_rules+=("frameworks/react")
-    fi
+        # Git/commit keywords
+        if echo "${prompt_lower}" | grep -qE '(commit|pull request|pr|merge|branch|push|rebase|cherry-pick)'; then
+            matched_rules+=("base/git-workflow")
+        elif echo "${prompt_lower}" | grep -qE '/(x?git|x?commit|push)(\s|$)'; then
+            matched_rules+=("base/git-workflow")
+        fi
 
-    if echo "${prompt_lower}" | grep -qE '(fastapi|starlette|pydantic)'; then
-        matched_rules+=("frameworks/fastapi")
-    fi
+        # Refactoring keywords
+        if echo "${prompt_lower}" | grep -qE '(refactor|clean|improve|optimize|simplify|restructure)'; then
+            matched_rules+=("base/refactoring-patterns")
+        elif echo "${prompt_lower}" | grep -qE '/(x?refactor|x?quality|x?optimize)(\s|$)'; then
+            matched_rules+=("base/refactoring-patterns")
+        fi
 
-    if echo "${prompt_lower}" | grep -qE '(next\.js|nextjs|getserversideprops)'; then
-        matched_rules+=("frameworks/nextjs")
-    fi
+        # Language-specific rules
+        if echo "${prompt_lower}" | grep -qE '(python|\.py|pip|pyproject|django|flask|fastapi)'; then
+            matched_rules+=("languages/python")
+            if echo "${prompt_lower}" | grep -qE '(test|pytest|unittest|spec|tdd|coverage|mock)'; then
+                matched_rules+=("languages/python/testing")
+            fi
+        fi
 
-    # Cloud/infrastructure keywords
-    if echo "${prompt_lower}" | grep -qE '(aws|lambda|s3|dynamodb|cloudformation|terraform)'; then
-        matched_rules+=("cloud/aws")
-    fi
+        if echo "${prompt_lower}" | grep -qE '(typescript|javascript|\.ts|\.js|npm|node)'; then
+            matched_rules+=("languages/typescript")
+            if echo "${prompt_lower}" | grep -qE '(test|jest|vitest|spec|tdd|coverage|mock)'; then
+                matched_rules+=("languages/typescript/testing")
+            fi
+        fi
 
-    if echo "${prompt_lower}" | grep -qE '(vercel|edge function|serverless)'; then
-        matched_rules+=("cloud/vercel")
-    fi
+        # Framework-specific rules
+        if echo "${prompt_lower}" | grep -qE '(react|jsx|tsx|component|hook|usestate)'; then
+            matched_rules+=("frameworks/react")
+        fi
 
-    # Beads/issue tracking keywords
-    if echo "${prompt_lower}" | grep -qE '(beads|beas|bd-[0-9]+|\bbd\b|issue.track|session (start|end)|create.*(issue|task)|close.*(issue|task))'; then
-        matched_rules+=("tools/beads/issue-tracking")
+        if echo "${prompt_lower}" | grep -qE '(fastapi|starlette|pydantic)'; then
+            matched_rules+=("frameworks/fastapi")
+        fi
+
+        # Cloud providers
+        if echo "${prompt_lower}" | grep -qE '(aws|lambda|s3|dynamodb|cloudformation|terraform)'; then
+            matched_rules+=("cloud/aws")
+        fi
+
+        if echo "${prompt_lower}" | grep -qE '(vercel|edge function|serverless)'; then
+            matched_rules+=("cloud/vercel")
+        fi
     fi
 
     log_debug "Matched rules: ${matched_rules[*]:-none}"

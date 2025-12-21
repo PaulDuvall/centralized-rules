@@ -187,10 +187,13 @@ for cmd in "${REQUIRED_COMMANDS[@]}"; do
         print_pass "$cmd is installed"
         print_info "$VERSION"
     else
-        print_fail "$cmd is NOT installed (required)"
-
         if [ "$cmd" = "jq" ]; then
+            print_fail "$cmd is NOT installed (REQUIRED as of v1.3.0)"
             print_info "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
+            print_info "The hook uses jq to read keywords from skill-rules.json"
+            CRITICAL_ISSUES=true
+        else
+            print_warn "$cmd is NOT installed"
         fi
     fi
 done
