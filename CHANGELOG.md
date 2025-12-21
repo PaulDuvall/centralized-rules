@@ -25,12 +25,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated keyword validation testing script (`scripts/test-keyword-validation.sh`)
 - CI integration for keyword validation (`ci-keyword-validation.yml`)
 - Comprehensive test documentation (`scripts/README.md`)
+- **GitHub Actions now shows which keywords failed** in job summary and error output
+  - Captures test output to log file
+  - Extracts failed keywords and displays them in CI
+  - Uploads test results as artifacts
+  - Provides clear debugging instructions
+
+### Improved
+- CI keyword validation workflow now provides detailed failure information
+  - Shows test summary (Total/Passed/Failed) in GitHub Step Summary
+  - Lists specific failed keywords in error output
+  - Uploads full test log as artifact for debugging
+  - Includes failed keywords in main CI test report
+- Better debugging experience with actionable error messages
 
 ### Technical Details
 - Keywords must be single-word tokens without spaces
 - Multi-word service names converted to camelCase or single-word variants
 - Test suite validates all keywords trigger expected rules
 - CI runs 10 random keyword tests on every push/PR
+- Test output parsed and displayed in GitHub Actions UI
 
 ---
 

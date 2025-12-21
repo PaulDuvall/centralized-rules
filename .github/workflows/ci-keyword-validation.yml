@@ -24,8 +24,44 @@ jobs:
         id: test
         run: |
           chmod +x scripts/test-keyword-validation.sh
-          ./scripts/test-keyword-validation.sh --num-tests 10
+          # Run tests and capture output
+          ./scripts/test-keyword-validation.sh --num-tests 10 2>&1 | tee test-output.log
+          # Preserve exit code
+          exit ${PIPESTATUS[0]}
         continue-on-error: true
+
+      - name: Parse test results
+        if: always()
+        id: parse
+        run: |
+          # Extract test summary
+          if [ -f test-output.log ]; then
+            echo "## Keyword Validation Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Extract summary stats
+            total=$(grep "Total Tests:" test-output.log | awk '{print $3}' || echo "0")
+            passed=$(grep "Passed:" test-output.log | grep -oP '\d+' | head -1 || echo "0")
+            failed=$(grep "Failed:" test-output.log | grep -oP '\d+' | tail -1 || echo "0")
+
+            echo "- **Total Tests**: $total" >> $GITHUB_STEP_SUMMARY
+            echo "- **Passed**: ✅ $passed" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failed**: ❌ $failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Extract failed keywords if any
+            if [ "$failed" != "0" ]; then
+              echo "### ❌ Failed Keywords" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              sed -n '/Failed Keywords:/,/^$/p' test-output.log | grep "  -" >> $GITHUB_STEP_SUMMARY || echo "See test output for details" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+
+              # Save failed keywords for next step
+              sed -n '/Failed Keywords:/,/^$/p' test-output.log | grep "  -" | sed 's/  - //' > failed-keywords.txt || true
+            fi
+          fi
 
       - name: Upload test results
         if: always()
@@ -33,15 +69,32 @@ jobs:
         with:
           name: keyword-validation-results
           path: |
-            scripts/test-keyword-validation.sh
+            test-output.log
+            failed-keywords.txt
           retention-days: 30
 
       - name: Check test results
         if: steps.test.outcome == 'failure'
         run: |
           echo "::error::Keyword validation tests failed!"
-          echo "Some keywords in skill-rules.json are not correctly triggering their expected rules."
-          echo "Run './scripts/test-keyword-validation.sh --verbose' locally to see details."
+          echo ""
+
+          if [ -f failed-keywords.txt ]; then
+            echo "Failed keywords:"
+            cat failed-keywords.txt | while read keyword; do
+              echo "  - $keyword"
+            done
+            echo ""
+            echo "These keywords in skill-rules.json are not correctly triggering their expected rules."
+          else
+            echo "Some keywords in skill-rules.json are not correctly triggering their expected rules."
+          fi
+
+          echo ""
+          echo "To debug locally, run:"
+          echo "  ./scripts/test-keyword-validation.sh --verbose"
+          echo ""
+          echo "See the job summary for detailed test results."
           exit 1
 
       - name: Report success

@@ -73,6 +73,7 @@ jobs:
           | 🔍 Code Quality | ${{ needs.quality.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | ShellCheck + Documentation verification |
           | 🧪 Sync Script Testing | ${{ needs.sync-script.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | **20+ comprehensive scenarios** |
           | ⚡ Claude Skill Tests | ${{ needs.skill.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | TypeScript compilation, tests, 85% coverage |
+          | 🔑 Keyword Validation | ${{ needs.keyword-validation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Validates all keywords trigger correct rules |
 
           ---
 
@@ -84,7 +85,8 @@ jobs:
           if [ "${{ needs.progressive-disclosure.result }}" == "success" ] && \
              [ "${{ needs.quality.result }}" == "success" ] && \
              [ "${{ needs.sync-script.result }}" == "success" ] && \
-             [ "${{ needs.skill.result }}" == "success" ]; then
+             [ "${{ needs.skill.result }}" == "success" ] && \
+             [ "${{ needs.keyword-validation.result }}" == "success" ]; then
             echo "### ✅ ALL TESTS PASSED" >> test-report.md
             echo "" >> test-report.md
             echo "All test suites completed successfully. The progressive disclosure architecture is validated and working correctly across all scenarios." >> test-report.md
@@ -99,6 +101,7 @@ jobs:
             [ "${{ needs.quality.result }}" != "success" ] && echo "- Code Quality" >> test-report.md
             [ "${{ needs.sync-script.result }}" != "success" ] && echo "- Sync Script Testing" >> test-report.md
             [ "${{ needs.skill.result }}" != "success" ] && echo "- Claude Skill Tests" >> test-report.md
+            [ "${{ needs.keyword-validation.result }}" != "success" ] && echo "- Keyword Validation" >> test-report.md
             overall_status="failure"
           fi
 
