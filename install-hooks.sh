@@ -64,6 +64,14 @@ find_rules_repo() {
     if [[ -f ".claude/hooks/activate-rules.sh" ]]; then
         RULES_REPO_PATH="$(pwd)"
         success "Using current directory: $RULES_REPO_PATH"
+
+        # Get commit ID and remote URL
+        if git rev-parse --git-dir > /dev/null 2>&1; then
+            COMMIT_ID=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+            REPO_URL=$(git config --get remote.origin.url 2>/dev/null || echo "unknown")
+            success "Commit: $COMMIT_ID"
+            success "Repository: $REPO_URL"
+        fi
         return 0
     fi
 
@@ -76,6 +84,14 @@ find_rules_repo() {
         if [[ -d "$path/.claude/hooks" ]]; then
             RULES_REPO_PATH="$path"
             success "Found centralized-rules at: $RULES_REPO_PATH"
+
+            # Get commit ID and remote URL
+            if [[ -d "$path/.git" ]]; then
+                COMMIT_ID=$(cd "$path" && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+                REPO_URL=$(cd "$path" && git config --get remote.origin.url 2>/dev/null || echo "unknown")
+                success "Commit: $COMMIT_ID"
+                success "Repository: $REPO_URL"
+            fi
             return 0
         fi
     done
@@ -322,6 +338,14 @@ main() {
         success "Installation successful! 🎉"
         echo ""
         echo "═══════════════════════════════════════════════════════"
+        echo "  Installation Details"
+        echo "═══════════════════════════════════════════════════════"
+        echo ""
+        echo "📦 Repository: ${REPO_URL:-paulduvall/centralized-rules}"
+        echo "📌 Commit: ${COMMIT_ID:-unknown}"
+        echo "🔗 Verify: https://github.com/paulduvall/centralized-rules/commit/${COMMIT_ID:-main}"
+        echo ""
+        echo "═══════════════════════════════════════════════════════"
         echo "  What happens now:"
         echo "═══════════════════════════════════════════════════════"
         echo ""
@@ -335,6 +359,10 @@ main() {
         echo "  • 'Write a Python function with tests'"
         echo "  • 'Create a React component'"
         echo "  • 'Add authentication to my API'"
+        echo "  • 'Are we using Vercel best practices?'"
+        echo ""
+        echo "To verify your installation anytime, check the hook banner"
+        echo "which shows the commit ID when triggered."
         echo ""
         echo "═══════════════════════════════════════════════════════"
     else
