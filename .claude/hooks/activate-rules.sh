@@ -350,9 +350,16 @@ generate_activation_instruction() {
         is_git_op=true
     fi
 
-    # Get current commit hash for version tracking
-    local commit_hash
-    commit_hash=$(git -C "${CLAUDE_PROJECT_DIR:-.}" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    # Get centralized-rules version from skill-rules.json
+    local rules_version="unknown"
+    local json_file="${CLAUDE_PROJECT_DIR:-.}/.claude/skills/skill-rules.json"
+    if [[ ! -f "$json_file" ]]; then
+        json_file="$HOME/.claude/skills/skill-rules.json"
+    fi
+
+    if [[ -f "$json_file" ]] && command -v jq &> /dev/null; then
+        rules_version=$(jq -r '.version // "unknown"' "$json_file" 2>/dev/null)
+    fi
 
     local repo_name="paulduvall/centralized-rules"
     local repo_url="https://github.com/${repo_name}"
@@ -364,7 +371,7 @@ generate_activation_instruction() {
 ═══════════════════════════════════════════════════════
 📦 Source: ${repo_name}
 🔗 Repo: ${repo_url}
-📌 Commit: ${commit_hash}
+📌 Version: ${rules_version}
 ───────────────────────────────────────────────────────
 EOF
 
