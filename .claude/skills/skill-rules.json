@@ -103,7 +103,7 @@
         "rules": ["base/metrics-standards"]
       },
       "cicd": {
-        "keywords": ["github actions", "gha", ".github/workflows", "gitlab ci", "gitlab", ".gitlab-ci.yml", "circleci", "jenkins", "github workflow", "actions", "ci pipeline", "cd pipeline", "continuous integration", "continuous deployment", "continuous", "integration", "deployment"],
+        "keywords": ["github actions", "gha", ".github/workflows", "gitlab ci", "gitlab", ".gitlab-ci.yml", "circleci", "jenkins", "github workflow", "workflow", "github", "actions", "ci pipeline", "pipeline", "cd pipeline", "ci", "cd", "continuous integration", "continuous deployment", "continuous", "integration", "deployment"],
         "slashCommands": ["/xcicd"],
         "rules": ["base/cicd-comprehensive"]
       },
@@ -112,7 +112,7 @@
         "rules": ["base/development-workflow"]
       },
       "beads": {
-        "keywords": ["beads", "bd", "bd-"],
+        "keywords": ["beads", "bead", "bd", "bd-"],
         "rules": ["tools/beads/issue-tracking"]
       }
     },
