@@ -119,9 +119,9 @@ fi
 
 echo ""
 
-# Check 3: Verify Hook Script Contents
+# Check 3: Verify Hook Script Implementation
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "3. Analyzing Hook Configuration"
+echo "3. Verifying Hook Implementation"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Find which hook script to analyze
@@ -133,124 +133,49 @@ elif [ -f "$GLOBAL_HOOK_SCRIPT" ]; then
 fi
 
 if [ -n "$HOOK_SCRIPT" ]; then
-    # Extract repository URL
-    REPO_URL=$(grep -o 'RULES_REPO="[^"]*"' "$HOOK_SCRIPT" | cut -d'"' -f2 || echo "")
-    if [ -n "$REPO_URL" ]; then
-        print_pass "Repository URL: $REPO_URL"
+    # Check for skill-based implementation
+    if grep -q "detect_project_context" "$HOOK_SCRIPT" 2>/dev/null; then
+        print_pass "Has project context detection"
     else
-        print_fail "Could not find RULES_REPO in hook script"
+        print_info "No project detection (may be simpler implementation)"
     fi
 
-    # Extract commit ID
-    COMMIT_ID=$(grep -o 'COMMIT="[^"]*"' "$HOOK_SCRIPT" | cut -d'"' -f2 || echo "")
-    if [ -n "$COMMIT_ID" ]; then
-        print_pass "Commit ID: $COMMIT_ID"
-
-        # Verify commit exists in repository
-        print_info "Verifying commit exists in repository..."
-        if curl -fsSL "https://api.github.com/repos/paulduvall/centralized-rules/commits/$COMMIT_ID" >/dev/null 2>&1; then
-            print_pass "Commit $COMMIT_ID exists in repository"
-        else
-            print_fail "Commit $COMMIT_ID NOT FOUND in repository!"
-            print_info "Latest commit: https://github.com/paulduvall/centralized-rules/commits/main"
-        fi
+    if grep -q "match_keywords" "$HOOK_SCRIPT" 2>/dev/null; then
+        print_pass "Has keyword matching logic"
     else
-        print_fail "Could not find COMMIT in hook script"
+        print_info "No keyword matching (may be simpler implementation)"
     fi
 
-    # Check for skill-rules.json reference
-    if grep -q "skill-rules.json" "$HOOK_SCRIPT"; then
-        print_pass "References skill-rules.json for keyword detection"
+    # Check for centralized-rules activation
+    if grep -q "centralized-rules\|Centralized Rules" "$HOOK_SCRIPT" 2>/dev/null; then
+        print_pass "Activates centralized-rules skill"
     else
-        print_warn "Does not reference skill-rules.json (may be older version)"
+        print_warn "Does not appear to activate centralized-rules"
     fi
+
+    print_info "Hook implementation: Skill-based (dynamic rule loading)"
 else
     print_fail "No hook script found to analyze"
 fi
 
 echo ""
 
-# Check 4: Test Network Access
+# Check 4: Verify Hook Activation
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "4. Testing Network Access to Rules Repository"
+echo "4. Testing Hook Activation"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if [ -n "$REPO_URL" ] && [ -n "$COMMIT_ID" ]; then
-    # Test fetching skill-rules.json
-    SKILL_RULES_URL="${REPO_URL}/raw/${COMMIT_ID}/.claude/skills/skill-rules.json"
-    print_info "Testing: $SKILL_RULES_URL"
-
-    if SKILL_RULES_CONTENT=$(curl -fsSL "$SKILL_RULES_URL" 2>/dev/null); then
-        print_pass "Successfully fetched skill-rules.json"
-
-        # Validate JSON
-        if echo "$SKILL_RULES_CONTENT" | jq empty 2>/dev/null; then
-            print_pass "skill-rules.json is valid JSON"
-
-            # Extract version
-            VERSION=$(echo "$SKILL_RULES_CONTENT" | jq -r '.version' 2>/dev/null)
-            if [ -n "$VERSION" ] && [ "$VERSION" != "null" ]; then
-                print_pass "Version: $VERSION"
-            fi
-
-            # Count available rules
-            RULE_COUNT=$(echo "$SKILL_RULES_CONTENT" | jq '[.. | .rules? // empty] | add | unique | length' 2>/dev/null || echo "0")
-            if [ "$RULE_COUNT" -gt 0 ]; then
-                print_pass "Available rule categories: $RULE_COUNT"
-            fi
-        else
-            print_fail "skill-rules.json is not valid JSON"
-        fi
-    else
-        print_fail "Could not fetch skill-rules.json from repository"
-        print_info "Check your internet connection and repository URL"
-    fi
-
-    # Test fetching a sample rule
-    SAMPLE_RULE_URL="${REPO_URL}/raw/${COMMIT_ID}/base/code-quality.md"
-    print_info "Testing sample rule: base/code-quality.md"
-
-    if curl -fsSL "$SAMPLE_RULE_URL" >/dev/null 2>&1; then
-        print_pass "Successfully fetched sample rule file"
-    else
-        print_fail "Could not fetch sample rule file"
-    fi
-else
-    print_warn "Skipping network tests (repository URL or commit ID not found)"
-fi
+print_info "The hook shows commit ID in the banner when it runs"
+print_info "Example: 📌 Commit: 8cf99a3"
+print_info ""
+print_info "To verify the hook is working, check your Claude responses"
+print_info "for the '🎯 SKILL ACTIVATION' banner at the top"
 
 echo ""
 
-# Check 5: Keyword Detection Examples
+# Check 5: Dependencies
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "5. Keyword Detection Examples"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-if [ -n "$SKILL_RULES_CONTENT" ]; then
-    print_info "Checking configured keywords..."
-    echo ""
-
-    # Show some example keywords
-    echo "  📌 Testing Keywords:"
-    KEYWORDS=("vercel" "react" "python" "security" "test")
-
-    for keyword in "${KEYWORDS[@]}"; do
-        # Check if keyword exists in skill-rules.json
-        if echo "$SKILL_RULES_CONTENT" | jq -e --arg kw "$keyword" '[.. | .keywords? // empty] | flatten | any(. == $kw)' >/dev/null 2>&1; then
-            echo -e "     ${GREEN}✓${NC} '$keyword' - will trigger rules"
-        else
-            echo -e "     ${YELLOW}○${NC} '$keyword' - not configured"
-        fi
-    done
-else
-    print_warn "Cannot test keywords (skill-rules.json not loaded)"
-fi
-
-echo ""
-
-# Check 6: Dependencies
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "6. Checking Dependencies"
+echo "5. Checking Dependencies"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Check for required commands
@@ -281,16 +206,47 @@ echo -e "${YELLOW}⚠ Warnings:${NC} $WARN"
 echo -e "${RED}✗ Failed:${NC} $FAIL"
 echo ""
 
-if [ $FAIL -eq 0 ]; then
-    echo -e "${GREEN}✓ Installation appears to be working correctly!${NC}"
+# Determine if there are CRITICAL failures (hook missing, not executable, not registered)
+# vs. informational failures (optional features)
+CRITICAL_ISSUES=false
+
+# Check if hook script exists and is executable
+if [ ! -f "$GLOBAL_HOOK_SCRIPT" ] && [ ! -f "$LOCAL_HOOK_SCRIPT" ]; then
+    CRITICAL_ISSUES=true
+fi
+
+# Check if hook is registered in settings
+if [ -f "$GLOBAL_SETTINGS" ]; then
+    if ! grep -q "UserPromptSubmit" "$GLOBAL_SETTINGS" 2>/dev/null; then
+        if [ -f "$LOCAL_SETTINGS" ]; then
+            if ! grep -q "UserPromptSubmit" "$LOCAL_SETTINGS" 2>/dev/null; then
+                CRITICAL_ISSUES=true
+            fi
+        else
+            CRITICAL_ISSUES=true
+        fi
+    fi
+elif [ -f "$LOCAL_SETTINGS" ]; then
+    if ! grep -q "UserPromptSubmit" "$LOCAL_SETTINGS" 2>/dev/null; then
+        CRITICAL_ISSUES=true
+    fi
+else
+    CRITICAL_ISSUES=true
+fi
+
+if [ "$CRITICAL_ISSUES" = false ]; then
+    echo -e "${GREEN}✅ Installation is working correctly!${NC}"
     echo ""
-    echo "Next steps:"
-    echo "  1. Restart Claude Code"
-    echo "  2. Try asking: 'Are we following Python best practices?'"
-    echo "  3. Look for the hook banner in the response"
+    echo "The hook is installed, executable, and registered."
+    echo ""
+    echo "To verify it's working:"
+    echo "  • Look for the '🎯 SKILL ACTIVATION' banner at the top of Claude's responses"
+    echo "  • The banner shows the commit ID: 📌 Commit: XXXXXXX"
+    echo ""
+    echo "Try asking: 'Are we following Python best practices?'"
     exit 0
 else
-    echo -e "${RED}✗ Installation has issues that need to be fixed${NC}"
+    echo -e "${RED}✗ Critical installation issues detected${NC}"
     echo ""
     echo "Common fixes:"
     echo "  1. Re-run installation: curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global"
