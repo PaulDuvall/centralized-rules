@@ -2,7 +2,8 @@
 # Centralized Rules Installation Verification Script
 # Verifies that centralized-rules is correctly installed and configured
 
-set -e
+# NOTE: We do NOT use 'set -e' here because we want to run ALL checks
+# even if some fail, so users can see exactly what's wrong
 
 # Colors for output
 RED='\033[0;31m'
@@ -24,17 +25,17 @@ echo ""
 # Function to print status
 print_pass() {
     echo -e "${GREEN}✓${NC} $1"
-    ((PASS++))
+    PASS=$((PASS + 1))
 }
 
 print_fail() {
     echo -e "${RED}✗${NC} $1"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
 }
 
 print_warn() {
     echo -e "${YELLOW}⚠${NC} $1"
-    ((WARN++))
+    WARN=$((WARN + 1))
 }
 
 print_info() {
