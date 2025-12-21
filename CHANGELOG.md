@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2025-12-20
 
 ### Fixed
-- **CRITICAL**: Hook banner now shows centralized-rules version instead of project commit
+- **CRITICAL**: Hook banner now shows centralized-rules version AND commit
   - Previously showed `📌 Commit: 1e7793c` (misleading - showed project's commit)
-  - Now shows `📌 Version: 1.3.0` (correct - shows rules version from skill-rules.json)
+  - Now shows `📌 Version: 1.3.0 (b38033f)` (correct - shows both version and rules commit)
+  - Version read from skill-rules.json (semantic versioning)
+  - Commit hash injected at installation time (automatic, verifiable on GitHub)
   - Eliminates confusion about which version of centralized-rules is active
-  - Version read from skill-rules.json using jq
+  - Best of both worlds: semantic version + verifiable commit
 
 ### Changed
 - **BREAKING**: Hook script now reads keywords from `skill-rules.json` as single source of truth

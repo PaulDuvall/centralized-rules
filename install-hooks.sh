@@ -110,10 +110,14 @@ install_local() {
     mkdir -p .claude/hooks
     mkdir -p .claude/skills
 
-    # Copy hook script
-    cp "$RULES_REPO_PATH/.claude/hooks/activate-rules.sh" .claude/hooks/
+    # Copy hook script and embed commit hash
+    cp "$RULES_REPO_PATH/.claude/hooks/activate-rules.sh" .claude/hooks/activate-rules.sh.tmp
+    # Inject the actual commit hash
+    sed "s/__CENTRALIZED_RULES_COMMIT__/${COMMIT_ID}/g" \
+        .claude/hooks/activate-rules.sh.tmp > .claude/hooks/activate-rules.sh
+    rm .claude/hooks/activate-rules.sh.tmp
     chmod +x .claude/hooks/activate-rules.sh
-    success "Copied hook script"
+    success "Copied hook script (commit: ${COMMIT_ID})"
 
     # Copy skill rules mapping
     cp "$RULES_REPO_PATH/.claude/skills/skill-rules.json" .claude/skills/
@@ -207,10 +211,14 @@ install_global() {
     mkdir -p "$HOME/.claude/hooks"
     mkdir -p "$HOME/.claude/skills"
 
-    # Copy hook script
-    cp "$RULES_REPO_PATH/.claude/hooks/activate-rules.sh" "$HOME/.claude/hooks/"
+    # Copy hook script and embed commit hash
+    cp "$RULES_REPO_PATH/.claude/hooks/activate-rules.sh" "$HOME/.claude/hooks/activate-rules.sh.tmp"
+    # Inject the actual commit hash
+    sed "s/__CENTRALIZED_RULES_COMMIT__/${COMMIT_ID}/g" \
+        "$HOME/.claude/hooks/activate-rules.sh.tmp" > "$HOME/.claude/hooks/activate-rules.sh"
+    rm "$HOME/.claude/hooks/activate-rules.sh.tmp"
     chmod +x "$HOME/.claude/hooks/activate-rules.sh"
-    success "Copied hook script to ~/.claude/hooks/"
+    success "Copied hook script to ~/.claude/hooks/ (commit: ${COMMIT_ID})"
 
     # Copy skill rules mapping
     cp "$RULES_REPO_PATH/.claude/skills/skill-rules.json" "$HOME/.claude/skills/"

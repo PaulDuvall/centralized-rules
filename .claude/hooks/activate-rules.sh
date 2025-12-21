@@ -361,6 +361,9 @@ generate_activation_instruction() {
         rules_version=$(jq -r '.version // "unknown"' "$json_file" 2>/dev/null)
     fi
 
+    # Commit hash embedded at installation time (replaced by install script)
+    local installed_commit="__CENTRALIZED_RULES_COMMIT__"
+
     local repo_name="paulduvall/centralized-rules"
     local repo_url="https://github.com/${repo_name}"
 
@@ -371,7 +374,7 @@ generate_activation_instruction() {
 ═══════════════════════════════════════════════════════
 📦 Source: ${repo_name}
 🔗 Repo: ${repo_url}
-📌 Version: ${rules_version}
+📌 Version: ${rules_version} (${installed_commit})
 ───────────────────────────────────────────────────────
 EOF
 
