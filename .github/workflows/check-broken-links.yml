@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.claude/**'
+      - '.github/markdown-link-check-config.json'
+      - '.github/workflows/check-broken-links.yml'
       - '**.md'
       - 'base/**'
       - 'frameworks/**'
@@ -14,6 +16,8 @@ on:
   pull_request:
     paths:
       - '.claude/**'
+      - '.github/markdown-link-check-config.json'
+      - '.github/workflows/check-broken-links.yml'
       - '**.md'
       - 'base/**'
       - 'frameworks/**'
