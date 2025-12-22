@@ -24,7 +24,7 @@ WARNINGS=0
 CHECKS=0
 
 # Test mode flag
-RUN_PROJECT_TEST="${RUN_PROJECT_TEST:-true}"
+readonly RUN_PROJECT_TEST="${RUN_PROJECT_TEST:-true}"
 
 # Helper functions
 error() {
@@ -300,29 +300,10 @@ test_documentation() {
 # TEST 7: Real Project Integration Test
 # ============================================================================
 
-test_real_project() {
-    if [ "$RUN_PROJECT_TEST" != "true" ]; then
-        info "Skipping real project test (RUN_PROJECT_TEST=false)"
-        echo ""
-        return
-    fi
+# Create test project with Python + FastAPI
+create_test_project() {
+    local test_dir="$1"
 
-    info "Testing against a real project..."
-
-    # Create temporary test project
-    test_dir=$(mktemp -d -t progressive-disclosure-test-XXXXXX)
-
-    cleanup_test_dir() {
-        if [ -n "${test_dir:-}" ] && [ -d "$test_dir" ]; then
-            rm -rf "$test_dir"
-        fi
-    }
-
-    trap cleanup_test_dir EXIT
-
-    info "Created test project: $test_dir"
-
-    # Create a Python + FastAPI project (local keyword removed)
     mkdir -p "$test_dir/src"
     cat > "$test_dir/pyproject.toml" <<'EOF'
 [project]
@@ -343,32 +324,10 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 EOF
+}
 
-    # Copy sync script to test project
-    check_pass
-    if cp "sync-ai-rules.sh" "$test_dir/" 2>/dev/null; then
-        success "Copied sync script to test project"
-    else
-        error "Failed to copy sync script"
-        echo ""
-        return
-    fi
-
-    # Run sync script in test project (generates for all tools by default)
-    check_pass
-    cd "$test_dir"
-    if bash ./sync-ai-rules.sh > /dev/null 2>&1; then
-        success "Sync script executed successfully (all tools)"
-    else
-        error "Sync script failed to execute"
-        cd - > /dev/null
-        echo ""
-        return
-    fi
-
-    # ========================================================================
-    # Validate Claude configuration
-    # ========================================================================
+# Validate Claude configuration in test project
+validate_claude_output() {
     info "Validating Claude configuration..."
 
     check_pass
@@ -379,8 +338,6 @@ EOF
     fi
 
     check_pass
-    # In hierarchical mode (default), RULES.md is not generated
-    # AGENTS.md is the entry point instead
     if [ -f ".claude/AGENTS.md" ]; then
         success "Hierarchical mode active (AGENTS.md is entry point)"
     elif [ -f ".claude/RULES.md" ]; then
@@ -389,7 +346,6 @@ EOF
         error "Neither AGENTS.md nor RULES.md generated"
     fi
 
-    # Check that Python and FastAPI rules were detected
     check_pass
     if [ -d ".claude/rules/languages/python" ]; then
         success "Python rules detected and copied"
@@ -404,7 +360,6 @@ EOF
         error "FastAPI rules not detected"
     fi
 
-    # Check that AGENTS.md mentions Python
     check_pass
     if grep -q "python" ".claude/AGENTS.md" 2>/dev/null; then
         success "AGENTS.md references Python"
@@ -412,7 +367,6 @@ EOF
         warning "AGENTS.md doesn't mention detected Python language"
     fi
 
-    # Verify progressive disclosure instructions are present
     check_pass
     if grep -q "DO NOT load all rule files at once" ".claude/AGENTS.md" 2>/dev/null; then
         success "Progressive disclosure warning present in test project"
@@ -420,7 +374,6 @@ EOF
         error "Progressive disclosure warning missing in test project"
     fi
 
-    # Check entry point has progressive disclosure instructions
     check_pass
     if [ -f ".claude/AGENTS.md" ]; then
         if grep -q "Progressive Disclosure" ".claude/AGENTS.md" 2>/dev/null; then
@@ -435,10 +388,10 @@ EOF
             error "RULES.md missing progressive disclosure header"
         fi
     fi
+}
 
-    # ========================================================================
-    # Validate Cursor configuration
-    # ========================================================================
+# Validate Cursor configuration in test project
+validate_cursor_output() {
     info "Validating Cursor configuration..."
 
     check_pass
@@ -457,7 +410,6 @@ EOF
 
     check_pass
     if [ -f ".cursorrules" ] && [ -s ".cursorrules" ]; then
-        # Check file is not empty and has substantial content
         line_count=$(wc -l < ".cursorrules")
         if [ "$line_count" -gt 10 ]; then
             success "Cursor rules file has content ($line_count lines)"
@@ -467,10 +419,10 @@ EOF
     else
         error "Cursor rules file is empty or missing"
     fi
+}
 
-    # ========================================================================
-    # Validate Copilot configuration
-    # ========================================================================
+# Validate Copilot configuration in test project
+validate_copilot_output() {
     info "Validating GitHub Copilot configuration..."
 
     check_pass
@@ -489,7 +441,6 @@ EOF
 
     check_pass
     if [ -f ".github/copilot-instructions.md" ] && [ -s ".github/copilot-instructions.md" ]; then
-        # Check file is not empty and has substantial content
         line_count=$(wc -l < ".github/copilot-instructions.md")
         if [ "$line_count" -gt 10 ]; then
             success "Copilot instructions file has content ($line_count lines)"
@@ -499,6 +450,56 @@ EOF
     else
         error "Copilot instructions file is empty or missing"
     fi
+}
+
+# Main test function (refactored)
+test_real_project() {
+    if [ "$RUN_PROJECT_TEST" != "true" ]; then
+        info "Skipping real project test (RUN_PROJECT_TEST=false)"
+        echo ""
+        return
+    fi
+
+    info "Testing against a real project..."
+
+    test_dir=$(mktemp -d -t progressive-disclosure-test-XXXXXX)
+
+    # shellcheck disable=SC2317
+    cleanup_test_dir() {
+        if [[ -n "${test_dir:-}" ]] && [[ -d "$test_dir" ]] && [[ "$test_dir" =~ ^/tmp/ ]]; then
+            rm -rf "$test_dir"
+        fi
+    }
+
+    trap cleanup_test_dir EXIT
+
+    info "Created test project: $test_dir"
+
+    create_test_project "$test_dir"
+
+    check_pass
+    if cp "sync-ai-rules.sh" "$test_dir/" 2>/dev/null; then
+        success "Copied sync script to test project"
+    else
+        error "Failed to copy sync script"
+        echo ""
+        return
+    fi
+
+    check_pass
+    cd "$test_dir"
+    if bash ./sync-ai-rules.sh > /dev/null 2>&1; then
+        success "Sync script executed successfully (all tools)"
+    else
+        error "Sync script failed to execute"
+        cd - > /dev/null
+        echo ""
+        return
+    fi
+
+    validate_claude_output
+    validate_cursor_output
+    validate_copilot_output
 
     cd - > /dev/null
     info "Test project validation complete (Claude + Cursor + Copilot)"
