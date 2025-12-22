@@ -26,6 +26,9 @@ on:
       - 'scripts/check-json-references.sh'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check-json-references:
     name: Check JSON File References

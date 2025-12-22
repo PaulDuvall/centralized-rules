@@ -40,3 +40,65 @@ jobs:
     with:
       check-progressive-disclosure: true
       check-architecture: true
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'skill/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./skill
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: ./skill
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+      - name: Scan for hardcoded secrets
+        run: |
+          echo "Scanning for hardcoded secrets and credentials..."
+          if git grep -i -E "(api[_-]?key|secret|password|token|credential|private[_-]?key)" --no-index | grep -v -E "(test|spec|mock|example|\.md|SECURITY|README|docs/)"; then
+            echo "::error::Potential secrets found in code"
+            exit 1
+          fi
+          echo "✓ No hardcoded secrets detected"
+
+      - name: Check shell script security patterns
+        run: |
+          echo "Checking shell scripts for security anti-patterns..."
+
+          # Check for dangerous eval/exec usage
+          if grep -r -E "eval\s+\$" --include="*.sh" scripts/ 2>/dev/null | grep -v "# safe:"; then
+            echo "::warning::Potentially dangerous eval usage found in shell scripts"
+          fi
+
+          # Check for unquoted variables
+          if grep -r -E '\$[A-Za-z_][A-Za-z0-9_]*[^"]' --include="*.sh" scripts/ 2>/dev/null | grep -v -E "(#|//)" | head -5; then
+            echo "::warning::Found potentially unquoted variables (may be false positives)"
+          fi
+
+          echo "✓ Shell script security check completed"
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-3.0, AGPL-3.0
