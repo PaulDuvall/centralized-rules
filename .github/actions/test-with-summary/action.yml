@@ -1,0 +1,100 @@
+name: 'Test with Summary'
+description: 'Run tests and generate standardized GitHub Actions job summary'
+author: 'PaulDuvall'
+
+inputs:
+  test-command:
+    description: 'Command to run tests'
+    required: true
+  summary-title:
+    description: 'Title for the summary section (e.g., "ShellCheck Results")'
+    required: true
+  working-directory:
+    description: 'Working directory to run tests in'
+    required: false
+    default: '.'
+  continue-on-error:
+    description: 'Whether to continue on test failure'
+    required: false
+    default: 'true'
+  artifact-name:
+    description: 'Name for test artifacts (optional)'
+    required: false
+    default: ''
+  artifact-path:
+    description: 'Path to upload as artifact (optional)'
+    required: false
+    default: ''
+  artifact-retention-days:
+    description: 'Number of days to retain artifacts'
+    required: false
+    default: '5'
+
+outputs:
+  test-result:
+    description: 'Test result: success or failure'
+    value: ${{ steps.test.outcome }}
+  test-output:
+    description: 'Test output captured to file'
+    value: 'test-output.log'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run test
+      id: test
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "Running: ${{ inputs.test-command }}"
+        ${{ inputs.test-command }} 2>&1 | tee test-output.log
+        exit ${PIPESTATUS[0]}
+      continue-on-error: ${{ inputs.continue-on-error == 'true' }}
+
+    - name: Generate summary
+      if: always()
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        # Source summary utilities
+        if [ -f "${GITHUB_WORKSPACE}/scripts/ci/summary-utils.sh" ]; then
+          # shellcheck source=scripts/ci/summary-utils.sh
+          source "${GITHUB_WORKSPACE}/scripts/ci/summary-utils.sh"
+
+          # Generate summary header
+          summary_header "${{ inputs.summary-title }}" "${{ steps.test.outcome }}"
+
+          # Add test output as collapsible details if available
+          if [ -f test-output.log ]; then
+            summary_details "View Test Output" "$(tail -100 test-output.log)"
+          fi
+
+          # Add footer
+          summary_footer
+        else
+          # Fallback if summary-utils.sh doesn't exist
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
+        ## ${{ inputs.summary-title }}
+
+        **Status:** ${{ steps.test.outcome == 'success' && '✅ PASSED' || '❌ FAILED' }}
+
+        ---
+
+        **Workflow URL:** ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+        EOF
+        fi
+
+    - name: Upload artifacts
+      if: always() && inputs.artifact-name != '' && inputs.artifact-path != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.working-directory }}/${{ inputs.artifact-path }}
+        retention-days: ${{ inputs.artifact-retention-days }}
+
+    - name: Fail if test failed
+      if: steps.test.outcome == 'failure' && inputs.continue-on-error != 'true'
+      shell: bash
+      run: |
+        echo "::error::${{ inputs.summary-title }} failed"
+        exit 1

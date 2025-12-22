@@ -26,13 +26,12 @@ jobs:
       - name: Check README mentions progressive disclosure
         if: inputs.check-progressive-disclosure
         id: check-readme
-        run: |
-          if ! grep -qi "progressive disclosure" README.md; then
-            echo "ERROR: README.md doesn't mention progressive disclosure"
-            exit 1
-          fi
-          echo "✓ README.md documents progressive disclosure"
-        continue-on-error: true
+        uses: ./.github/actions/run-validation
+        with:
+          command: 'grep -qi "progressive disclosure" README.md'
+          name: 'README progressive disclosure check'
+          error-file: 'README.md'
+          failure-message: 'README.md does not mention progressive disclosure'
 
       - name: Check ARCHITECTURE documentation
         if: inputs.check-architecture
@@ -51,16 +50,16 @@ jobs:
 
       - name: Verify rule files are markdown
         id: check-markdown
-        run: |
-          # Check that all rule files are .md
-          non_md=$(find base/ languages/ frameworks/ cloud/ -type f ! -name "*.md" 2>/dev/null || true)
-          if [ -n "$non_md" ]; then
-            echo "ERROR: Non-markdown files found in rule directories:"
-            echo "$non_md"
-            exit 1
-          fi
-          echo "✓ All rule files are markdown"
-        continue-on-error: true
+        uses: ./.github/actions/run-validation
+        with:
+          command: |
+            non_md=$(find base/ languages/ frameworks/ cloud/ -type f ! -name "*.md" 2>/dev/null || true)
+            if [ -n "$non_md" ]; then
+              echo "ERROR: Non-markdown files found: $non_md"
+              exit 1
+            fi
+          name: 'Rule files markdown check'
+          failure-message: 'Non-markdown files found in rule directories'
 
       - name: Check for broken internal links
         id: check-links

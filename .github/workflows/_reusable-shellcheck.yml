@@ -39,20 +39,17 @@ jobs:
       - name: Generate ShellCheck summary
         if: always()
         run: |
-          echo "## 🔍 ShellCheck Results: ${{ inputs.scan-dir }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          # Source summary utilities
+          # shellcheck source=scripts/ci/summary-utils.sh
+          source scripts/ci/summary-utils.sh
 
-          if [ "${{ steps.shellcheck.outcome }}" == "success" ]; then
-            echo "✅ **Status:** PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Status:** ISSUES FOUND" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "- **Scan Directory:** \`${{ inputs.scan-dir }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Severity Level:** ${{ inputs.severity }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Format:** ${{ inputs.format }}" >> $GITHUB_STEP_SUMMARY
+          # Generate summary
+          summary_header "🔍 ShellCheck Results: ${{ inputs.scan-dir }}" "${{ steps.shellcheck.outcome }}"
+          summary_config \
+            "Scan Directory: \`${{ inputs.scan-dir }}\`" \
+            "Severity Level: ${{ inputs.severity }}" \
+            "Format: ${{ inputs.format }}"
+          summary_footer
 
       - name: Fail if issues found
         if: steps.shellcheck.outcome != 'success'

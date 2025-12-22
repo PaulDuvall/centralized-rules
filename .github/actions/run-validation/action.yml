@@ -1,0 +1,74 @@
+name: 'Run Validation'
+description: 'Run validation command with standardized error handling and GitHub annotations'
+author: 'PaulDuvall'
+
+inputs:
+  command:
+    description: 'Validation command to run'
+    required: true
+  name:
+    description: 'Name of the validation (for error messages)'
+    required: true
+  working-directory:
+    description: 'Working directory to run validation in'
+    required: false
+    default: '.'
+  error-file:
+    description: 'File path for GitHub error annotations (optional)'
+    required: false
+    default: ''
+  failure-message:
+    description: 'Custom failure message (optional)'
+    required: false
+    default: ''
+
+outputs:
+  result:
+    description: 'Validation result: success or failure'
+    value: ${{ steps.validate.outcome }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run validation
+      id: validate
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: ${{ inputs.command }}
+      continue-on-error: true
+
+    - name: Handle validation failure
+      if: steps.validate.outcome == 'failure'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        # Generate error annotation
+        if [ -n "${{ inputs.error-file }}" ] && [ -f "${{ inputs.error-file }}" ]; then
+          echo "::error file=${{ inputs.error-file }}::${{ inputs.name }} validation failed"
+        else
+          echo "::error::${{ inputs.name }} validation failed"
+        fi
+
+        # Display custom failure message or default
+        if [ -n "${{ inputs.failure-message }}" ]; then
+          echo ""
+          echo "❌ ${{ inputs.failure-message }}"
+        else
+          echo ""
+          echo "❌ ${{ inputs.name }} validation failed"
+          echo ""
+          echo "Please review the logs above for details."
+        fi
+
+        echo ""
+        echo "🔧 To debug locally, run:"
+        echo "   cd ${{ inputs.working-directory }}"
+        echo "   ${{ inputs.command }}"
+
+        exit 1
+
+    - name: Report validation success
+      if: steps.validate.outcome == 'success'
+      shell: bash
+      run: |
+        echo "✅ ${{ inputs.name }} validation passed"

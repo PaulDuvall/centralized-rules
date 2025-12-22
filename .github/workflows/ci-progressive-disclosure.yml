@@ -35,59 +35,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run progressive disclosure validation
-        id: validation
-        run: |
-          chmod +x scripts/validate-progressive-disclosure.sh
-          ./scripts/validate-progressive-disclosure.sh | tee validation-output.txt
-          echo "result=$?" >> $GITHUB_OUTPUT
-        env:
-          RUN_PROJECT_TEST: "true"
-        continue-on-error: true
-
-      - name: Generate validation summary
-        if: always()
-        run: |
-          echo "## 📋 Progressive Disclosure Validation" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ steps.validation.outputs.result }}" == "0" ]; then
-            echo "✅ **Status:** PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Status:** FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Tests Performed" >> $GITHUB_STEP_SUMMARY
-          echo "- Directory structure validation" >> $GITHUB_STEP_SUMMARY
-          echo "- **Claude:** AGENTS.md + hierarchical rules" >> $GITHUB_STEP_SUMMARY
-          echo "- **Cursor:** .cursorrules generation" >> $GITHUB_STEP_SUMMARY
-          echo "- **Copilot:** .github/copilot-instructions.md" >> $GITHUB_STEP_SUMMARY
-          echo "- Base rules language-agnostic validation" >> $GITHUB_STEP_SUMMARY
-          echo "- Documentation completeness check" >> $GITHUB_STEP_SUMMARY
-          echo "- Real project integration test (all 3 AI tools)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ -f validation-output.txt ]; then
-            echo "<details>" >> $GITHUB_STEP_SUMMARY
-            echo "<summary>View detailed output</summary>" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            tail -100 validation-output.txt >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "</details>" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Upload validation results
-        if: always()
-        uses: actions/upload-artifact@v4
+        uses: ./.github/actions/test-with-summary
         with:
-          name: progressive-disclosure-validation-results
-          path: |
-            validation-output.txt
+          test-command: |
+            chmod +x scripts/validate-progressive-disclosure.sh
+            ./scripts/validate-progressive-disclosure.sh
+          summary-title: '📋 Progressive Disclosure Validation'
+          artifact-name: 'progressive-disclosure-validation-results'
+          artifact-path: |
+            test-output.log
             .claude/
             scripts/
-          retention-days: 5
-
-      - name: Fail if validation failed
-        if: steps.validation.outputs.result != '0'
-        run: exit 1
+          artifact-retention-days: '5'
+        env:
+          RUN_PROJECT_TEST: "true"
