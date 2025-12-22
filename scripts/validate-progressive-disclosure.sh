@@ -487,6 +487,15 @@ test_real_project() {
     fi
 
     check_pass
+    if cp -r "lib" "$test_dir/" 2>/dev/null; then
+        success "Copied lib directory to test project"
+    else
+        error "Failed to copy lib directory"
+        echo ""
+        return
+    fi
+
+    check_pass
     cd "$test_dir"
     if bash ./sync-ai-rules.sh > /dev/null 2>&1; then
         success "Sync script executed successfully (all tools)"

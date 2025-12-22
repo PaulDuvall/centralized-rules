@@ -230,15 +230,15 @@ test_keyword() {
         FAILED_TESTS=$((FAILED_TESTS + 1))
         FAILED_KEYWORDS+=("$keyword")
         log_error "[$category_name] Keyword '$keyword' failed to trigger expected rules"
-        log_warning "Expected rules: $expected_rules"
-        log_warning "Missing: ${missing_rules[*]}"
+        log_warn "Expected rules: $expected_rules"
+        log_warn "Missing: ${missing_rules[*]}"
         if [[ -n "$matched_rules" ]]; then
             log_info "Matched rules:"
             echo "$matched_rules" | while read -r rule; do
                 echo "  - $rule"
             done
         else
-            log_warning "No rules were matched!"
+            log_warn "No rules were matched!"
         fi
     fi
 }
@@ -251,7 +251,7 @@ test_category() {
     keywords_data=$(extract_keywords "$category")
 
     if [[ -z "$keywords_data" ]]; then
-        log_warning "No keywords found for category: $category"
+        log_warn "No keywords found for category: $category"
         return
     fi
 

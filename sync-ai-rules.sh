@@ -22,8 +22,10 @@ readonly SCRIPT_DIR
 
 # Source shared libraries
 # shellcheck source=lib/logging.sh
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/logging.sh"
 # shellcheck source=lib/detection.sh
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/detection.sh"
 readonly RULES_REPO_URL="${AI_RULES_REPO:-https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main}"
 readonly RULES_DIR=".ai-rules"
@@ -1033,24 +1035,48 @@ generate_gemini_rules() {
 
 # Detect all project configuration
 detect_all_project_config() {
-    local -n _languages=$1
-    local -n _frameworks=$2
-    local -n _cloud_providers=$3
-    local -n _tools=$4
-    local -n _maturity_level=$5
+    local languages_var=$1
+    local frameworks_var=$2
+    local cloud_providers_var=$3
+    local tools_var=$4
+    local maturity_level_var=$5
 
-    while IFS= read -r line; do _languages+=("$line"); done < <(detect_language)
-    while IFS= read -r line; do _frameworks+=("$line"); done < <(detect_frameworks)
-    while IFS= read -r line; do _cloud_providers+=("$line"); done < <(detect_cloud_providers)
-    while IFS= read -r line; do _tools+=("$line"); done < <(detect_tools)
-    _maturity_level=$(detect_maturity_level)
+    # Use eval for bash 3.2 compatibility (no nameref support)
+    while IFS= read -r line; do
+        eval "${languages_var}+=(\"${line}\")"
+    done < <(detect_language)
+
+    while IFS= read -r line; do
+        eval "${frameworks_var}+=(\"${line}\")"
+    done < <(detect_frameworks)
+
+    while IFS= read -r line; do
+        eval "${cloud_providers_var}+=(\"${line}\")"
+    done < <(detect_cloud_providers)
+
+    while IFS= read -r line; do
+        eval "${tools_var}+=(\"${line}\")"
+    done < <(detect_tools)
+
+    eval "${maturity_level_var}=\$(detect_maturity_level)"
 }
 
 # Log detected project configuration
 log_detected_config() {
-    local languages=("$@")
-    shift $(($# > 0 ? ${#languages[@]} : 0))
-    local frameworks=("$@")
+    local lang_count=$1
+    shift
+    local languages=()
+    local frameworks=()
+
+    # Extract languages
+    local i
+    for ((i=0; i<lang_count; i++)); do
+        languages+=("$1")
+        shift
+    done
+
+    # Remaining arguments are frameworks
+    frameworks=("$@")
 
     if [[ ${#languages[@]} -eq 0 ]]; then
         log_warn "No recognized language detected. Loading base rules only."
@@ -1077,9 +1103,20 @@ log_detected_config() {
 
 # Load all rules based on detected configuration
 load_all_detected_rules() {
-    local languages=("$@")
-    shift $(($# > 0 ? ${#languages[@]} : 0))
-    local frameworks=("$@")
+    local lang_count=$1
+    shift
+    local languages=()
+    local frameworks=()
+
+    # Extract languages
+    local i
+    for ((i=0; i<lang_count; i++)); do
+        languages+=("$1")
+        shift
+    done
+
+    # Remaining arguments are frameworks
+    frameworks=("$@")
 
     load_base_rules
     echo ""
@@ -1154,10 +1191,10 @@ sync_rules() {
     detect_all_project_config languages frameworks cloud_providers tools maturity_level
 
     # Log detected configuration
-    log_detected_config "${languages[@]}" "${frameworks[@]}"
+    log_detected_config "${#languages[@]}" "${languages[@]}" "${frameworks[@]}"
 
     # Load all detected rules
-    load_all_detected_rules "${languages[@]}" "${frameworks[@]}"
+    load_all_detected_rules "${#languages[@]}" "${languages[@]}" "${frameworks[@]}"
 
     # Generate outputs for specified tool(s)
     generate_tool_specific_outputs "$tool"
