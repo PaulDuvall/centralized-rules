@@ -13,10 +13,22 @@
 
 set -euo pipefail
 
-# Configuration
-VERBOSE=${VERBOSE:-false}
+# Get repository root
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+readonly REPO_ROOT
 
-# Logging helper
+# Source shared libraries
+# shellcheck source=../../lib/logging.sh
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/lib/logging.sh"
+# shellcheck source=../../lib/detection.sh
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/lib/detection.sh"
+
+# Configuration
+readonly VERBOSE=${VERBOSE:-false}
+
+# Custom debug logging (extends lib/logging.sh)
 log_debug() {
     if [[ "${VERBOSE}" == "true" ]]; then
         echo "[DEBUG] $*" >&2
@@ -40,47 +52,20 @@ extract_prompt() {
 }
 
 # Detect project context by checking for language/framework marker files
+# NOTE: Uses shared detection functions from lib/detection.sh
 detect_project_context() {
-    local -a languages=()
-    local -a frameworks=()
+    local languages
+    local frameworks
 
-    # Language detection
-    [[ -f "pyproject.toml" ]] || [[ -f "requirements.txt" ]] || [[ -f "setup.py" ]] && languages+=("python")
-    [[ -f "package.json" ]] && {
-        if grep -q '"typescript"' package.json 2>/dev/null; then
-            languages+=("typescript")
-        else
-            languages+=("javascript")
-        fi
-    }
-    [[ -f "go.mod" ]] && languages+=("go")
-    [[ -f "Cargo.toml" ]] && languages+=("rust")
-    [[ -f "pom.xml" ]] || [[ -f "build.gradle" ]] && languages+=("java")
-    [[ -f "*.csproj" ]] && languages+=("csharp")
+    # Use shared detection functions
+    languages=$(detect_language)
+    frameworks=$(detect_frameworks)
 
-    # Framework detection
-    [[ -f "package.json" ]] && {
-        grep -q '"react"' package.json 2>/dev/null && frameworks+=("react")
-        grep -q '"next"' package.json 2>/dev/null && frameworks+=("nextjs")
-        grep -q '"@nestjs/core"' package.json 2>/dev/null && frameworks+=("nestjs")
-        grep -q '"express"' package.json 2>/dev/null && frameworks+=("express")
-    }
-    [[ -f "pyproject.toml" ]] && {
-        grep -q 'fastapi' pyproject.toml 2>/dev/null && frameworks+=("fastapi")
-        grep -q 'django' pyproject.toml 2>/dev/null && frameworks+=("django")
-        grep -q 'flask' pyproject.toml 2>/dev/null && frameworks+=("flask")
-    }
-    [[ -f "requirements.txt" ]] && {
-        grep -q 'fastapi' requirements.txt 2>/dev/null && frameworks+=("fastapi")
-        grep -q 'django' requirements.txt 2>/dev/null && frameworks+=("django")
-        grep -q 'flask' requirements.txt 2>/dev/null && frameworks+=("flask")
-    }
+    log_debug "Detected languages: ${languages:-none}"
+    log_debug "Detected frameworks: ${frameworks:-none}"
 
-    log_debug "Detected languages: ${languages[*]:-none}"
-    log_debug "Detected frameworks: ${frameworks[*]:-none}"
-
-    # Return as comma-separated strings
-    echo "${languages[*]:-}|${frameworks[*]:-}"
+    # Return as pipe-separated strings
+    echo "${languages:-}|${frameworks:-}"
 }
 
 # Load keyword mappings from skill-rules.json

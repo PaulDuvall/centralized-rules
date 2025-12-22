@@ -19,22 +19,22 @@ set -euo pipefail
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SKILL_RULES_JSON="${REPO_ROOT}/.claude/skills/skill-rules.json"
-HOOK_SCRIPT="${REPO_ROOT}/.claude/hooks/activate-rules.sh"
+readonly REPO_ROOT
+
+# Source shared libraries
+# shellcheck source=../lib/logging.sh
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/lib/logging.sh"
+readonly SKILL_RULES_JSON="${REPO_ROOT}/.claude/skills/skill-rules.json"
+readonly HOOK_SCRIPT="${REPO_ROOT}/.claude/hooks/activate-rules.sh"
 
 # Default options
 NUM_TESTS=10
 VERBOSE=false
 TEST_ALL=false
 CATEGORY_FILTER=""
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Test results
 TOTAL_TESTS=0
@@ -72,11 +72,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Logging functions
-log_info() { echo -e "${BLUE}ℹ${NC} $*"; }
-log_success() { echo -e "${GREEN}✓${NC} $*"; }
-log_warning() { echo -e "${YELLOW}⚠${NC} $*"; }
-log_error() { echo -e "${RED}✗${NC} $*"; }
+# NOTE: Logging functions provided by lib/logging.sh
 
 # Check dependencies
 check_dependencies() {

@@ -19,152 +19,18 @@ set -euo pipefail
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
+
+# Source shared libraries
+# shellcheck source=lib/logging.sh
+source "${SCRIPT_DIR}/lib/logging.sh"
+# shellcheck source=lib/detection.sh
+source "${SCRIPT_DIR}/lib/detection.sh"
 readonly RULES_REPO_URL="${AI_RULES_REPO:-https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main}"
 readonly RULES_DIR=".ai-rules"
 readonly CACHE_DIR="${RULES_DIR}/.cache"
 
-# Colors for output
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m' # No Color
-
-# Logging functions
-log_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}✓${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}⚠${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}✗${NC} $1" >&2
-}
-
-# Detect project language
-detect_language() {
-    local languages=()
-
-    # Python
-    if [[ -f "pyproject.toml" ]] || [[ -f "setup.py" ]] || [[ -f "requirements.txt" ]]; then
-        languages+=("python")
-    fi
-
-    # TypeScript/JavaScript
-    if [[ -f "package.json" ]]; then
-        if grep -q '"typescript"' package.json 2>/dev/null; then
-            languages+=("typescript")
-        else
-            languages+=("javascript")
-        fi
-    fi
-
-    # Go
-    if [[ -f "go.mod" ]]; then
-        languages+=("go")
-    fi
-
-    # Java
-    if [[ -f "pom.xml" ]] || [[ -f "build.gradle" ]] || [[ -f "build.gradle.kts" ]]; then
-        languages+=("java")
-    fi
-
-    # C#
-    if [[ -f "*.csproj" ]] || [[ -f "*.sln" ]]; then
-        languages+=("csharp")
-    fi
-
-    # Ruby
-    if [[ -f "Gemfile" ]]; then
-        languages+=("ruby")
-    fi
-
-    # Rust
-    if [[ -f "Cargo.toml" ]]; then
-        languages+=("rust")
-    fi
-
-    echo "${languages[@]:-}"
-}
-
-# Detect frameworks
-detect_frameworks() {
-    local frameworks=()
-
-    # Python frameworks
-    if [[ -f "requirements.txt" ]] || [[ -f "pyproject.toml" ]]; then
-        grep -qi "django" requirements.txt pyproject.toml 2>/dev/null && frameworks+=("django")
-        grep -qi "fastapi" requirements.txt pyproject.toml 2>/dev/null && frameworks+=("fastapi")
-        grep -qi "flask" requirements.txt pyproject.toml 2>/dev/null && frameworks+=("flask")
-    fi
-
-    # JavaScript/TypeScript frameworks
-    if [[ -f "package.json" ]]; then
-        grep -q '"react"' package.json 2>/dev/null && frameworks+=("react")
-        grep -q '"next"' package.json 2>/dev/null && frameworks+=("nextjs")
-        grep -q '"vue"' package.json 2>/dev/null && frameworks+=("vue")
-        grep -q '"express"' package.json 2>/dev/null && frameworks+=("express")
-        grep -q '"nestjs"' package.json 2>/dev/null && frameworks+=("nestjs")
-    fi
-
-    # Go frameworks
-    if [[ -f "go.mod" ]]; then
-        grep -q "gin-gonic/gin" go.mod 2>/dev/null && frameworks+=("gin")
-        grep -q "gofiber/fiber" go.mod 2>/dev/null && frameworks+=("fiber")
-    fi
-
-    # Java frameworks
-    if [[ -f "pom.xml" ]] || [[ -f "build.gradle" ]]; then
-        grep -q "spring-boot" pom.xml build.gradle 2>/dev/null && frameworks+=("springboot")
-    fi
-
-    echo "${frameworks[@]:-}"
-}
-
-# Detect cloud providers
-detect_cloud_providers() {
-    local providers=()
-
-    # Vercel
-    if [[ -f "vercel.json" ]] || [[ -d ".vercel" ]]; then
-        providers+=("vercel")
-    fi
-
-    # AWS
-    if [[ -f ".aws-sam" ]] || [[ -d "cdk.out" ]] || [[ -f "serverless.yml" ]]; then
-        providers+=("aws")
-    fi
-
-    # Azure
-    if [[ -f "azure-pipelines.yml" ]] || [[ -d ".azure" ]]; then
-        providers+=("azure")
-    fi
-
-    # GCP
-    if [[ -f "app.yaml" ]] || [[ -f "cloudbuild.yaml" ]]; then
-        providers+=("gcp")
-    fi
-
-    echo "${providers[@]:-}"
-}
-
-# Detect development tools
-detect_tools() {
-    local tools=()
-
-    # Beads issue tracker
-    if [[ -d ".beads" ]]; then
-        tools+=("beads")
-    fi
-
-    echo "${tools[@]:-}"
-}
+# NOTE: detect_language, detect_frameworks, detect_cloud_providers, and detect_tools
+# are now provided by lib/detection.sh
 
 # Detect project maturity level
 detect_maturity_level() {

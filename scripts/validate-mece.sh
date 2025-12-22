@@ -12,17 +12,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+readonly REPO_ROOT
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Source shared libraries
+# shellcheck source=../lib/logging.sh
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/lib/logging.sh"
 
 # Flags
-VERBOSE=false
+readonly VERBOSE=false
 
 # Counters
 TOTAL_CHECKS=0
@@ -30,11 +30,8 @@ PASSED_CHECKS=0
 FAILED_CHECKS=0
 WARNINGS=0
 
-# Logging
-log_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
-}
-
+# NOTE: log_info, log_error provided by lib/logging.sh
+# Custom logging functions that update counters
 log_success() {
     echo -e "${GREEN}✓${NC} $1"
     ((PASSED_CHECKS++))
@@ -57,6 +54,7 @@ log_verbose() {
 }
 
 # Check if a pattern appears in multiple files (duplication check)
+# shellcheck disable=SC2317
 check_duplication() {
     local pattern="$1"
     local description="$2"
@@ -316,7 +314,7 @@ check_cross_references() {
         while IFS= read -r link; do
             # Extract the file path (remove anchor)
             local ref_file
-            ref_file=$(echo "$link" | sed 's/#.*//')
+            ref_file="${link%%#*}"
 
             # Check if file exists (relative to the file containing the reference)
             local file_dir
