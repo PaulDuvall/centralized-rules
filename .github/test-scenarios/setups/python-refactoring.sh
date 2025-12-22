@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python Refactoring Scenario test project
+# Description: Setup script for Python Refactoring Scenario test project
+# Usage: ./python-refactoring.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

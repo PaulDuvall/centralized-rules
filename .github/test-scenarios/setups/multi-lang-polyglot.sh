@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Multi-language (Python + TypeScript + Rust) test project
+# Description: Setup script for Multi-language (Python + TypeScript + Rust) test project
+# Usage: ./multi-lang-polyglot.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python + FastAPI + AWS test project
+# Description: Setup script for Python + FastAPI + AWS test project
+# Usage: ./python-fastapi-aws.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

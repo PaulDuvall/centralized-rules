@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Rust + High Performance Computing test project
+# Description: Setup script for Rust + High Performance Computing test project
+# Usage: ./rust-hpc.sh
+set -euo pipefail
 
 cat > Cargo.toml <<'EOF'
 [package]

@@ -4,13 +4,15 @@
 
 # NOTE: We do NOT use 'set -e' here because we want to run ALL checks
 # even if some fail, so users can see exactly what's wrong
+# However, we do use 'set -uo pipefail' for undefined variable protection
+set -uo pipefail
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
 
 # Counters
 PASS=0
@@ -47,14 +49,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "1. Checking Global Installation (~/.claude/)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-GLOBAL_HOOK_SCRIPT="$HOME/.claude/hooks/activate-rules.sh"
-GLOBAL_SETTINGS="$HOME/.claude/settings.json"
+readonly GLOBAL_HOOK_SCRIPT="$HOME/.claude/hooks/activate-rules.sh"
+readonly GLOBAL_SETTINGS="$HOME/.claude/settings.json"
 
-if [ -f "$GLOBAL_HOOK_SCRIPT" ]; then
+if [[ -f "$GLOBAL_HOOK_SCRIPT" ]]; then
     print_pass "Global hook script exists: $GLOBAL_HOOK_SCRIPT"
 
     # Check if it's executable
-    if [ -x "$GLOBAL_HOOK_SCRIPT" ]; then
+    if [[ -x "$GLOBAL_HOOK_SCRIPT" ]]; then
         print_pass "Hook script is executable"
     else
         print_fail "Hook script is not executable"
@@ -65,7 +67,7 @@ else
     print_info "Run: curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global"
 fi
 
-if [ -f "$GLOBAL_SETTINGS" ]; then
+if [[ -f "$GLOBAL_SETTINGS" ]]; then
     print_pass "Global settings file exists: $GLOBAL_SETTINGS"
 
     # Check if hook is registered
@@ -74,7 +76,7 @@ if [ -f "$GLOBAL_SETTINGS" ]; then
 
         # Extract and display the hook command
         HOOK_CMD=$(jq -r '.hooks.UserPromptSubmit[0]' "$GLOBAL_SETTINGS" 2>/dev/null || echo "")
-        if [ -n "$HOOK_CMD" ] && [ "$HOOK_CMD" != "null" ]; then
+        if [[ -n "$HOOK_CMD" ]] && [[ "$HOOK_CMD" != "null" ]]; then
             print_info "Hook command: $HOOK_CMD"
         fi
     else
@@ -91,13 +93,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "2. Checking Local Installation (.claude/)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-LOCAL_HOOK_SCRIPT=".claude/hooks/activate-rules.sh"
-LOCAL_SETTINGS=".claude/settings.json"
+readonly LOCAL_HOOK_SCRIPT=".claude/hooks/activate-rules.sh"
+readonly LOCAL_SETTINGS=".claude/settings.json"
 
-if [ -f "$LOCAL_HOOK_SCRIPT" ]; then
+if [[ -f "$LOCAL_HOOK_SCRIPT" ]]; then
     print_pass "Local hook script exists: $LOCAL_HOOK_SCRIPT"
 
-    if [ -x "$LOCAL_HOOK_SCRIPT" ]; then
+    if [[ -x "$LOCAL_HOOK_SCRIPT" ]]; then
         print_pass "Hook script is executable"
     else
         print_fail "Hook script is not executable"
@@ -107,7 +109,7 @@ else
     print_info "No local hook script (using global is fine)"
 fi
 
-if [ -f "$LOCAL_SETTINGS" ]; then
+if [[ -f "$LOCAL_SETTINGS" ]]; then
     print_pass "Local settings file exists: $LOCAL_SETTINGS"
 
     if grep -q "UserPromptSubmit" "$LOCAL_SETTINGS" 2>/dev/null; then
@@ -126,13 +128,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Find which hook script to analyze
 HOOK_SCRIPT=""
-if [ -f "$LOCAL_HOOK_SCRIPT" ]; then
+if [[ -f "$LOCAL_HOOK_SCRIPT" ]]; then
     HOOK_SCRIPT="$LOCAL_HOOK_SCRIPT"
-elif [ -f "$GLOBAL_HOOK_SCRIPT" ]; then
+elif [[ -f "$GLOBAL_HOOK_SCRIPT" ]]; then
     HOOK_SCRIPT="$GLOBAL_HOOK_SCRIPT"
 fi
 
-if [ -n "$HOOK_SCRIPT" ]; then
+if [[ -n "$HOOK_SCRIPT" ]]; then
     # Check for skill-based implementation
     if grep -q "detect_project_context" "$HOOK_SCRIPT" 2>/dev/null; then
         print_pass "Has project context detection"
@@ -179,7 +181,7 @@ echo "5. Checking Dependencies"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Check for required commands
-REQUIRED_COMMANDS=("curl" "jq" "bash")
+readonly REQUIRED_COMMANDS=("curl" "jq" "bash")
 
 for cmd in "${REQUIRED_COMMANDS[@]}"; do
     if command -v "$cmd" >/dev/null 2>&1; then
@@ -187,7 +189,7 @@ for cmd in "${REQUIRED_COMMANDS[@]}"; do
         print_pass "$cmd is installed"
         print_info "$VERSION"
     else
-        if [ "$cmd" = "jq" ]; then
+        if [[ "$cmd" = "jq" ]]; then
             print_fail "$cmd is NOT installed (REQUIRED as of v1.3.0)"
             print_info "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
             print_info "The hook uses jq to read keywords from skill-rules.json"
@@ -214,14 +216,14 @@ echo ""
 CRITICAL_ISSUES=false
 
 # Check if hook script exists and is executable
-if [ ! -f "$GLOBAL_HOOK_SCRIPT" ] && [ ! -f "$LOCAL_HOOK_SCRIPT" ]; then
+if [[ ! -f "$GLOBAL_HOOK_SCRIPT" ]] && [[ ! -f "$LOCAL_HOOK_SCRIPT" ]]; then
     CRITICAL_ISSUES=true
 fi
 
 # Check if hook is registered in settings
-if [ -f "$GLOBAL_SETTINGS" ]; then
+if [[ -f "$GLOBAL_SETTINGS" ]]; then
     if ! grep -q "UserPromptSubmit" "$GLOBAL_SETTINGS" 2>/dev/null; then
-        if [ -f "$LOCAL_SETTINGS" ]; then
+        if [[ -f "$LOCAL_SETTINGS" ]]; then
             if ! grep -q "UserPromptSubmit" "$LOCAL_SETTINGS" 2>/dev/null; then
                 CRITICAL_ISSUES=true
             fi
@@ -229,7 +231,7 @@ if [ -f "$GLOBAL_SETTINGS" ]; then
             CRITICAL_ISSUES=true
         fi
     fi
-elif [ -f "$LOCAL_SETTINGS" ]; then
+elif [[ -f "$LOCAL_SETTINGS" ]]; then
     if ! grep -q "UserPromptSubmit" "$LOCAL_SETTINGS" 2>/dev/null; then
         CRITICAL_ISSUES=true
     fi
@@ -237,7 +239,7 @@ else
     CRITICAL_ISSUES=true
 fi
 
-if [ "$CRITICAL_ISSUES" = false ]; then
+if [[ "$CRITICAL_ISSUES" = false ]]; then
     echo -e "${GREEN}✅ Installation is working correctly!${NC}"
     echo ""
     echo "The hook is installed, executable, and registered."

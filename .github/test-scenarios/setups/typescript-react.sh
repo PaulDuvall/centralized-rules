@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for TypeScript + React test project
+# Description: Setup script for TypeScript + React test project
+# Usage: ./typescript-react.sh
+set -euo pipefail
 
 cat > package.json <<'EOF'
 {

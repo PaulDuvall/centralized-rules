@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python + CI/CD Pipeline test project
+# Description: Setup script for Python + CI/CD Pipeline test project
+# Usage: ./python-cicd.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

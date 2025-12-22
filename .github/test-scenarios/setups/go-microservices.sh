@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Go + Microservices + Docker + K8s test project
+# Description: Setup script for Go + Microservices + Docker + K8s test project
+# Usage: ./go-microservices.sh
+set -euo pipefail
 
 cat > go.mod <<'EOF'
 module example.com/microservices

@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python + FastAPI test project
+# Description: Setup script for Python + FastAPI test project
+# Usage: ./python-fastapi.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

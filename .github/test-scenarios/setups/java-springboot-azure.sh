@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Java + SpringBoot + Azure test project
+# Description: Setup script for Java + SpringBoot + Azure test project
+# Usage: ./java-springboot-azure.sh
+set -euo pipefail
 
 cat > pom.xml <<'EOF'
 <project>

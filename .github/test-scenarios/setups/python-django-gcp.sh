@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python + Django + GCP test project
+# Description: Setup script for Python + Django + GCP test project
+# Usage: ./python-django-gcp.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

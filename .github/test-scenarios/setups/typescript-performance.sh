@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for TypeScript Performance Optimization test project
+# Description: Setup script for TypeScript Performance Optimization test project
+# Usage: ./typescript-performance.sh
+set -euo pipefail
 
 cat > package.json <<'EOF'
 {

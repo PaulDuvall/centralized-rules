@@ -6,13 +6,15 @@ A centralized repository of development rules that dynamically loads only releva
 
 ## 🚀 Quick Start (Claude Code CLI)
 
-Install the automated hook system with one command:
+**Global installation (recommended):**
 
 ```bash
-# Install globally for ALL your projects (recommended)
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+```
 
-# Or install for current project only
+**Or install for current project only:**
+
+```bash
 cd your-project
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
 ```

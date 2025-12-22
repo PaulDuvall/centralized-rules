@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Multi-Cloud (AWS + GCP) test project
+# Description: Setup script for Multi-Cloud (AWS + GCP) test project
+# Usage: ./multi-cloud.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

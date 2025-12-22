@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for TypeScript + Express + AWS test project
+# Description: Setup script for TypeScript + Express + AWS test project
+# Usage: ./typescript-express-aws.sh
+set -euo pipefail
 
 cat > package.json <<'EOF'
 {

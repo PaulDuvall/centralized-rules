@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python + Django + PostgreSQL test project
+# Description: Setup script for Python + Django + PostgreSQL test project
+# Usage: ./python-django-postgres.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

@@ -2,7 +2,7 @@
 # Validation script for sync-ai-rules.sh output
 # Usage: validate-sync-output.sh --project-type=TYPE --scenario=SCENARIO --test-dir=DIR
 
-set -e
+set -euo pipefail
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required parameters
-if [ -z "$PROJECT_TYPE" ] || [ -z "$SCENARIO" ] || [ -z "$TEST_DIR" ]; then
+if [[ -z "${PROJECT_TYPE:-}" ]] || [[ -z "${SCENARIO:-}" ]] || [[ -z "${TEST_DIR:-}" ]]; then
   echo "Usage: $0 --project-type=TYPE --scenario=SCENARIO --test-dir=DIR [--name=NAME]"
   exit 1
 fi
@@ -41,7 +41,7 @@ cd "$TEST_DIR"
 echo "=== Validating sync output for $PROJECT_TYPE (scenario: $SCENARIO) ==="
 
 # Check AGENTS.md was generated
-if [ ! -f .claude/AGENTS.md ]; then
+if [[ ! -f .claude/AGENTS.md ]]; then
   echo "ERROR: .claude/AGENTS.md not generated"
   exit 1
 fi
@@ -55,7 +55,7 @@ fi
 echo "✓ Progressive disclosure warning present"
 
 # Check rules directory structure
-if [ ! -d .claude/rules ]; then
+if [[ ! -d .claude/rules ]]; then
   echo "ERROR: .claude/rules directory not created"
   exit 1
 fi
@@ -110,23 +110,23 @@ case "$SCENARIO" in
 esac
 
 # Check for cloud platform specific rules
-if [ -f "vercel.json" ]; then
-  if [ -d ".claude/rules/cloud/vercel" ]; then
+if [[ -f "vercel.json" ]]; then
+  if [[ -d ".claude/rules/cloud/vercel" ]]; then
     echo "✓ Vercel rules detected for Vercel project"
   else
     echo "WARNING: Vercel config found but no Vercel rules"
   fi
 fi
 
-if grep -q "boto3\|aws-sdk\|AWS" *.* 2>/dev/null; then
-  if [ -d ".claude/rules/cloud/aws" ] || grep -qr "aws" .claude/rules/; then
+if grep -q "boto3\|aws-sdk\|AWS" ./*.* 2>/dev/null; then
+  if [[ -d ".claude/rules/cloud/aws" ]] || grep -qr "aws" .claude/rules/; then
     echo "✓ AWS rules detected for AWS project"
   else
     echo "WARNING: AWS dependencies found but no AWS rules"
   fi
 fi
 
-if grep -q "google-cloud\|gcp" *.* 2>/dev/null; then
+if grep -q "google-cloud\|gcp" ./*.* 2>/dev/null; then
   if grep -qr "gcp\|google.*cloud" .claude/; then
     echo "✓ GCP-related rules detected"
   else
@@ -134,7 +134,7 @@ if grep -q "google-cloud\|gcp" *.* 2>/dev/null; then
   fi
 fi
 
-if grep -q "azure\|Microsoft.Azure" *.* 2>/dev/null; then
+if grep -q "azure\|Microsoft.Azure" ./*.* 2>/dev/null; then
   if grep -qr "azure" .claude/; then
     echo "✓ Azure-related rules detected"
   else
@@ -145,15 +145,16 @@ fi
 # Validate language-specific rules
 # For polyglot projects, be lenient - warn instead of fail
 IS_POLYGLOT="false"
-if [ "$SCENARIO" == "polyglot" ]; then
-  IS_POLYGLOT="true"
+if [[ "${SCENARIO:-}" == "polyglot" ]]; then
+    IS_POLYGLOT="true"
 fi
+readonly IS_POLYGLOT
 
-if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
-  if [ -d ".claude/rules/languages/python" ]; then
+if [[ -f "pyproject.toml" ]] || [[ -f "requirements.txt" ]]; then
+  if [[ -d ".claude/rules/languages/python" ]]; then
     echo "✓ Python rules detected"
   else
-    if [ "$IS_POLYGLOT" == "true" ]; then
+    if [[ "$IS_POLYGLOT" == "true" ]]; then
       echo "WARNING: Python project but no Python rules (polyglot - non-fatal)"
     else
       echo "ERROR: Python project but no Python rules"
@@ -162,11 +163,11 @@ if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
   fi
 fi
 
-if [ -f "package.json" ]; then
-  if [ -d ".claude/rules/languages/typescript" ] || grep -q "typescript" .claude/rules/ -r; then
+if [[ -f "package.json" ]]; then
+  if [[ -d ".claude/rules/languages/typescript" ]] || grep -q "typescript" .claude/rules/ -r; then
     echo "✓ TypeScript/JavaScript rules detected"
   else
-    if [ "$IS_POLYGLOT" == "true" ]; then
+    if [[ "$IS_POLYGLOT" == "true" ]]; then
       echo "WARNING: Node.js project but no TypeScript rules (polyglot - non-fatal)"
     else
       echo "ERROR: Node.js project but no TypeScript rules"
@@ -175,11 +176,11 @@ if [ -f "package.json" ]; then
   fi
 fi
 
-if [ -f "go.mod" ]; then
-  if [ -d ".claude/rules/languages/go" ]; then
+if [[ -f "go.mod" ]]; then
+  if [[ -d ".claude/rules/languages/go" ]]; then
     echo "✓ Go rules detected"
   else
-    if [ "$IS_POLYGLOT" == "true" ]; then
+    if [[ "$IS_POLYGLOT" == "true" ]]; then
       echo "WARNING: Go project but no Go rules (polyglot - non-fatal)"
     else
       echo "ERROR: Go project but no Go rules"
@@ -188,11 +189,11 @@ if [ -f "go.mod" ]; then
   fi
 fi
 
-if [ -f "Cargo.toml" ]; then
-  if [ -d ".claude/rules/languages/rust" ]; then
+if [[ -f "Cargo.toml" ]]; then
+  if [[ -d ".claude/rules/languages/rust" ]]; then
     echo "✓ Rust rules detected"
   else
-    if [ "$IS_POLYGLOT" == "true" ]; then
+    if [[ "$IS_POLYGLOT" == "true" ]]; then
       echo "WARNING: Rust project but no Rust rules (polyglot - non-fatal)"
     else
       echo "ERROR: Rust project but no Rust rules"
@@ -201,8 +202,8 @@ if [ -f "Cargo.toml" ]; then
   fi
 fi
 
-if [ -f "pom.xml" ] || ls *.csproj 2>/dev/null; then
-  if [ -d ".claude/rules/languages/java" ] || [ -d ".claude/rules/languages/csharp" ]; then
+if [[ -f "pom.xml" ]] || ls ./*.csproj 2>/dev/null; then
+  if [[ -d ".claude/rules/languages/java" ]] || [[ -d ".claude/rules/languages/csharp" ]]; then
     echo "✓ Java/C# rules detected"
   else
     echo "WARNING: JVM/.NET project but rules may be missing"
@@ -211,31 +212,31 @@ fi
 
 # Check framework-specific rules
 if grep -q "fastapi" pyproject.toml 2>/dev/null || grep -q "from fastapi" src/*.py 2>/dev/null; then
-  if [ -d ".claude/rules/frameworks/fastapi" ]; then
+  if [[ -d ".claude/rules/frameworks/fastapi" ]]; then
     echo "✓ FastAPI rules detected"
   fi
 fi
 
 if grep -q "django" pyproject.toml requirements.txt 2>/dev/null; then
-  if [ -d ".claude/rules/frameworks/django" ]; then
+  if [[ -d ".claude/rules/frameworks/django" ]]; then
     echo "✓ Django rules detected"
   fi
 fi
 
 if grep -q '"react"' package.json 2>/dev/null; then
-  if [ -d ".claude/rules/frameworks/react" ]; then
+  if [[ -d ".claude/rules/frameworks/react" ]]; then
     echo "✓ React rules detected"
   fi
 fi
 
 if grep -q '"express"' package.json 2>/dev/null; then
-  if [ -d ".claude/rules/frameworks/express" ]; then
+  if [[ -d ".claude/rules/frameworks/express" ]]; then
     echo "✓ Express rules detected"
   fi
 fi
 
 if grep -q "spring-boot" pom.xml 2>/dev/null; then
-  if [ -d ".claude/rules/frameworks/springboot" ]; then
+  if [[ -d ".claude/rules/frameworks/springboot" ]]; then
     echo "✓ SpringBoot rules detected"
   fi
 fi

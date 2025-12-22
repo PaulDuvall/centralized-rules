@@ -1,6 +1,11 @@
-#!/bin/bash
-# Generate GitHub Actions step summary for test results
-# Usage: generate-test-summary.sh --name=NAME --scenario=SCENARIO --expected-rules=RULES --status=STATUS
+#!/usr/bin/env bash
+#
+# Script Name: generate-test-summary.sh
+# Description: Generate GitHub Actions step summary for test results
+# Usage: ./generate-test-summary.sh --name=NAME --scenario=SCENARIO --expected-rules=RULES --status=STATUS
+#
+
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -29,8 +34,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required parameters
-if [ -z "$NAME" ] || [ -z "$SCENARIO" ] || [ -z "$STATUS" ]; then
-  echo "Usage: $0 --name=NAME --scenario=SCENARIO --status=STATUS [--expected-rules=RULES]"
+if [[ -z "${NAME:-}" ]] || [[ -z "${SCENARIO:-}" ]] || [[ -z "${STATUS:-}" ]]; then
+  echo "Usage: $0 --name=NAME --scenario=SCENARIO --status=STATUS [--expected-rules=RULES]" >&2
   exit 1
 fi
 
@@ -38,27 +43,29 @@ fi
 echo "## 🧪 Sync Script Test: $NAME" >> "$GITHUB_STEP_SUMMARY"
 echo "" >> "$GITHUB_STEP_SUMMARY"
 
-if [ "$STATUS" == "success" ]; then
+if [[ "$STATUS" == "success" ]]; then
   echo "✅ **Status:** PASSED" >> "$GITHUB_STEP_SUMMARY"
 else
   echo "❌ **Status:** FAILED" >> "$GITHUB_STEP_SUMMARY"
 fi
 
-echo "" >> "$GITHUB_STEP_SUMMARY"
-echo "### Test Details" >> "$GITHUB_STEP_SUMMARY"
-echo "- **Project Type:** $NAME" >> "$GITHUB_STEP_SUMMARY"
-echo "- **Scenario:** \`$SCENARIO\`" >> "$GITHUB_STEP_SUMMARY"
-if [ -n "$EXPECTED_RULES" ]; then
-  echo "- **Expected Rules:** $EXPECTED_RULES" >> "$GITHUB_STEP_SUMMARY"
-fi
-echo "" >> "$GITHUB_STEP_SUMMARY"
-echo "### Validations Performed" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ AGENTS.md generation" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ Progressive disclosure warnings" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ Rules directory structure" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ Language/framework detection" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ Scenario-specific rules validation" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ Cloud platform rules (if applicable)" >> "$GITHUB_STEP_SUMMARY"
-echo "- ✓ Context-appropriate rule application" >> "$GITHUB_STEP_SUMMARY"
+{
+  echo ""
+  echo "### Test Details"
+  echo "- **Project Type:** $NAME"
+  echo "- **Scenario:** \`$SCENARIO\`"
+  if [[ -n "${EXPECTED_RULES:-}" ]]; then
+    echo "- **Expected Rules:** $EXPECTED_RULES"
+  fi
+  echo ""
+  echo "### Validations Performed"
+  echo "- ✓ AGENTS.md generation"
+  echo "- ✓ Progressive disclosure warnings"
+  echo "- ✓ Rules directory structure"
+  echo "- ✓ Language/framework detection"
+  echo "- ✓ Scenario-specific rules validation"
+  echo "- ✓ Cloud platform rules (if applicable)"
+  echo "- ✓ Context-appropriate rule application"
+} >> "$GITHUB_STEP_SUMMARY"
 
 echo "✅ Summary generated for $NAME"

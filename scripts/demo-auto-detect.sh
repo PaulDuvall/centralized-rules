@@ -8,10 +8,10 @@
 set -euo pipefail
 
 # Colors for output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+readonly GREEN='\033[0;32m'
+readonly BLUE='\033[0;34m'
+readonly YELLOW='\033[1;33m'
+readonly NC='\033[0m' # No Color
 
 echo -e "${BLUE}=== AI Tool Auto-Detection Demo ===${NC}\n"
 

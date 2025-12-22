@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Python Debugging & Testing test project
+# Description: Setup script for Python Debugging & Testing test project
+# Usage: ./python-debugging.sh
+set -euo pipefail
 
 cat > pyproject.toml <<'EOF'
 [project]

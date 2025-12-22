@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Go Security Hardening test project
+# Description: Setup script for Go Security Hardening test project
+# Usage: ./go-security.sh
+set -euo pipefail
 
 cat > go.mod <<'EOF'
 module example.com/secure-app

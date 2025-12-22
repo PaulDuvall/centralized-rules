@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for TypeScript + Next.js + Vercel (Full Stack) test project
+# Description: Setup script for TypeScript + Next.js + Vercel (Full Stack) test project
+# Usage: ./typescript-nextjs-vercel.sh
+set -euo pipefail
 
 cat > package.json <<'EOF'
 {

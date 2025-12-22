@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
-set -e
+#
+# Script Name: install.sh
+# Description: Centralized Rules Skill Installer - Installs the Claude skill via git clone + build
+# Usage: ./install.sh
+#
 
-# Centralized Rules Skill Installer
-# Installs the Claude skill via git clone + build
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly BLUE='\033[0;34m'
+readonly YELLOW='\033[1;33m'
+readonly NC='\033[0m' # No Color
 
 # Configuration
-REPO_URL="https://github.com/PaulDuvall/centralized-rules.git"
-INSTALL_DIR="${HOME}/centralized-rules"
-SKILL_DIR="${INSTALL_DIR}/skill"
+readonly REPO_URL="https://github.com/PaulDuvall/centralized-rules.git"
+readonly INSTALL_DIR="${HOME}/centralized-rules"
+readonly SKILL_DIR="${INSTALL_DIR}/skill"
 
 # Helper functions
 log_info() {
@@ -56,8 +59,9 @@ check_prerequisites() {
     fi
 
     # Check Node version
-    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-    if [ "$NODE_VERSION" -lt 18 ]; then
+    local node_version
+    node_version=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    if [[ "$node_version" -lt 18 ]]; then
         log_error "Node.js 18+ required. Current version: $(node -v)"
         exit 1
     fi
@@ -69,13 +73,13 @@ check_prerequisites() {
 install_repo() {
     log_info "Installing centralized-rules repository..."
 
-    if [ -d "$INSTALL_DIR" ]; then
+    if [[ -d "$INSTALL_DIR" ]]; then
         log_warn "Directory $INSTALL_DIR already exists"
         read -p "Update existing installation? (y/N) " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             log_info "Updating repository..."
-            cd "$INSTALL_DIR"
+            cd "$INSTALL_DIR" || exit 1
             git pull || {
                 log_error "Failed to update repository"
                 exit 1
@@ -98,12 +102,12 @@ install_repo() {
 build_skill() {
     log_info "Building skill..."
 
-    if [ ! -d "$SKILL_DIR" ]; then
+    if [[ ! -d "$SKILL_DIR" ]]; then
         log_error "Skill directory not found: $SKILL_DIR"
         exit 1
     fi
 
-    cd "$SKILL_DIR"
+    cd "$SKILL_DIR" || exit 1
 
     # Install dependencies
     log_info "Installing dependencies..."
@@ -128,14 +132,14 @@ detect_claude_variants() {
     CLAUDE_DESKTOP=false
 
     # Check for Claude Code CLI (looks for ~/.claude/skills directory)
-    if [ -d "${HOME}/.claude" ]; then
+    if [[ -d "${HOME}/.claude" ]]; then
         CLAUDE_CODE_CLI=true
     fi
 
     # Check for Claude Desktop (looks for config file or app)
-    if [ -f "${HOME}/.config/claude/claude_desktop_config.json" ] || \
-       [ -d "/Applications/Claude.app" ] || \
-       [ -d "${HOME}/Applications/Claude.app" ]; then
+    if [[ -f "${HOME}/.config/claude/claude_desktop_config.json" ]] || \
+       [[ -d "/Applications/Claude.app" ]] || \
+       [[ -d "${HOME}/Applications/Claude.app" ]]; then
         CLAUDE_DESKTOP=true
     fi
 }
@@ -148,20 +152,20 @@ setup_claude_code_cli() {
     mkdir -p "${HOME}/.claude/skills"
 
     # Create symlink
-    SYMLINK_PATH="${HOME}/.claude/skills/centralized-rules"
-    if [ -L "$SYMLINK_PATH" ] || [ -e "$SYMLINK_PATH" ]; then
-        log_warn "Symlink already exists at $SYMLINK_PATH"
-        rm -f "$SYMLINK_PATH"
+    local symlink_path="${HOME}/.claude/skills/centralized-rules"
+    if [[ -L "$symlink_path" ]] || [[ -e "$symlink_path" ]]; then
+        log_warn "Symlink already exists at $symlink_path"
+        rm -f "$symlink_path"
         log_info "Removed existing symlink"
     fi
 
-    ln -s "$SKILL_DIR" "$SYMLINK_PATH" || {
+    ln -s "$SKILL_DIR" "$symlink_path" || {
         log_error "Failed to create symlink"
         return 1
     }
 
     log_success "Claude Code CLI configured"
-    echo "   Symlink: $SYMLINK_PATH -> $SKILL_DIR"
+    echo "   Symlink: $symlink_path -> $SKILL_DIR"
 }
 
 # Show Claude Desktop instructions
@@ -193,39 +197,39 @@ show_config_instructions() {
     # Detect which Claude variants are present
     detect_claude_variants
 
-    if [ "$CLAUDE_CODE_CLI" = false ] && [ "$CLAUDE_DESKTOP" = false ]; then
+    if [[ "$CLAUDE_CODE_CLI" = false ]] && [[ "$CLAUDE_DESKTOP" = false ]]; then
         log_warn "No Claude installation detected"
         echo ""
         log_info "Install Claude Code CLI or Claude Desktop, then run this script again"
         echo ""
     else
         log_info "Detected Claude variants:"
-        if [ "$CLAUDE_CODE_CLI" = true ]; then
+        if [[ "$CLAUDE_CODE_CLI" = true ]]; then
             echo "   ✓ Claude Code CLI"
         fi
-        if [ "$CLAUDE_DESKTOP" = true ]; then
+        if [[ "$CLAUDE_DESKTOP" = true ]]; then
             echo "   ✓ Claude Desktop"
         fi
         echo ""
 
         # Setup Claude Code CLI automatically
-        if [ "$CLAUDE_CODE_CLI" = true ]; then
+        if [[ "$CLAUDE_CODE_CLI" = true ]]; then
             setup_claude_code_cli
             echo ""
         fi
 
         # Show Claude Desktop instructions
-        if [ "$CLAUDE_DESKTOP" = true ]; then
+        if [[ "$CLAUDE_DESKTOP" = true ]]; then
             show_claude_desktop_instructions
             echo ""
         fi
 
         log_info "Next steps:"
         echo ""
-        if [ "$CLAUDE_CODE_CLI" = true ]; then
+        if [[ "$CLAUDE_CODE_CLI" = true ]]; then
             echo "   • Restart Claude Code CLI - skill is ready!"
         fi
-        if [ "$CLAUDE_DESKTOP" = true ]; then
+        if [[ "$CLAUDE_DESKTOP" = true ]]; then
             echo "   • Update config file (see above)"
             echo "   • Restart Claude Desktop"
         fi

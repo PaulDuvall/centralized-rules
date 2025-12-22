@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for Go + Standard Library test project
+# Description: Setup script for Go + Standard Library test project
+# Usage: ./go-stdlib.sh
+set -euo pipefail
 
 cat > go.mod <<'EOF'
 module example.com/test

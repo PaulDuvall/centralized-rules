@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for C# + .NET + Azure Functions test project
+# Description: Setup script for C# + .NET + Azure Functions test project
+# Usage: ./csharp-azure-functions.sh
+set -euo pipefail
 
 cat > project.csproj <<'EOF'
 <Project Sdk="Microsoft.NET.Sdk">

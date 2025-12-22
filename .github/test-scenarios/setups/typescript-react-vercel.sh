@@ -1,5 +1,7 @@
 #!/bin/bash
-# Setup script for TypeScript + React + Vercel test project
+# Description: Setup script for TypeScript + React + Vercel test project
+# Usage: ./typescript-react-vercel.sh
+set -euo pipefail
 
 cat > package.json <<'EOF'
 {
