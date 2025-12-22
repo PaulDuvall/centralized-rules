@@ -91,6 +91,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-project-${{ matrix.project-type }}
+          name: sync-script-test-${{ matrix.project-type }}
           path: /tmp/test-project/.claude/
           retention-days: 5

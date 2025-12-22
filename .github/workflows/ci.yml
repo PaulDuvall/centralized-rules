@@ -53,75 +53,20 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate comprehensive test report
-        run: |
-          cat > test-report.md << 'REPORT_EOF'
-          # 🚀 CI Test Report
-
-          **Workflow Run:** ${{ github.run_number }}
-          **Commit:** `${{ github.sha }}`
-          **Branch:** `${{ github.ref_name }}`
-          **Triggered by:** ${{ github.event_name }}
-          **Run Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-
-          ---
-
-          ## 📊 Test Results Summary
-
-          | Test Suite | Status | Details |
-          |-----------|---------|---------|
-          | 📋 Progressive Disclosure Validation | ${{ needs.progressive-disclosure.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Claude + Cursor + Copilot configs validated |
-          | 🔍 Code Quality | ${{ needs.quality.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | ShellCheck + Documentation verification |
-          | 🧪 Sync Script Testing | ${{ needs.sync-script.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | **20+ comprehensive scenarios** |
-          | ⚡ Claude Skill Tests | ${{ needs.skill.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | TypeScript compilation, tests, 85% coverage |
-          | 🔑 Keyword Validation | ${{ needs.keyword-validation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Validates all keywords trigger correct rules |
-
-          ---
-
-          ## 🎯 Overall Status
-
-          REPORT_EOF
-
-          # Determine overall status
-          if [ "${{ needs.progressive-disclosure.result }}" == "success" ] && \
-             [ "${{ needs.quality.result }}" == "success" ] && \
-             [ "${{ needs.sync-script.result }}" == "success" ] && \
-             [ "${{ needs.skill.result }}" == "success" ] && \
-             [ "${{ needs.keyword-validation.result }}" == "success" ]; then
-            echo "### ✅ ALL TESTS PASSED" >> test-report.md
-            echo "" >> test-report.md
-            echo "All test suites completed successfully. The progressive disclosure architecture is validated and working correctly across all scenarios." >> test-report.md
-            overall_status="success"
-          else
-            echo "### ❌ TESTS FAILED" >> test-report.md
-            echo "" >> test-report.md
-            echo "One or more test suites failed. Please review the individual test results above and check the workflow logs for details." >> test-report.md
-            echo "" >> test-report.md
-            echo "#### Failed Tests:" >> test-report.md
-            [ "${{ needs.progressive-disclosure.result }}" != "success" ] && echo "- Progressive Disclosure Validation" >> test-report.md
-            [ "${{ needs.quality.result }}" != "success" ] && echo "- Code Quality" >> test-report.md
-            [ "${{ needs.sync-script.result }}" != "success" ] && echo "- Sync Script Testing" >> test-report.md
-            [ "${{ needs.skill.result }}" != "success" ] && echo "- Claude Skill Tests" >> test-report.md
-            [ "${{ needs.keyword-validation.result }}" != "success" ] && echo "- Keyword Validation" >> test-report.md
-            overall_status="failure"
-          fi
-
-          echo "" >> test-report.md
-          echo "---" >> test-report.md
-          echo "" >> test-report.md
-          echo "**Workflow URL:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> test-report.md
-
-          # Output to job summary
-          cat test-report.md >> $GITHUB_STEP_SUMMARY
-
-          # Save status for next step
-          echo "status=$overall_status" >> $GITHUB_OUTPUT
         id: report
+        run: scripts/ci/generate-test-report.sh >> $GITHUB_OUTPUT
+        env:
+          PROGRESSIVE_DISCLOSURE_STATUS: ${{ needs.progressive-disclosure.result }}
+          QUALITY_STATUS: ${{ needs.quality.result }}
+          SYNC_SCRIPT_STATUS: ${{ needs.sync-script.result }}
+          SKILL_STATUS: ${{ needs.skill.result }}
+          KEYWORD_VALIDATION_STATUS: ${{ needs.keyword-validation.result }}
 
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: ci-main-test-report
           path: test-report.md
           retention-days: 30
 

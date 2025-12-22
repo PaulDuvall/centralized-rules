@@ -75,45 +75,7 @@ jobs:
 
       - name: Check test results
         if: steps.test.outcome == 'failure'
-        run: |
-          echo "::error::Keyword validation tests failed!"
-          echo ""
-
-          if [ -f failed-keywords.txt ] && [ -s failed-keywords.txt ]; then
-            echo "❌ FAILED KEYWORDS:"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-            # Show failed keywords in output
-            cat failed-keywords.txt | while read keyword; do
-              echo "  ✗ $keyword"
-              # Also create individual error annotations
-              echo "::error file=.claude/skills/skill-rules.json::Keyword '$keyword' failed validation - not triggering expected rules"
-            done
-
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo ""
-            echo "These keywords in skill-rules.json are not correctly triggering their expected rules."
-            echo ""
-
-            # Show excerpt from test log with failures
-            if [ -f test-output.log ]; then
-              echo "Test failure details:"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              grep -A 3 "✗.*failed to trigger" test-output.log || true
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            fi
-          else
-            echo "⚠️  Test failed but could not extract failed keywords from output."
-            echo "Full test log available in artifacts."
-          fi
-
-          echo ""
-          echo "🔧 To debug locally, run:"
-          echo "   ./scripts/test-keyword-validation.sh --verbose"
-          echo ""
-          echo "📊 See the job summary tab above for detailed test results."
-          echo "📦 Download test-output.log artifact for full details."
-          exit 1
+        run: scripts/ci/format-keyword-errors.sh
 
       - name: Report success
         if: steps.test.outcome == 'success'
