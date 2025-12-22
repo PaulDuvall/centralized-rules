@@ -2,17 +2,6 @@ name: Reusable Documentation Validation Workflow
 
 on:
   workflow_call:
-    inputs:
-      check-progressive-disclosure:
-        description: 'Check for progressive disclosure documentation'
-        required: false
-        type: boolean
-        default: true
-      check-architecture:
-        description: 'Check ARCHITECTURE.md exists and is complete'
-        required: false
-        type: boolean
-        default: true
 
 jobs:
   verify-documentation:
@@ -24,7 +13,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check README mentions progressive disclosure
-        if: inputs.check-progressive-disclosure
         id: check-readme
         uses: ./.github/actions/run-validation
         with:
@@ -34,19 +22,19 @@ jobs:
           failure-message: 'README.md does not mention progressive disclosure'
 
       - name: Check ARCHITECTURE documentation
-        if: inputs.check-architecture
         id: check-arch
-        run: |
-          if [ -f ARCHITECTURE.md ]; then
-            if ! grep -qi "progressive disclosure" ARCHITECTURE.md; then
-              echo "ERROR: ARCHITECTURE.md doesn't explain progressive disclosure"
-              exit 1
+        uses: ./.github/actions/run-validation
+        with:
+          command: |
+            if [ -f ARCHITECTURE.md ]; then
+              grep -qi "progressive disclosure" ARCHITECTURE.md
+            else
+              echo "WARNING: ARCHITECTURE.md not found"
+              exit 0
             fi
-            echo "✓ ARCHITECTURE.md explains progressive disclosure"
-          else
-            echo "WARNING: ARCHITECTURE.md not found"
-          fi
-        continue-on-error: true
+          name: 'ARCHITECTURE documentation check'
+          error-file: 'ARCHITECTURE.md'
+          failure-message: 'ARCHITECTURE.md does not explain progressive disclosure'
 
       - name: Verify rule files are markdown
         id: check-markdown
@@ -63,55 +51,40 @@ jobs:
 
       - name: Check for broken internal links
         id: check-links
-        run: |
-          # Simple check for broken relative links in markdown files
-          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.claude/*"); do
-            echo "Checking $file..."
-            # This is a basic check - could be enhanced with a proper link checker
-            if grep -o '\[.*\](\.\/[^)]*\.md)' "$file" > /dev/null; then
-              echo "  Found internal links"
-            fi
-          done
-          echo "✓ Internal link check complete"
-        continue-on-error: true
+        uses: ./.github/actions/run-validation
+        with:
+          command: |
+            for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.claude/*"); do
+              echo "Checking $file..."
+            done
+            echo "✓ Internal link check complete"
+          name: 'Internal links check'
+          failure-message: 'Internal link validation failed'
 
       - name: Generate documentation verification summary
         if: always()
         run: |
-          echo "## 📚 Documentation Verification" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          readme="${{ steps.check-readme.outcome }}"
-          arch="${{ steps.check-arch.outcome }}"
-          markdown="${{ steps.check-markdown.outcome }}"
-          links="${{ steps.check-links.outcome }}"
-
-          # Handle skipped checks
-          if [ "${{ inputs.check-progressive-disclosure }}" != "true" ]; then
-            readme="skipped"
-          fi
-          if [ "${{ inputs.check-architecture }}" != "true" ]; then
-            arch="skipped"
-          fi
+          # Source summary utilities
+          # shellcheck source=scripts/ci/summary-utils.sh
+          source scripts/ci/summary-utils.sh
 
           # Determine overall status
-          failed=0
-          if [ "$readme" == "failure" ] || [ "$arch" == "failure" ] || [ "$markdown" == "failure" ] || [ "$links" == "failure" ]; then
-            failed=1
+          overall_status="success"
+          if [ "${{ steps.check-readme.outcome }}" == "failure" ] || \
+             [ "${{ steps.check-arch.outcome }}" == "failure" ] || \
+             [ "${{ steps.check-markdown.outcome }}" == "failure" ] || \
+             [ "${{ steps.check-links.outcome }}" == "failure" ]; then
+            overall_status="failure"
           fi
 
-          if [ $failed -eq 0 ]; then
-            echo "✅ **Status:** ALL CHECKS PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Status:** SOME CHECKS FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Documentation Checks" >> $GITHUB_STEP_SUMMARY
-          echo "- **README progressive disclosure:** $readme" >> $GITHUB_STEP_SUMMARY
-          echo "- **ARCHITECTURE documentation:** $arch" >> $GITHUB_STEP_SUMMARY
-          echo "- **Rule files are markdown:** $markdown" >> $GITHUB_STEP_SUMMARY
-          echo "- **Internal links:** $links" >> $GITHUB_STEP_SUMMARY
+          # Generate summary
+          summary_header "📚 Documentation Verification" "$overall_status"
+          summary_list "Documentation Checks" \
+            "README progressive disclosure: ${{ steps.check-readme.outcome }}" \
+            "ARCHITECTURE documentation: ${{ steps.check-arch.outcome }}" \
+            "Rule files are markdown: ${{ steps.check-markdown.outcome }}" \
+            "Internal links: ${{ steps.check-links.outcome }}"
+          summary_footer
 
       - name: Fail if any check failed
         if: |

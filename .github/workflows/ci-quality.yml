@@ -37,9 +37,6 @@ jobs:
   verify-documentation:
     name: Verify Documentation
     uses: ./.github/workflows/_reusable-doc-validation.yml
-    with:
-      check-progressive-disclosure: true
-      check-architecture: true
 
   security-scan:
     name: Security Scanning

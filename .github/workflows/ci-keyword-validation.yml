@@ -34,33 +34,35 @@ jobs:
         if: always()
         id: parse
         run: |
+          # Source summary utilities
+          # shellcheck source=scripts/ci/summary-utils.sh
+          source scripts/ci/summary-utils.sh
+
           # Extract test summary
           if [ -f test-output.log ]; then
-            echo "## Keyword Validation Test Results" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-
             # Extract summary stats
             total=$(grep "Total Tests:" test-output.log | awk '{print $3}' || echo "0")
             passed=$(grep "Passed:" test-output.log | grep -oP '\d+' | head -1 || echo "0")
             failed=$(grep "Failed:" test-output.log | grep -oP '\d+' | tail -1 || echo "0")
 
-            echo "- **Total Tests**: $total" >> $GITHUB_STEP_SUMMARY
-            echo "- **Passed**: ✅ $passed" >> $GITHUB_STEP_SUMMARY
-            echo "- **Failed**: ❌ $failed" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            # Determine status
+            status="success"
+            [ "$failed" != "0" ] && status="failure"
 
-            # Extract failed keywords if any
+            # Generate summary
+            summary_header "Keyword Validation Test Results" "$status"
+            summary_test_results "$total" "$passed" "$failed"
+
+            # Add failed keywords if any
             if [ "$failed" != "0" ]; then
-              echo "### ❌ Failed Keywords" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-              sed -n '/Failed Keywords:/,/^$/p' test-output.log | grep "  -" >> $GITHUB_STEP_SUMMARY || echo "See test output for details" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
+              failed_keywords=$(sed -n '/Failed Keywords:/,/^$/p' test-output.log | grep "  -" || echo "See test output for details")
+              summary_details "❌ Failed Keywords" "$failed_keywords"
 
               # Save failed keywords for next step
               sed -n '/Failed Keywords:/,/^$/p' test-output.log | grep "  -" | sed 's/  - //' > failed-keywords.txt || true
             fi
+
+            summary_footer
           fi
 
       - name: Upload test results
