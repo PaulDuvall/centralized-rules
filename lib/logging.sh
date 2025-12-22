@@ -124,9 +124,12 @@ register_cleanup() {
 
 _run_cleanup_handlers() {
     local handler
-    for handler in "${_cleanup_handlers[@]}"; do
-        eval "$handler" 2>/dev/null || true
-    done
+    # Safe iteration with set -u: only iterate if array has elements
+    if [[ ${#_cleanup_handlers[@]} -gt 0 ]]; then
+        for handler in "${_cleanup_handlers[@]}"; do
+            eval "$handler" 2>/dev/null || true
+        done
+    fi
 }
 
 # Set up cleanup trap

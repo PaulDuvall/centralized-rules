@@ -12,14 +12,14 @@
 #   cd centralized-rules
 #   ./install-hooks.sh [--global|--local]
 
-set -e  # Exit on error
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
 
 # Logging functions
 info() { echo -e "${BLUE}ℹ${NC} $*"; }
@@ -29,9 +29,9 @@ error() { echo -e "${RED}✗${NC} $*"; }
 
 # Detect installation mode
 INSTALL_MODE="local"  # Default to local project installation
-if [[ "$1" == "--global" ]]; then
+if [[ "${1:-}" == "--global" ]]; then
     INSTALL_MODE="global"
-elif [[ "$1" == "--local" ]]; then
+elif [[ "${1:-}" == "--local" ]]; then
     INSTALL_MODE="local"
 fi
 
@@ -60,6 +60,8 @@ detect_environment() {
 
 # Find the centralized-rules repository
 find_rules_repo() {
+    local path
+
     # If we're already in the centralized-rules repo
     if [[ -f ".claude/hooks/activate-rules.sh" ]]; then
         RULES_REPO_PATH="$(pwd)"
@@ -109,15 +111,22 @@ install_local() {
     # Create .claude directories
     mkdir -p .claude/hooks
     mkdir -p .claude/skills
+    mkdir -p .claude/lib
 
     # Copy hook script and embed commit hash
     cp "$RULES_REPO_PATH/.claude/hooks/activate-rules.sh" .claude/hooks/activate-rules.sh.tmp
-    # Inject the actual commit hash
-    sed "s/__CENTRALIZED_RULES_COMMIT__/${COMMIT_ID}/g" \
+    # Inject the actual commit hash (escape special sed characters for security)
+    local commit_id_escaped
+    commit_id_escaped=$(printf '%s\n' "$COMMIT_ID" | sed 's/[&/\]/\\&/g')
+    sed "s/__CENTRALIZED_RULES_COMMIT__/${commit_id_escaped}/g" \
         .claude/hooks/activate-rules.sh.tmp > .claude/hooks/activate-rules.sh
     rm .claude/hooks/activate-rules.sh.tmp
-    chmod +x .claude/hooks/activate-rules.sh
+    chmod 700 .claude/hooks/activate-rules.sh
     success "Copied hook script (commit: ${COMMIT_ID})"
+
+    # Copy shared libraries
+    cp -r "$RULES_REPO_PATH/lib/"* .claude/lib/
+    success "Copied shared libraries"
 
     # Copy skill rules mapping
     cp "$RULES_REPO_PATH/.claude/skills/skill-rules.json" .claude/skills/
@@ -213,12 +222,19 @@ install_global() {
 
     # Copy hook script and embed commit hash
     cp "$RULES_REPO_PATH/.claude/hooks/activate-rules.sh" "$HOME/.claude/hooks/activate-rules.sh.tmp"
-    # Inject the actual commit hash
-    sed "s/__CENTRALIZED_RULES_COMMIT__/${COMMIT_ID}/g" \
+    # Inject the actual commit hash (escape special sed characters for security)
+    local commit_id_escaped
+    commit_id_escaped=$(printf '%s\n' "$COMMIT_ID" | sed 's/[&/\]/\\&/g')
+    sed "s/__CENTRALIZED_RULES_COMMIT__/${commit_id_escaped}/g" \
         "$HOME/.claude/hooks/activate-rules.sh.tmp" > "$HOME/.claude/hooks/activate-rules.sh"
     rm "$HOME/.claude/hooks/activate-rules.sh.tmp"
-    chmod +x "$HOME/.claude/hooks/activate-rules.sh"
+    chmod 700 "$HOME/.claude/hooks/activate-rules.sh"
     success "Copied hook script to ~/.claude/hooks/ (commit: ${COMMIT_ID})"
+
+    # Copy shared libraries
+    mkdir -p "$HOME/.claude/lib"
+    cp -r "$RULES_REPO_PATH/lib/"* "$HOME/.claude/lib/"
+    success "Copied shared libraries to ~/.claude/lib/"
 
     # Copy skill rules mapping
     cp "$RULES_REPO_PATH/.claude/skills/skill-rules.json" "$HOME/.claude/skills/"
@@ -308,7 +324,7 @@ test_installation() {
 
     # Test the hook with a sample prompt
     local test_output
-    test_output=$(echo '{"prompt":"Write a test function"}' | "$hook_script" 2>&1)
+    test_output=$(echo '{"prompt":"Write a test function"}' | "$hook_script" 2>&1) || true
 
     if echo "$test_output" | grep -q "IMPLEMENTATION WORKFLOW"; then
         success "Hook test passed!"

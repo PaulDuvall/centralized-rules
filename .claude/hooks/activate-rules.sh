@@ -13,17 +13,17 @@
 
 set -euo pipefail
 
-# Get repository root
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-readonly REPO_ROOT
+# Get .claude directory (parent of hooks/)
+CLAUDE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly CLAUDE_DIR
 
-# Source shared libraries
-# shellcheck source=../../lib/logging.sh
+# Source shared libraries from .claude/lib/
+# shellcheck source=../lib/logging.sh
 # shellcheck disable=SC1091
-source "${REPO_ROOT}/lib/logging.sh"
-# shellcheck source=../../lib/detection.sh
+source "${CLAUDE_DIR}/lib/logging.sh"
+# shellcheck source=../lib/detection.sh
 # shellcheck disable=SC1091
-source "${REPO_ROOT}/lib/detection.sh"
+source "${CLAUDE_DIR}/lib/detection.sh"
 
 # Configuration
 readonly VERBOSE=${VERBOSE:-false}
