@@ -375,4 +375,4 @@ Before shipping a sourceable script:
 ## References
 
 - [Bash Reference Manual - Shell Builtin Commands](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html)
-- [Zsh Documentation - Shell Grammar](http://zsh.sourceforge.net/Doc/Release/Shell-Grammar.html)
+- [Zsh Documentation - Shell Grammar](https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html)
