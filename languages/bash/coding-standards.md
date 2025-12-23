@@ -11,6 +11,7 @@
 - **Use `#!/usr/bin/env bash`** for portability (finds bash in PATH)
 - **Include script documentation** at the top of every script
 - **Set strict error handling** with `set -euo pipefail`
+  - **Exception:** Scripts designed to be sourced - see [sourceable-scripts.md](./sourceable-scripts.md)
 
 **Example:**
 ```bash
