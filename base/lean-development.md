@@ -750,10 +750,31 @@ def review_features():
 
 ## Related Resources
 
+- See `base/architecture-principles.md` for Tracer Bullet Development (also known as Steel Thread or Walking Skeleton)
 - See `base/ai-assisted-development.md` for AI workflow patterns
 - See `base/project-maturity-levels.md` for MVP vs Production rigor
 - See `base/testing-philosophy.md` for quality practices
 - See `base/specification-driven-development.md` for requirements
+
+---
+
+## Progressive Enhancement vs. Tracer Bullets
+
+**Key Distinction:**
+- **Progressive Enhancement:** Building features in layers (basic → enhanced → optimized)
+- **Tracer Bullets (Steel Thread):** Building end-to-end skeleton through all architectural layers first
+
+**When to use each:**
+- Use **Tracer Bullets** when starting a new system or integrating unfamiliar technologies
+- Use **Progressive Enhancement** when adding features to an existing, proven architecture
+
+**They complement each other:**
+```
+Week 1: Tracer Bullet (prove architecture works end-to-end)
+Week 2+: Progressive Enhancement (add features layer by layer)
+```
+
+See `base/architecture-principles.md#tracer-bullet-development` for detailed implementation guidance.
 
 ---
 

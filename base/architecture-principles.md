@@ -559,6 +559,391 @@ employee = Employee(SalaryCalculator(), ManagerRole())
 
 ---
 
+## Tracer Bullet Development
+
+**Also known as:** Steel Thread, Walking Skeleton, End-to-End Slice
+
+**Rule:** Build a minimal but complete end-to-end implementation first, then add features incrementally.
+
+### What Are Tracer Bullets?
+
+The term comes from military tracer ammunition: bullets loaded at intervals that leave a visible trail, allowing gunners to see if they're hitting their target and adjust their aim in real-time.
+
+In software development, tracer bullets mean building a **thin vertical slice** that connects all architectural layers immediately:
+
+```
+User Interface → API Layer → Business Logic → Data Access → Database
+```
+
+**Key Characteristics:**
+- **Production Quality:** Not throwaway prototype code
+- **End-to-End:** Touches all architectural layers
+- **Minimal but Complete:** Simplest possible implementation
+- **Incremental:** Foundation that grows with additional features
+- **Visible:** Stakeholders can see and interact with real functionality
+
+### Tracer Bullets vs. Prototyping
+
+| Aspect | Tracer Bullets | Prototyping |
+|--------|----------------|-------------|
+| **Purpose** | Build architectural skeleton | Explore specific questions |
+| **Code Quality** | Production-ready | Throwaway code |
+| **Scope** | End-to-end through all layers | Focused on one area |
+| **Evolution** | Grows into final system | Discarded after learning |
+| **Goal** | Validate architecture works | Answer design questions |
+
+### When to Use Tracer Bullets
+
+**Use tracer bullets when:**
+- Building new systems with unfamiliar technology
+- Architecture or integration points are uncertain
+- Need early feedback on technical feasibility
+- Working with distributed systems or microservices
+- Team needs confidence in the technical approach
+
+**Example scenarios:**
+- New mobile app with cloud backend
+- Microservices architecture for existing monolith
+- Real-time data pipeline integration
+- Third-party API integration with complex flows
+
+### Implementation Approach
+
+#### Step 1: Identify the Simplest Path
+
+```python
+# Goal: User Dashboard showing account balance
+# Tracer Bullet: Hardcoded balance, minimal UI, basic auth
+
+# 1. Database Layer (simplest schema)
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(255),
+    balance DECIMAL(10,2) DEFAULT 0
+);
+
+# 2. Data Access Layer (single query)
+class UserRepository:
+    def get_balance(self, user_id: str) -> Decimal:
+        return db.execute(
+            "SELECT balance FROM users WHERE id = %s",
+            (user_id,)
+        ).scalar()
+
+# 3. Business Logic Layer (no rules yet)
+class AccountService:
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
+
+    def get_user_balance(self, user_id: str) -> Decimal:
+        # No business logic yet, direct passthrough
+        return self.user_repo.get_balance(user_id)
+
+# 4. API Layer (single endpoint)
+from fastapi import FastAPI, Depends
+
+app = FastAPI()
+
+@app.get("/api/balance")
+def get_balance(user_id: str, service: AccountService = Depends()):
+    balance = service.get_user_balance(user_id)
+    return {"balance": float(balance)}
+
+# 5. UI Layer (minimal display)
+async function showBalance() {
+    const response = await fetch('/api/balance?user_id=123');
+    const data = await response.json();
+    document.getElementById('balance').textContent = `$${data.balance}`;
+}
+```
+
+**Result:** Complete end-to-end flow from UI to database and back. Simple, but it works.
+
+#### Step 2: Verify Integration Points
+
+```bash
+# Test the entire stack
+curl http://localhost:8000/api/balance?user_id=123
+# Response: {"balance": 1250.50}
+
+# Validates:
+# ✓ Database connection works
+# ✓ API routing works
+# ✓ Authentication flow works (basic)
+# ✓ UI can call API
+# ✓ Data serialization works
+```
+
+#### Step 3: Incrementally Add Features
+
+```python
+# Iteration 1: Add transaction history (extend existing layers)
+
+# Database: Add transactions table
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    amount DECIMAL(10,2),
+    created_at TIMESTAMP
+);
+
+# Repository: Add method
+class UserRepository:
+    def get_balance(self, user_id: str) -> Decimal:
+        # ... existing code ...
+
+    def get_transactions(self, user_id: str, limit: int = 10):
+        return db.execute(
+            "SELECT * FROM transactions WHERE user_id = %s ORDER BY created_at DESC LIMIT %s",
+            (user_id, limit)
+        ).fetchall()
+
+# Service: Add method
+class AccountService:
+    def get_user_balance(self, user_id: str) -> Decimal:
+        # ... existing code ...
+
+    def get_recent_transactions(self, user_id: str):
+        return self.user_repo.get_transactions(user_id)
+
+# API: Add endpoint
+@app.get("/api/transactions")
+def get_transactions(user_id: str, service: AccountService = Depends()):
+    transactions = service.get_recent_transactions(user_id)
+    return {"transactions": transactions}
+
+# UI: Add display
+async function showTransactions() {
+    const response = await fetch('/api/transactions?user_id=123');
+    const data = await response.json();
+    // Render transactions...
+}
+```
+
+### Tracer Bullet Development Flow
+
+```
+Phase 1: Tracer Bullet (Week 1)
+├─ Database: Single table, minimal schema
+├─ Repository: One query method
+├─ Service: Passthrough logic
+├─ API: One endpoint
+└─ UI: Basic display
+
+Goal: Prove all layers connect and work together
+
+Phase 2: Feature Addition (Week 2)
+├─ Database: Add related tables
+├─ Repository: Add CRUD operations
+├─ Service: Add business logic
+├─ API: Add endpoints for new features
+└─ UI: Enhanced interface
+
+Goal: Build on proven foundation
+
+Phase 3: Refinement (Week 3+)
+├─ Database: Optimize queries, add indexes
+├─ Repository: Add caching, error handling
+├─ Service: Complex business rules
+├─ API: Validation, rate limiting
+└─ UI: Polish, accessibility
+```
+
+### Real-World Example: E-Commerce Search
+
+**Full Vision:**
+- Natural language search
+- AI-powered recommendations
+- Faceted filtering
+- Autocomplete
+- Search analytics
+- Personalization
+
+**Tracer Bullet (Day 1-2):**
+
+```python
+# 1. Database: Minimal product table
+CREATE TABLE products (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255),
+    price DECIMAL(10,2)
+);
+
+# 2. Repository: Simple keyword search
+class ProductRepository:
+    def search(self, query: str):
+        return db.execute(
+            "SELECT * FROM products WHERE name ILIKE %s LIMIT 20",
+            (f"%{query}%",)
+        ).fetchall()
+
+# 3. Service: No ranking, just return results
+class SearchService:
+    def __init__(self, product_repo: ProductRepository):
+        self.product_repo = product_repo
+
+    def search(self, query: str):
+        return self.product_repo.search(query)
+
+# 4. API: Single search endpoint
+@app.get("/api/search")
+def search(q: str, service: SearchService = Depends()):
+    results = service.search(q)
+    return {"results": results}
+
+# 5. UI: Basic search box
+<input id="search" type="text" />
+<div id="results"></div>
+
+<script>
+async function search(query) {
+    const response = await fetch(`/api/search?q=${query}`);
+    const data = await response.json();
+    displayResults(data.results);
+}
+</script>
+```
+
+**Tracer Bullet Validates:**
+- ✓ Database queries work
+- ✓ API handles requests
+- ✓ UI can submit searches
+- ✓ Results display correctly
+- ✓ End-to-end latency is acceptable
+
+**Incremental Enhancement:**
+
+```python
+# Week 2: Add relevance ranking
+class SearchService:
+    def search(self, query: str):
+        results = self.product_repo.search(query)
+        # Add ranking by sales
+        return sorted(results, key=lambda p: p.sales_count, reverse=True)
+
+# Week 3: Add faceted filtering
+class SearchService:
+    def search(self, query: str, category: str = None, max_price: float = None):
+        results = self.product_repo.search(query, category, max_price)
+        return self._rank_results(results)
+
+# Week 4: Add autocomplete
+@app.get("/api/autocomplete")
+def autocomplete(q: str):
+    suggestions = search_service.get_suggestions(q)
+    return {"suggestions": suggestions}
+```
+
+### Benefits of Tracer Bullets
+
+**1. Early Risk Reduction**
+- Integration problems discovered immediately
+- Technical feasibility validated early
+- Architecture proven before heavy investment
+
+**2. Visible Progress**
+- Stakeholders see working software from day one
+- Demonstrates value quickly
+- Builds team confidence
+
+**3. Easier Debugging**
+- Problems isolated to single layer
+- Clear understanding of what changed
+- Incremental additions easier to troubleshoot
+
+**4. Better Estimates**
+- Real data on implementation velocity
+- Understand actual complexity
+- More accurate future planning
+
+**5. Flexible Direction**
+- Easy to pivot based on feedback
+- Architecture adjustments less costly
+- Features added based on real needs
+
+### Common Mistakes
+
+**❌ Making the tracer too complex:**
+```python
+# Bad: Trying to build too much in tracer bullet
+class UserService:
+    def create_user(self, data):
+        # Validation with 20 rules
+        # Email verification
+        # Password strength checking
+        # Profile picture upload
+        # Welcome email with templates
+        # Analytics tracking
+        # ... too much for initial tracer!
+```
+
+**✅ Keep it minimal:**
+```python
+# Good: Simplest possible implementation
+class UserService:
+    def create_user(self, email: str, password: str):
+        # Just prove create user flow works
+        user = User(email=email, password_hash=hash(password))
+        return self.user_repo.save(user)
+
+# Add validation, emails, etc. in iterations 2, 3, 4...
+```
+
+**❌ Building throwaway code:**
+```python
+# Bad: Prototype mindset
+def search(query):
+    # Quick hack, will rewrite later
+    return [{"name": "Fake Product"}]  # Hardcoded
+```
+
+**✅ Production-quality from start:**
+```python
+# Good: Simple but real implementation
+def search(query: str) -> List[Product]:
+    # Real database query, simple logic
+    return self.product_repo.search(query)
+```
+
+### Integration with Other Practices
+
+**Tracer Bullets + TDD:**
+```python
+# Write tests for tracer bullet first
+def test_search_end_to_end():
+    """Test complete search flow"""
+    # Setup
+    product_repo.create(Product(name="Laptop"))
+
+    # Execute: UI → API → Service → Repository → DB
+    response = client.get("/api/search?q=laptop")
+
+    # Verify
+    assert response.status_code == 200
+    assert len(response.json()["results"]) > 0
+    assert "Laptop" in response.json()["results"][0]["name"]
+```
+
+**Tracer Bullets + Agile:**
+```
+Sprint 1: Tracer bullet (end-to-end minimal feature)
+Sprint 2: Add feature A (extend all layers)
+Sprint 3: Add feature B (extend all layers)
+Sprint 4: Polish and optimize
+```
+
+**Tracer Bullets + Microservices:**
+```
+Service A (Auth) ──┐
+                   ├─→ API Gateway ──→ UI
+Service B (Data) ──┘
+
+Tracer: Single request through all services
+Iteration: Add endpoints, error handling, retry logic
+```
+
+---
+
 ## Architectural Decision Records (ADRs)
 
 **Rule:** Document significant architectural decisions.
@@ -606,7 +991,8 @@ Use PostgreSQL as the primary relational database.
 9. **Dependency Injection:** Provide dependencies from outside
 10. **Composition over Inheritance:** Favor has-a over is-a
 11. **Package by Feature:** Organize by business capability
-12. **Document Decisions:** Use ADRs for significant choices
+12. **Tracer Bullets:** Build end-to-end skeleton first, then enhance
+13. **Document Decisions:** Use ADRs for significant choices
 
 ---
 
