@@ -95,7 +95,7 @@
         "rules": ["base/refactoring-patterns"]
       },
       "architecture": {
-        "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer"],
+        "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer", "tracer bullet", "tracer", "bullet", "steel thread", "walking skeleton", "end-to-end", "vertical slice"],
         "rules": ["base/architecture-principles", "base/12-factor-app"]
       },
       "metrics": {
