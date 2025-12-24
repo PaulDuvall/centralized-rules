@@ -25,7 +25,8 @@ jobs:
         run: |
           chmod +x scripts/test-keyword-validation.sh
           # Run tests and capture output
-          ./scripts/test-keyword-validation.sh --num-tests 10 2>&1 | tee test-output.log
+          # Use --all to test ALL keywords including newly added ones
+          ./scripts/test-keyword-validation.sh --all 2>&1 | tee test-output.log
           # Preserve exit code
           exit ${PIPESTATUS[0]}
         continue-on-error: true
