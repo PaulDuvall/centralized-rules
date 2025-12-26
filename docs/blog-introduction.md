@@ -382,7 +382,7 @@ Compare this to traditional approaches:
 | Approach | Rules Loaded | Tokens Used | Context Available |
 |----------|--------------|-------------|-------------------|
 | Manual Copy-Paste | All relevant (10-15 files) | 40,000-60,000 | 70% |
-| Static .claud file | All possible (50+ files) | 100,000+ | 50% |
+| Static Loading (all rules) | All possible (50+ files) | 100,000+ | 50% |
 | **Centralized Rules** | **Task-relevant (2-3 files)** | **5,000-7,000** | **96%** |
 
 ## Performance
