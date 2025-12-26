@@ -131,6 +131,10 @@ nav:
       - Tool Design: base/tool-design.md
       - Development Workflow: base/development-workflow.md
     - Language Rules:
+      - HTML:
+        - Coding Standards: languages/html/coding-standards.md
+      - CSS:
+        - Coding Standards: languages/css/coding-standards.md
       - Python:
         - Coding Standards: languages/python/coding-standards.md
         - Testing: languages/python/testing.md

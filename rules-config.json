@@ -115,6 +115,30 @@
           "when": "C# files (.cs)"
         }
       ]
+    },
+    "html": {
+      "display_name": "HTML",
+      "file_patterns": ["*.html", "*.htm"],
+      "test_patterns": [],
+      "rules": [
+        {
+          "name": "HTML Coding Standards",
+          "file": "languages/html/coding-standards.md",
+          "when": "HTML files (.html, .htm)"
+        }
+      ]
+    },
+    "css": {
+      "display_name": "CSS",
+      "file_patterns": ["*.css", "*.scss", "*.sass", "*.less"],
+      "test_patterns": [],
+      "rules": [
+        {
+          "name": "CSS Coding Standards",
+          "file": "languages/css/coding-standards.md",
+          "when": "CSS files (.css, .scss, .sass, .less)"
+        }
+      ]
     }
   },
   "frameworks": {
