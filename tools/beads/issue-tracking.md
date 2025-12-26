@@ -1,6 +1,9 @@
 # Beads Issue Tracking
 
-> **When to apply:** Projects using beads (bd) for issue tracking and workflow management
+> **Official Tool:** https://github.com/steveyegge/beads/
+> **When to apply:** Projects using the `bd` CLI tool from the beads repository for issue tracking and workflow management
+
+**IMPORTANT:** BEADS is a specific git-based issue tracking tool, not a general methodology. Always refer to the official beads repository when implementing or discussing BEADS functionality.
 
 ## Maturity Level Indicators
 
@@ -23,9 +26,24 @@ Apply beads practices based on your project's maturity level:
 
 See `base/project-maturity-levels.md` for detailed maturity framework.
 
+## What is Beads?
+
+**Beads** is a specific git-based issue tracking tool created by Steve Yegge. It is **NOT**:
+- ❌ A general methodology or pattern
+- ❌ A custom format you should create
+- ❌ An abstract concept open to interpretation
+
+It **IS**:
+- ✅ A concrete CLI tool installed via the repository: https://github.com/steveyegge/beads/
+- ✅ Used through the `bd` command (e.g., `bd create`, `bd list`, `bd close`)
+- ✅ Stores issues in a `.beads/` directory using SQLite database
+- ✅ Designed specifically for AI agents and developers
+
+**If a project uses BEADS, it means they have installed the tool from the official repository and use the `bd` CLI commands.**
+
 ## Core Philosophy
 
-Beads is a lightweight, git-based issue tracking system designed for AI agents and developers to manage work seamlessly within the repository.
+**Beads (https://github.com/steveyegge/beads/)** is a lightweight, git-based issue tracking system designed for AI agents and developers to manage work seamlessly within the repository. This rule describes how to use the `bd` CLI tool from the official beads repository - it is NOT a custom or alternative implementation.
 
 ### ⚠️ CRITICAL DATABASE SAFETY WARNING
 
@@ -1106,6 +1124,8 @@ This rule is ~20KB. Load it selectively at session boundaries or when explicitly
 4. **Git** tracks all changes (code + beads metadata)
 
 ## Why Beads Matters
+
+**Tool Repository:** https://github.com/steveyegge/beads/
 
 ### Benefits:
 
