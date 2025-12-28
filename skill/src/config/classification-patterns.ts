@@ -1,12 +1,39 @@
 /**
  * Comprehensive pattern definitions for prompt classification
  *
- * This file contains pattern definitions and weights for classifying user prompts
- * into semantic categories. Patterns are organized by confidence level and category.
+ * This file contains 70+ specialized regex patterns and weighted indicators
+ * for classifying user prompts into semantic categories.
+ *
+ * ## Organization
+ *
+ * Patterns are organized by category and confidence level:
+ * - **Category-Specific Patterns**: High-confidence regex for each category
+ * - **Code Indicators**: Weighted patterns that suggest code-related content
+ * - **Non-Code Indicators**: Weighted patterns that suggest business/legal content
+ *
+ * ## Pattern Design Principles
+ *
+ * 1. **Negative Lookahead**: Prevents false positives (e.g., "financial API" not matched as LEGAL)
+ * 2. **Priority Ordering**: More distinctive patterns checked first (LEGAL before CODE_IMPLEMENTATION)
+ * 3. **Word Boundaries**: Uses `\b` to match whole words, avoiding partial matches
+ * 4. **Case Insensitive**: All patterns use `/i` flag for flexibility
+ *
+ * ## Adding New Patterns
+ *
+ * When adding patterns:
+ * 1. Start with CATEGORY_PATTERNS arrays for high-confidence cases
+ * 2. Add CODE_INDICATORS or NON_CODE_INDICATORS for weighted scoring
+ * 3. Test against edge cases (see tests/classification-patterns.test.ts)
+ * 4. Document any negative lookahead logic
+ *
+ * @module classification-patterns
  */
 
 /**
  * Pattern indicator with weight and signal description
+ *
+ * Used for weighted scoring when pattern matching doesn't find a clear match.
+ * Higher weights indicate stronger signals for that category.
  */
 export interface PatternIndicator {
   /** Regular expression pattern to match */
@@ -22,6 +49,26 @@ export interface PatternIndicator {
  *
  * These patterns indicate business/legal content with high confidence,
  * even if technical terms are present.
+ *
+ * Uses negative lookahead to prevent false positives on technical content:
+ * - "SLA monitoring API" → Not matched (technical)
+ * - "SLA agreement terms" → Matched (business)
+ *
+ * Categories covered:
+ * - Legal documents (privacy policy, NDA, terms of service)
+ * - HR and employment (employee handbook, performance review)
+ * - Business operations (business plan, budget allocation)
+ * - Compliance and regulations (GDPR, HIPAA, audit requirements)
+ * - Corporate governance (board resolution, bylaws)
+ *
+ * @example
+ * ```typescript
+ * LEGAL_BUSINESS_PATTERNS.some(p => p.test("Review our privacy policy"));
+ * // Returns: true
+ *
+ * LEGAL_BUSINESS_PATTERNS.some(p => p.test("Implement SLA monitoring in API"));
+ * // Returns: false (negative lookahead excludes "api")
+ * ```
  */
 export const LEGAL_BUSINESS_PATTERNS = [
   // Legal documents
@@ -206,7 +253,33 @@ export const GENERAL_QUESTION_PATTERNS = [
 /**
  * Code indicators with weights
  *
- * Patterns that suggest code-related content with associated confidence weights
+ * Weighted patterns that suggest code-related content. Used for scoring
+ * when pattern matching doesn't find a definitive match.
+ *
+ * Weights range from 8-30 based on signal strength:
+ * - **30**: File extensions (.js, .ts, .py) - very strong signal
+ * - **25**: Code constructs (function, class, method) - strong signal
+ * - **20**: Technical terms (async, promise, framework names) - medium-strong
+ * - **15**: Syntax elements, development tools - medium
+ * - **10**: Programming language names - low-medium
+ * - **8**: Module system keywords - low
+ *
+ * @example
+ * ```typescript
+ * import { CODE_INDICATORS } from './classification-patterns.js';
+ *
+ * const text = "Fix bug in auth.ts function";
+ * let score = 0;
+ * CODE_INDICATORS.forEach(indicator => {
+ *   if (indicator.pattern.test(text)) {
+ *     score += indicator.weight;
+ *     console.log(`Matched: ${indicator.signal} (+${indicator.weight})`);
+ *   }
+ * });
+ * // Matched: file extension reference (+30)
+ * // Matched: code construct keywords (+25)
+ * // Total score: 55 (strong code signal)
+ * ```
  */
 export const CODE_INDICATORS: PatternIndicator[] = [
   // File references (strong signal)
