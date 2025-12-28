@@ -16,6 +16,17 @@
  * @module prompt-classifier
  */
 
+import {
+  LEGAL_BUSINESS_PATTERNS,
+  CODE_IMPLEMENTATION_PATTERNS,
+  CODE_DEBUGGING_PATTERNS,
+  CODE_REVIEW_PATTERNS,
+  ARCHITECTURE_PATTERNS,
+  DEVOPS_PATTERNS,
+  DOCUMENTATION_PATTERNS,
+  GENERAL_QUESTION_PATTERNS,
+} from '../config/classification-patterns.js';
+
 /**
  * Semantic categories for prompt classification
  *
@@ -45,45 +56,17 @@ export enum PromptCategory {
 
 /**
  * Pattern definitions for high-confidence classification
+ * Maps PromptCategory enum values to pattern arrays from classification-patterns.ts
  */
 const PATTERNS: Record<PromptCategory, RegExp[]> = {
-  [PromptCategory.LEGAL_BUSINESS]: [
-    /\b(privacy policy|terms of service|GDPR|legal|contract|compliance|license|licensing|copyright|trademark)\b/i,
-    /\b(SLA|service level|agreement|liability|warranty|indemnif)/i,
-  ],
-  [PromptCategory.CODE_DEBUGGING]: [
-    /\b(error|bug|fix|debug|broken|not working|fails|failing|crash|exception)\b/i,
-    /\b(stack trace|error message|throws|stack overflow)\b/i,
-    /\bwhy (is|does|doesn't|isn't|won't)\b/i,
-  ],
-  [PromptCategory.CODE_REVIEW]: [
-    /\b(review|code review|feedback on|look at this code|check this|validate this)\b/i,
-    /\b(best practice|improve|optimize|refactor)\b.*\b(code|function|class)\b/i,
-    /\b(how (do|to|should|can) I)\s+test\b.*\b(component|function|class|module|code)\b/i,
-    /\b(test|testing)\s+(this|the|my)\s+(component|function|class|code)\b/i,
-  ],
-  [PromptCategory.DEVOPS]: [
-    /\b(deploy|deployment|CI\/CD|pipeline|docker|kubernetes|k8s|container)\b/i,
-    /\b(infrastructure|IaC|terraform|cloudformation|ansible|jenkins|github actions)\b/i,
-    /\b(monitoring|logging|observability|metrics|alerts?)\b/i,
-  ],
-  [PromptCategory.ARCHITECTURE]: [
-    /\b(architecture|design pattern|system design|scalability|microservices)\b/i,
-    /\b(database schema|data model|API design|high-level)\b/i,
-    /\b(distributed system|event-driven|message queue|pub\/sub)\b/i,
-  ],
-  [PromptCategory.DOCUMENTATION]: [
-    /\b(document|documentation|README|docs|comment)\b/i,
-    /\b(write|create|add)\b.*\b(document|documentation|README|guide|tutorial)\b/i,
-  ],
-  [PromptCategory.CODE_IMPLEMENTATION]: [
-    /\b(implement|create|add|build|write|develop)\b.*\b(feature|function|class|component|endpoint)\b/i,
-    /\b(new|make)\b.*\b(feature|function|class|component|endpoint|API)\b/i,
-  ],
-  [PromptCategory.GENERAL_QUESTION]: [
-    /^(what|who|when|where|why|how)\b/i,
-    /\b(explain|tell me|help me understand)\b/i,
-  ],
+  [PromptCategory.LEGAL_BUSINESS]: LEGAL_BUSINESS_PATTERNS,
+  [PromptCategory.CODE_DEBUGGING]: CODE_DEBUGGING_PATTERNS,
+  [PromptCategory.CODE_REVIEW]: CODE_REVIEW_PATTERNS,
+  [PromptCategory.DEVOPS]: DEVOPS_PATTERNS,
+  [PromptCategory.ARCHITECTURE]: ARCHITECTURE_PATTERNS,
+  [PromptCategory.DOCUMENTATION]: DOCUMENTATION_PATTERNS,
+  [PromptCategory.CODE_IMPLEMENTATION]: CODE_IMPLEMENTATION_PATTERNS,
+  [PromptCategory.GENERAL_QUESTION]: GENERAL_QUESTION_PATTERNS,
   [PromptCategory.UNCLEAR]: [],
 };
 
