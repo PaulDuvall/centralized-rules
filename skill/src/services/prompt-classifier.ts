@@ -36,6 +36,8 @@ const PATTERNS: Record<PromptCategory, RegExp[]> = {
   [PromptCategory.CODE_REVIEW]: [
     /\b(review|code review|feedback on|look at this code|check this|validate this)\b/i,
     /\b(best practice|improve|optimize|refactor)\b.*\b(code|function|class)\b/i,
+    /\b(how (do|to|should|can) I)\s+test\b.*\b(component|function|class|module|code)\b/i,
+    /\b(test|testing)\s+(this|the|my)\s+(component|function|class|code)\b/i,
   ],
   [PromptCategory.DEVOPS]: [
     /\b(deploy|deployment|CI\/CD|pipeline|docker|kubernetes|k8s|container)\b/i,

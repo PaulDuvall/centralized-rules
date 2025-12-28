@@ -107,6 +107,8 @@ export const CODE_REVIEW_PATTERNS = [
   /\b(is this|this)\s+.*\b(best practice|good code|clean code|correct|right approach)\b/i,
   /\b(improve|optimize|refactor)\s+(this|the)\s+(code|function|class|implementation)\b/i,
   /\b(how|what)\b.*\b(improve|optimize|refactor|better)\b.*\b(code|function|implementation)\b/i,
+  /\b(how (do|to|should|can) I)\s+test\b.*\b(component|function|class|module|code)\b/i,
+  /\b(test|testing)\s+(this|the|my)\s+(component|function|class|code)\b/i,
 ];
 
 /**

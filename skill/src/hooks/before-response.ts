@@ -8,6 +8,20 @@ import { analyzeIntent, selectRules, getAvailableRules } from '../tools/select-r
 import { fetchRules } from '../tools/get-rules';
 import { getErrorDetails, getErrorMessage, isSkillError } from '../errors';
 import { loggers, configureLogging, formatDuration } from '../services/logger';
+import { classifyPrompt, PromptCategory } from '../services/prompt-classifier';
+
+/**
+ * Categories that should trigger rule injection
+ * Non-code categories (legal, general questions) skip rule loading to save tokens
+ */
+const CODE_CATEGORIES: PromptCategory[] = [
+  PromptCategory.CODE_IMPLEMENTATION,
+  PromptCategory.CODE_DEBUGGING,
+  PromptCategory.CODE_REVIEW,
+  PromptCategory.ARCHITECTURE,
+  PromptCategory.DEVOPS,
+  PromptCategory.DOCUMENTATION,
+];
 
 /**
  * Hook execution timing
@@ -17,6 +31,7 @@ interface Timing {
   analysis: number;
   selection: number;
   fetching: number;
+  classification?: number;
   total: number;
 }
 
@@ -46,6 +61,37 @@ export async function handler(context: SkillContext): Promise<HookResult> {
     if (!lastUserMessage) {
       return {
         continue: true,
+      };
+    }
+
+    // Step 0: Classify the prompt to determine if rules are needed
+    const classificationStart = Date.now();
+    const category = classifyPrompt(lastUserMessage.content);
+    timing.classification = Date.now() - classificationStart;
+
+    const isCodeRelated = CODE_CATEGORIES.includes(category);
+
+    logger.debug('Prompt classified', {
+      category,
+      isCodeRelated,
+      prompt: lastUserMessage.content.slice(0, 100) + '...',
+      duration: formatDuration(timing.classification),
+    });
+
+    // Skip rule injection for non-code categories to save tokens and processing
+    if (!isCodeRelated) {
+      logger.info('Non-code category detected, skipping rule injection', {
+        category,
+        promptPreview: lastUserMessage.content.slice(0, 80),
+      });
+
+      return {
+        continue: true,
+        metadata: {
+          category,
+          skippedRules: true,
+          reason: 'non-code category',
+        },
       };
     }
 
@@ -136,6 +182,7 @@ export async function handler(context: SkillContext): Promise<HookResult> {
       rulesInjected: rules.length,
       totalDuration: formatDuration(timing.total),
       timing: {
+        classification: formatDuration(timing.classification || 0),
         detection: formatDuration(timing.detection || 0),
         analysis: formatDuration(timing.analysis || 0),
         selection: formatDuration(timing.selection || 0),
@@ -147,6 +194,8 @@ export async function handler(context: SkillContext): Promise<HookResult> {
       continue: true,
       systemPrompt,
       metadata: {
+        category,
+        isCodeRelated,
         projectContext,
         userIntent,
         rulesLoaded: rules.length,
