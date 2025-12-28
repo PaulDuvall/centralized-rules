@@ -10,6 +10,11 @@
  */
 
 /**
+ * Re-export PromptCategory from prompt-classifier
+ */
+export { PromptCategory } from '../services/prompt-classifier.js';
+
+/**
  * Project context detected from the codebase
  */
 export interface ProjectContext {
