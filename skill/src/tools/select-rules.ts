@@ -6,6 +6,7 @@
 import type { RuleInfo, RuleSelectionParams, UserIntent } from '../types';
 import { loadRulesConfig } from '../config/rule-config-loader';
 import { extractTopicsFromText } from '../services/metadata-extractor';
+import { PromptCategory } from '../services/prompt-classifier';
 
 /**
  * Scoring weights for different factors
@@ -18,7 +19,39 @@ const WEIGHTS = {
   TOPIC_MATCH: 80, // Increased to prioritize explicit topic requests
   BASE_RULE: 20,
   URGENCY_BOOST: 25,
+  CATEGORY_BOOST: 30, // Boost for category-relevant rules
   ALWAYS_LOAD: 200,
+};
+
+/**
+ * Category-specific topic boosting
+ * Maps prompt categories to topics that should be boosted
+ */
+const CATEGORY_BOOSTS: Partial<Record<PromptCategory, { topics: string[]; boost: number }>> = {
+  [PromptCategory.CODE_DEBUGGING]: {
+    topics: ['testing', 'debugging', 'logging', 'error-handling'],
+    boost: 30,
+  },
+  [PromptCategory.ARCHITECTURE]: {
+    topics: ['architecture', 'design', 'patterns', 'scalability'],
+    boost: 25,
+  },
+  [PromptCategory.DEVOPS]: {
+    topics: ['deployment', 'ci-cd', 'infrastructure', 'monitoring'],
+    boost: 25,
+  },
+  [PromptCategory.DOCUMENTATION]: {
+    topics: ['documentation', 'comments'],
+    boost: 20,
+  },
+  [PromptCategory.CODE_REVIEW]: {
+    topics: ['code-quality', 'security', 'best-practices'],
+    boost: 20,
+  },
+  [PromptCategory.CODE_IMPLEMENTATION]: {
+    topics: ['testing', 'security', 'best-practices'],
+    boost: 15,
+  },
 };
 
 /**
@@ -31,10 +64,18 @@ interface ScoredRule extends RuleInfo {
 
 /**
  * Select the most relevant rules based on context and intent
+ *
+ * @param availableRules - All available rules to choose from
+ * @param params - Selection parameters (context, intent, limits)
+ * @param category - Optional prompt category for category-aware boosting
  */
-export function selectRules(availableRules: RuleInfo[], params: RuleSelectionParams): RuleInfo[] {
-  // Score all rules
-  const scoredRules = availableRules.map((rule) => scoreRule(rule, params));
+export function selectRules(
+  availableRules: RuleInfo[],
+  params: RuleSelectionParams,
+  category?: PromptCategory
+): RuleInfo[] {
+  // Score all rules with optional category boosting
+  const scoredRules = availableRules.map((rule) => scoreRule(rule, params, category));
 
   // Sort by score (descending)
   scoredRules.sort((a, b) => b.score - a.score);
@@ -59,9 +100,17 @@ export function selectRules(availableRules: RuleInfo[], params: RuleSelectionPar
 }
 
 /**
- * Score a single rule based on context and intent
+ * Score a single rule based on context, intent, and category
+ *
+ * @param rule - The rule to score
+ * @param params - Selection parameters
+ * @param category - Optional prompt category for boosting
  */
-function scoreRule(rule: RuleInfo, params: RuleSelectionParams): ScoredRule {
+function scoreRule(
+  rule: RuleInfo,
+  params: RuleSelectionParams,
+  category?: PromptCategory
+): ScoredRule {
   let score = 0;
   const reasons: string[] = [];
 
@@ -112,6 +161,17 @@ function scoreRule(rule: RuleInfo, params: RuleSelectionParams): ScoredRule {
   ) {
     score += WEIGHTS.URGENCY_BOOST;
     reasons.push('Urgency boost for security');
+  }
+
+  // Category-aware boosting
+  if (category && CATEGORY_BOOSTS[category]) {
+    const boost = CATEGORY_BOOSTS[category];
+    const matchingBoostTopics = rule.topics.filter((topic) => boost.topics.includes(topic));
+
+    if (matchingBoostTopics.length > 0) {
+      score += boost.boost;
+      reasons.push(`Category boost (${category}): ${matchingBoostTopics.join(', ')}`);
+    }
   }
 
   return {

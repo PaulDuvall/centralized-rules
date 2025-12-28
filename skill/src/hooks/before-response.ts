@@ -121,15 +121,19 @@ export async function handler(context: SkillContext): Promise<HookResult> {
       duration: formatDuration(timing.analysis),
     });
 
-    // Step 3: Select relevant rules
+    // Step 3: Select relevant rules with category-aware boosting
     const selectionStart = Date.now();
     const availableRules = getAvailableRules();
-    const selectedRuleInfos = selectRules(availableRules, {
-      project: projectContext,
-      intent: userIntent,
-      maxRules: context.config.maxRules,
-      maxTokens: context.config.maxTokens,
-    });
+    const selectedRuleInfos = selectRules(
+      availableRules,
+      {
+        project: projectContext,
+        intent: userIntent,
+        maxRules: context.config.maxRules,
+        maxTokens: context.config.maxTokens,
+      },
+      category // Pass category for smart boosting
+    );
     timing.selection = Date.now() - selectionStart;
 
     logger.debug('Rules selected', {
