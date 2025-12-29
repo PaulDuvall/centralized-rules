@@ -86,16 +86,54 @@ All code should be thoroughly tested with meaningful coverage.
 
 ### Property-Based Tests
 
-Property-based testing validates that code satisfies universal properties across a wide range of automatically generated inputs, discovering edge cases that example-based tests miss.
+Property-based testing (PBT) is a testing approach where, instead of writing individual test cases with specific input/output pairs, you define *properties* that should hold true for all possible inputs within a given range. The testing framework then automatically generates hundreds of diverse test cases, discovering edge cases that example-based tests miss.
 
-**Core Concept:** Instead of writing specific examples, define properties that should always hold true, then let the framework generate hundreds of test cases.
+**Core Concept:** Instead of writing `assert add(2, 3) == 5`, write universal properties like "for any integers a and b, add(a, b) should equal add(b, a)" (commutativity).
 
-**When to use:**
+**Key Components:**
+
+1. **Properties** - Universal assertions that begin conceptually with "for any..."
+   - Example: "For any sequence of operations, at most one traffic light is green at a time"
+   - Example: "For any valid input, decode(encode(x)) == x"
+
+2. **Generators** - Functions that automatically produce diverse input values
+   - Frameworks provide built-in generators for common types (integers, strings, lists)
+   - Generators can be composed to create complex test data
+   - Examples: `st.integers()`, `st.lists(st.text())`, `fc.array(fc.integer())`
+
+3. **Shrinking** - Automatic reduction of failing inputs to minimal counterexamples
+   - When a test fails, the framework simplifies the input to the smallest case that still fails
+   - Makes debugging easier by removing irrelevant complexity
+   - Example: Failing input `[1, 2, -5, 3, 4]` shrinks to `[-1]` or `[0]`
+
+**Common Property Shapes to Look For:**
+
+- **Invariants**: Conditions that must always hold (e.g., a sorted list stays sorted after operations)
+- **Round-trips**: `decode(encode(x)) == x` or `parse(serialize(x)) == x`
+- **Idempotency**: `delete(delete(x)) == delete(x)` or `normalize(normalize(x)) == normalize(x)`
+- **Commutativity**: `a + b == b + a` or `set.union(a, b) == set.union(b, a)`
+- **Associativity**: `(a + b) + c == a + (b + c)`
+
+**When to Use Property-Based Testing:**
 - Mathematical properties and algorithms
-- Data transformations and serialization
+- Data transformations and serialization (JSON, XML, binary formats)
 - Validation and parsing logic
 - API contracts and invariants
-- Anywhere you can express "for all inputs X, property Y holds"
+- Business logic with clear invariants
+- Any code where you can express "for all inputs X, property Y holds"
+
+**When Example-Based Tests Are Better:**
+- Specific business scenarios with known edge cases
+- UI interactions and user workflows
+- Integration with external services (where properties are unclear)
+- Cases where properties are hard to express clearly
+
+**Frameworks by Language:**
+- **Python**: Hypothesis - `from hypothesis import given, strategies as st`
+- **TypeScript/JavaScript**: fast-check - `import fc from 'fast-check'`
+- **Go**: gopter - `github.com/leanovate/gopter`
+- **Rust**: proptest - `use proptest::prelude::*`
+- **Haskell**: QuickCheck (the original PBT framework)
 
 #### Property Testing Frameworks
 
