@@ -124,8 +124,8 @@ export const CODE_IMPLEMENTATION_PATTERNS = [
  * Strong indicators of debugging/troubleshooting tasks
  */
 export const CODE_DEBUGGING_PATTERNS = [
-  // Error-specific
-  /\b(fix|debug|resolve|solve)\s+(this\s+)?(error|bug|issue|problem)\b/i,
+  // Error-specific (allows articles: this, the, a, an, or no article)
+  /\b(fix|debug|resolve|solve)\s+(this\s+|the\s+|an?\s+)?(error|bug|issue|problem)\b/i,
   /\b(error|exception|crash|failure)\s+in\s+\w+\.(js|ts|py|rs|go|java|rb|php)\b/i,
   /\b(stack trace|error message|exception thrown)\b/i,
   /\b(null pointer|segfault|memory leak|race condition)\b/i,
