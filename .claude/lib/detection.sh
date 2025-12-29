@@ -14,6 +14,40 @@
 [[ -n "${_LIB_DETECTION_LOADED:-}" ]] && return 0
 readonly _LIB_DETECTION_LOADED=1
 
+# File content cache to avoid repeated reads
+declare -A _FILE_CACHE
+
+# Read file with caching to avoid multiple I/O operations
+# Usage: read_file_cached "package.json"
+read_file_cached() {
+    local file="$1"
+
+    # Return empty if file doesn't exist
+    [[ ! -f "$file" ]] && return 1
+
+    # Check cache first
+    if [[ -n "${_FILE_CACHE[$file]:-}" ]]; then
+        echo "${_FILE_CACHE[$file]}"
+        return 0
+    fi
+
+    # Read and cache file content
+    _FILE_CACHE[$file]=$(cat "$file" 2>/dev/null)
+    echo "${_FILE_CACHE[$file]}"
+    return 0
+}
+
+# Check if cached file content contains pattern
+# Usage: cached_file_contains "package.json" '"react"'
+cached_file_contains() {
+    local file="$1"
+    local pattern="$2"
+    local content
+
+    content=$(read_file_cached "$file") || return 1
+    echo "$content" | grep -q "$pattern" 2>/dev/null
+}
+
 # Detect project language based on common config files
 detect_language() {
     local languages=()
@@ -25,7 +59,7 @@ detect_language() {
 
     # TypeScript/JavaScript
     if [[ -f "package.json" ]]; then
-        if grep -q '"typescript"' package.json 2>/dev/null; then
+        if cached_file_contains "package.json" '"typescript"'; then
             languages+=("typescript")
         else
             languages+=("javascript")
@@ -65,30 +99,38 @@ detect_frameworks() {
     local frameworks=()
 
     # Python frameworks
-    if [[ -f "requirements.txt" ]] || [[ -f "pyproject.toml" ]]; then
-        grep -qi "django" requirements.txt pyproject.toml 2>/dev/null && frameworks+=("django")
-        grep -qi "fastapi" requirements.txt pyproject.toml 2>/dev/null && frameworks+=("fastapi")
-        grep -qi "flask" requirements.txt pyproject.toml 2>/dev/null && frameworks+=("flask")
+    if [[ -f "requirements.txt" ]]; then
+        cached_file_contains "requirements.txt" "django" && frameworks+=("django")
+        cached_file_contains "requirements.txt" "fastapi" && frameworks+=("fastapi")
+        cached_file_contains "requirements.txt" "flask" && frameworks+=("flask")
+    fi
+    if [[ -f "pyproject.toml" ]]; then
+        cached_file_contains "pyproject.toml" "django" && frameworks+=("django")
+        cached_file_contains "pyproject.toml" "fastapi" && frameworks+=("fastapi")
+        cached_file_contains "pyproject.toml" "flask" && frameworks+=("flask")
     fi
 
     # JavaScript/TypeScript frameworks
     if [[ -f "package.json" ]]; then
-        grep -q '"react"' package.json 2>/dev/null && frameworks+=("react")
-        grep -q '"next"' package.json 2>/dev/null && frameworks+=("nextjs")
-        grep -q '"vue"' package.json 2>/dev/null && frameworks+=("vue")
-        grep -q '"express"' package.json 2>/dev/null && frameworks+=("express")
-        grep -q '"nestjs"' package.json 2>/dev/null && frameworks+=("nestjs")
+        cached_file_contains "package.json" '"react"' && frameworks+=("react")
+        cached_file_contains "package.json" '"next"' && frameworks+=("nextjs")
+        cached_file_contains "package.json" '"vue"' && frameworks+=("vue")
+        cached_file_contains "package.json" '"express"' && frameworks+=("express")
+        cached_file_contains "package.json" '"nestjs"' && frameworks+=("nestjs")
     fi
 
     # Go frameworks
     if [[ -f "go.mod" ]]; then
-        grep -q "gin-gonic/gin" go.mod 2>/dev/null && frameworks+=("gin")
-        grep -q "gofiber/fiber" go.mod 2>/dev/null && frameworks+=("fiber")
+        cached_file_contains "go.mod" "gin-gonic/gin" && frameworks+=("gin")
+        cached_file_contains "go.mod" "gofiber/fiber" && frameworks+=("fiber")
     fi
 
     # Java frameworks
-    if [[ -f "pom.xml" ]] || [[ -f "build.gradle" ]]; then
-        grep -q "spring-boot" pom.xml build.gradle 2>/dev/null && frameworks+=("springboot")
+    if [[ -f "pom.xml" ]]; then
+        cached_file_contains "pom.xml" "spring-boot" && frameworks+=("springboot")
+    fi
+    if [[ -f "build.gradle" ]]; then
+        cached_file_contains "build.gradle" "spring-boot" && frameworks+=("springboot")
     fi
 
     echo "${frameworks[@]:-}"
@@ -193,6 +235,7 @@ dir_exists() {
 }
 
 # Export functions for subshells
+export -f read_file_cached cached_file_contains
 export -f detect_language detect_frameworks detect_cloud_providers
 export -f detect_tools detect_ai_tools
 export -f file_contains any_file_exists dir_exists
