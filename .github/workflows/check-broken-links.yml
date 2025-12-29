@@ -46,7 +46,7 @@ jobs:
           ./scripts/check-json-references.sh
 
   check-markdown-links:
-    name: Check Markdown Links
+    name: Check Markdown Links (Critical)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -59,3 +59,28 @@ jobs:
           use-verbose-mode: 'yes'
           config-file: '.github/markdown-link-check-config.json'
           check-modified-files-only: 'no'
+
+  check-flaky-links:
+    name: Check Flaky Links (Advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check known-flaky links (W3C, GNU)
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'no'
+          use-verbose-mode: 'yes'
+          config-file: '.github/markdown-link-check-config-flaky.json'
+          check-modified-files-only: 'no'
+        continue-on-error: true
+
+      - name: Report flaky link results
+        if: always()
+        run: |
+          echo "⚠️  Flaky link check completed (advisory only - does not block CI)"
+          echo "This job checks W3C, GNU, and other domains that block automated checkers."
+          echo "Failures here should be investigated but won't block the build."
+          echo "Last manual verification: 2025-12-28"

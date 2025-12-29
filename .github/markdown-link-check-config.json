@@ -1,24 +1,32 @@
 {
+  "$comment": "Critical link check configuration - failures block CI. Flaky domains checked separately in check-flaky-links job.",
   "ignorePatterns": [
     {
+      "$comment": "Dynamic GitHub URLs that may not exist yet",
       "pattern": "^https://github.com/.*/pull/.*"
     },
     {
+      "$comment": "Dynamic GitHub issue URLs that may not exist yet",
       "pattern": "^https://github.com/.*/issues/.*"
     },
     {
+      "$comment": "Local development URLs",
       "pattern": "^http://localhost"
     },
     {
+      "$comment": "Internal anchor links",
       "pattern": "^#"
     },
     {
+      "$comment": "Google AI blocks automated checkers - checked separately in flaky job",
       "pattern": "^https://ai\\.google\\.dev"
     },
     {
+      "$comment": "GNU.org returns 403 for automated checkers - checked separately in flaky job. Last verified: 2025-12-28",
       "pattern": "^https://www\\.gnu\\.org"
     },
     {
+      "$comment": "W3C websites return 403 for automated checkers - checked separately in flaky job. Last verified: 2025-12-28",
       "pattern": "^https://.*\\.w3\\.org"
     }
   ],
