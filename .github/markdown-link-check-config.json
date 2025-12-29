@@ -17,6 +17,9 @@
     },
     {
       "pattern": "^https://www\\.gnu\\.org"
+    },
+    {
+      "pattern": "^https://.*\\.w3\\.org"
     }
   ],
   "replacementPatterns": [],
