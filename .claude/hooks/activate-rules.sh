@@ -68,6 +68,13 @@ detect_project_context() {
     echo "${languages:-}|${frameworks:-}"
 }
 
+# Escape special regex characters for use in grep -E patterns
+escape_regex() {
+    local input="$1"
+    # Escape all special regex characters: . * + ? [ ] ( ) { } ^ $ | \
+    printf '%s' "$input" | sed 's/[.*+?\[\](){}^$|\\]/\\&/g'
+}
+
 # Load keyword mappings from skill-rules.json
 load_keyword_mappings() {
     local json_file="$1"
@@ -119,7 +126,7 @@ match_keywords() {
 
             # Get keywords for this category and escape special characters
             local keywords
-            keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.keywords[]?" 2>/dev/null | sed 's/\./\\./g' | tr '\n' '|' | sed 's/|$//')
+            keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
             # Get slash commands for this category
             local slash_cmds
@@ -153,7 +160,7 @@ match_keywords() {
 
             # Get keywords for this language
             local lang_keywords
-            lang_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.keywords[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+            lang_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
             # Get rules for this language
             local lang_rules
@@ -185,7 +192,7 @@ match_keywords() {
                 [[ -z "$framework" ]] && continue
 
                 local framework_keywords
-                framework_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.keywords[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+                framework_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
                 local framework_rules
                 framework_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.rules[]?" 2>/dev/null)
@@ -206,7 +213,7 @@ match_keywords() {
             [[ -z "$provider" ]] && continue
 
             local provider_keywords
-            provider_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.keywords[]?" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+            provider_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
             local provider_rules
             provider_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.rules[]?" 2>/dev/null)
@@ -475,10 +482,23 @@ main() {
                 additionalContext: .[0]
             }
         }"
+    elif command -v python3 &> /dev/null; then
+        # Fallback: Use Python for proper JSON escaping
+        python3 -c "import json, sys; output = sys.stdin.read(); print(json.dumps({'systemMessage': output, 'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': output}}))" <<< "${output}"
+    elif command -v python &> /dev/null; then
+        # Fallback: Use Python 2 for proper JSON escaping
+        python -c "import json, sys; output = sys.stdin.read(); print json.dumps({'systemMessage': output, 'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': output}})" <<< "${output}"
     else
-        # Fallback: Manual JSON escaping (basic but functional)
+        # Last resort: Manual JSON escaping with improved edge case handling
         local escaped_output
-        escaped_output=$(printf '%s' "${output}" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed '$ s/\\n$//')
+        # Escape backslashes first, then quotes, then control characters
+        escaped_output=$(printf '%s' "${output}" | \
+            sed 's/\\/\\\\/g' | \
+            sed 's/"/\\"/g' | \
+            sed 's/\t/\\t/g' | \
+            sed 's/\r/\\r/g' | \
+            awk '{printf "%s\\n", $0}' | \
+            sed '$ s/\\n$//')
 
         cat <<EOF
 {
