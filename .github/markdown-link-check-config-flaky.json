@@ -1,15 +1,15 @@
 {
-  "comment": "Configuration for checking known-flaky links (W3C, GNU) that block automated checkers",
+  "comment": "Configuration for checking known-flaky links (W3C, GNU, AgentSkills) that block automated checkers",
   "ignorePatterns": [
     {
-      "comment": "Ignore all links EXCEPT W3C and GNU domains",
-      "pattern": "^(?!https://(.*\\.w3\\.org|www\\.gnu\\.org)).*$"
+      "comment": "Ignore all links EXCEPT W3C, GNU, and AgentSkills domains",
+      "pattern": "^(?!https://(.*\\.w3\\.org|www\\.gnu\\.org|agentskills\\.io)).*$"
     }
   ],
   "replacementPatterns": [],
   "httpHeaders": [
     {
-      "urls": ["https://validator.w3.org", "https://jigsaw.w3.org", "https://www.w3.org"],
+      "urls": ["https://validator.w3.org", "https://jigsaw.w3.org", "https://www.w3.org", "https://agentskills.io"],
       "headers": {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
       }

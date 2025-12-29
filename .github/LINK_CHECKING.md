@@ -40,6 +40,7 @@ This job checks ONLY the known-flaky domains using:
 - `*.w3.org` (validator.w3.org, jigsaw.w3.org, www.w3.org)
 - `www.gnu.org`
 - `ai.google.dev`
+- `agentskills.io` (redirect loop for automated checkers)
 
 ## Benefits
 
