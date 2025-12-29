@@ -10,6 +10,14 @@
       "pattern": "^https://github.com/.*/issues/.*"
     },
     {
+      "$comment": "GitHub release and compare URLs that may not exist yet",
+      "pattern": "^https://github.com/.*/releases/.*"
+    },
+    {
+      "$comment": "GitHub compare URLs that may not exist yet",
+      "pattern": "^https://github.com/.*/compare/.*"
+    },
+    {
       "$comment": "Local development URLs",
       "pattern": "^http://localhost"
     },
@@ -27,7 +35,7 @@
     },
     {
       "$comment": "W3C websites return 403 for automated checkers - checked separately in flaky job. Last verified: 2025-12-28",
-      "pattern": "^https://.*\\.w3\\.org"
+      "pattern": "^https?://.*\\.w3\\.org"
     },
     {
       "$comment": "AgentSkills.io has redirect loop for automated checkers - checked separately in flaky job. Last verified: 2025-12-28",
