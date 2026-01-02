@@ -161,6 +161,26 @@
          <lastmod>2026-01-02</lastmod>
     </url>
     <url>
+         <loc>https://paulduvall.github.io/centralized-rules/base/ai-assisted/anti-patterns/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://paulduvall.github.io/centralized-rules/base/ai-assisted/context-management/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://paulduvall.github.io/centralized-rules/base/ai-assisted/prompting/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://paulduvall.github.io/centralized-rules/base/ai-assisted/tdd-workflow/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://paulduvall.github.io/centralized-rules/base/ai-assisted/verification/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/aws/iam-best-practices/</loc>
          <lastmod>2026-01-02</lastmod>
     </url>
