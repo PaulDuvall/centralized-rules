@@ -1,0 +1,237 @@
+name: CI - Token Limits
+
+on:
+  workflow_call:
+  push:
+    branches: [ main ]
+    paths:
+      - 'base/**'
+      - 'languages/**'
+      - 'frameworks/**'
+      - 'cloud/**'
+      - 'skill/src/tools/select-rules.ts'
+      - 'skill/tests/unit/tools/token-limits.test.ts'
+      - 'tests/test-token-limits.sh'
+      - '.github/workflows/ci-token-limits.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'base/**'
+      - 'languages/**'
+      - 'frameworks/**'
+      - 'cloud/**'
+      - 'skill/src/tools/select-rules.ts'
+      - 'skill/tests/unit/tools/token-limits.test.ts'
+      - 'tests/test-token-limits.sh'
+      - '.github/workflows/ci-token-limits.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-bash-token-limits:
+    name: Bash Token Limit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run token limit tests
+        id: test
+        run: |
+          chmod +x tests/test-token-limits.sh
+          ./tests/test-token-limits.sh 2>&1 | tee test-output.log
+          # Preserve exit code
+          exit ${PIPESTATUS[0]}
+        continue-on-error: true
+
+      - name: Parse test results
+        if: always()
+        id: parse
+        run: |
+          # Source summary utilities
+          # shellcheck source=scripts/ci/summary-utils.sh
+          source scripts/ci/summary-utils.sh
+
+          # Extract test summary
+          if [ -f test-output.log ]; then
+            total=$(grep "Total Tests:" test-output.log | awk '{print $3}' || echo "0")
+            passed=$(grep "Passed:" test-output.log | grep -oP '\d+' | head -1 || echo "0")
+            failed=$(grep "Failed:" test-output.log | grep -oP '\d+' | tail -1 || echo "0")
+
+            # Determine status
+            status="success"
+            [ "$failed" != "0" ] && status="failure"
+
+            # Generate summary
+            summary_header "Token Limit Test Results" "$status"
+            summary_test_results "$total" "$passed" "$failed"
+
+            # Add warnings if any tests reveal issues
+            if grep -q "Large rule:" test-output.log; then
+              large_rules=$(grep "Large rule:" test-output.log || echo "")
+              summary_details "⚠️  Large Rules Detected" "$large_rules"
+            fi
+
+            summary_footer
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: token-limit-bash-results
+          path: test-output.log
+          retention-days: 30
+
+      - name: Check test results
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "❌ Token limit tests failed!"
+          echo ""
+          if [ -f test-output.log ]; then
+            grep "Failed Tests:" -A 100 test-output.log || true
+          fi
+          exit 1
+
+      - name: Report success
+        if: steps.test.outcome == 'success'
+        run: |
+          echo "✅ All token limit tests passed!"
+          echo ""
+          echo "Token limit enforcement is working correctly."
+
+  test-typescript-token-limits:
+    name: TypeScript Token Limit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: skill/package-lock.json
+
+      - name: Install dependencies
+        working-directory: skill
+        run: npm ci
+
+      - name: Run token limit tests
+        id: test
+        working-directory: skill
+        run: |
+          # Run only the token limit tests
+          npm test -- tests/unit/tools/token-limits.test.ts 2>&1 | tee ../test-output.log
+          # Preserve exit code
+          exit ${PIPESTATUS[0]}
+        continue-on-error: true
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🔢 TypeScript Token Limit Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f test-output.log ]; then
+            # Extract test count from vitest output
+            if grep -q "Test Files" test-output.log; then
+              echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+              grep -E "Test Files|Tests|Time" test-output.log | while read -r line; do
+                echo "- $line" >> $GITHUB_STEP_SUMMARY
+              done
+            fi
+
+            # Check for failures
+            if grep -q "FAIL" test-output.log; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+              grep "FAIL" test-output.log >> $GITHUB_STEP_SUMMARY || true
+            fi
+          fi
+
+          if [ "${{ steps.test.outcome }}" == "success" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ All TypeScript token limit tests passed!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: token-limit-typescript-results
+          path: test-output.log
+          retention-days: 30
+
+      - name: Check test results
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "❌ TypeScript token limit tests failed!"
+          exit 1
+
+      - name: Report success
+        if: steps.test.outcome == 'success'
+        run: |
+          echo "✅ All TypeScript token limit tests passed!"
+
+  summary:
+    name: Token Limit Tests Summary
+    runs-on: ubuntu-latest
+    needs:
+      - test-bash-token-limits
+      - test-typescript-token-limits
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate summary
+        run: |
+          echo "## 🔢 Token Limit Testing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Suites" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Bash tests
+          if [ "${{ needs.test-bash-token-limits.result }}" == "success" ]; then
+            echo "- ✅ Bash token limit tests: **Passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Bash token limit tests: **Failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # TypeScript tests
+          if [ "${{ needs.test-typescript-token-limits.result }}" == "success" ]; then
+            echo "- ✅ TypeScript token limit tests: **Passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ TypeScript token limit tests: **Failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Overall status
+          if [ "${{ needs.test-bash-token-limits.result }}" == "success" ] && \
+             [ "${{ needs.test-typescript-token-limits.result }}" == "success" ]; then
+            echo "### ✅ Overall Status: All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Token limit enforcement is working correctly across all systems." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Overall Status: Some tests failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the individual test results above." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check overall status
+        run: |
+          if [ "${{ needs.test-bash-token-limits.result }}" != "success" ] || \
+             [ "${{ needs.test-typescript-token-limits.result }}" != "success" ]; then
+            echo "❌ Some token limit tests failed"
+            exit 1
+          fi
+
+          echo "✅ All token limit tests passed!"

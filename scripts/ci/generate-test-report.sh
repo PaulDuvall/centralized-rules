@@ -8,6 +8,7 @@
 #   SYNC_SCRIPT_STATUS - status of sync script tests
 #   SKILL_STATUS - status of skill tests
 #   KEYWORD_VALIDATION_STATUS - status of keyword validation tests
+#   TOKEN_LIMITS_STATUS - status of token limit tests
 #   GITHUB_RUN_NUMBER - workflow run number
 #   GITHUB_SHA - commit SHA
 #   GITHUB_REF_NAME - branch name
@@ -50,6 +51,7 @@ EOF
   echo "| 🧪 Sync Script Testing | $([ "$SYNC_SCRIPT_STATUS" == "success" ] && echo "✅ PASSED" || echo "❌ FAILED") | **20+ comprehensive scenarios** |"
   echo "| ⚡ Claude Skill Tests | $([ "$SKILL_STATUS" == "success" ] && echo "✅ PASSED" || echo "❌ FAILED") | TypeScript compilation, tests, 85% coverage |"
   echo "| 🔑 Keyword Validation | $([ "$KEYWORD_VALIDATION_STATUS" == "success" ] && echo "✅ PASSED" || echo "❌ FAILED") | Validates all keywords trigger correct rules |"
+  echo "| 🔢 Token Limit Tests | $([ "$TOKEN_LIMITS_STATUS" == "success" ] && echo "✅ PASSED" || echo "❌ FAILED") | Validates token budgets and warnings |"
 } >> "$REPORT_FILE"
 
 cat >> "$REPORT_FILE" << EOF
@@ -66,7 +68,8 @@ if [ "$PROGRESSIVE_DISCLOSURE_STATUS" != "success" ] || \
    [ "$QUALITY_STATUS" != "success" ] || \
    [ "$SYNC_SCRIPT_STATUS" != "success" ] || \
    [ "$SKILL_STATUS" != "success" ] || \
-   [ "$KEYWORD_VALIDATION_STATUS" != "success" ]; then
+   [ "$KEYWORD_VALIDATION_STATUS" != "success" ] || \
+   [ "$TOKEN_LIMITS_STATUS" != "success" ]; then
   overall_status="failure"
 fi
 
@@ -91,6 +94,7 @@ EOF
   [ "$SYNC_SCRIPT_STATUS" != "success" ] && echo "- Sync Script Testing" >> "$REPORT_FILE"
   [ "$SKILL_STATUS" != "success" ] && echo "- Claude Skill Tests" >> "$REPORT_FILE"
   [ "$KEYWORD_VALIDATION_STATUS" != "success" ] && echo "- Keyword Validation" >> "$REPORT_FILE"
+  [ "$TOKEN_LIMITS_STATUS" != "success" ] && echo "- Token Limit Tests" >> "$REPORT_FILE"
 fi
 
 cat >> "$REPORT_FILE" << EOF

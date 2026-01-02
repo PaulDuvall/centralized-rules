@@ -36,6 +36,11 @@ jobs:
     name: Keyword Validation
     uses: ./.github/workflows/ci-keyword-validation.yml
 
+  # Token Limit Tests
+  token-limits:
+    name: Token Limits
+    uses: ./.github/workflows/ci-token-limits.yml
+
   # Generate comprehensive test report
   report:
     name: Test Report
@@ -46,6 +51,7 @@ jobs:
       - sync-script
       - skill
       - keyword-validation
+      - token-limits
     if: always()
 
     steps:
@@ -61,6 +67,7 @@ jobs:
           SYNC_SCRIPT_STATUS: ${{ needs.sync-script.result }}
           SKILL_STATUS: ${{ needs.skill.result }}
           KEYWORD_VALIDATION_STATUS: ${{ needs.keyword-validation.result }}
+          TOKEN_LIMITS_STATUS: ${{ needs.token-limits.result }}
 
       - name: Upload test report
         if: always()
