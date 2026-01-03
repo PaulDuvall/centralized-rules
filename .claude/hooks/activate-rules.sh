@@ -53,6 +53,12 @@ if ! [[ "$TOKEN_CONTEXT_BUDGET_RAW" =~ ^[0-9]+$ ]] || [[ "$TOKEN_CONTEXT_BUDGET_
 fi
 readonly TOKEN_CONTEXT_BUDGET="$TOKEN_CONTEXT_BUDGET_RAW"
 
+# Token estimation constants (shared across all token calculation functions)
+# Simplicity: Centralized constants eliminate duplication and ensure consistency
+readonly TOKEN_BANNER_BASE=500           # Banner display overhead
+readonly TOKEN_METADATA=850              # skill-rules.json (~3400 chars ÷ 4)
+readonly TOKEN_RULES_EXPECTED=3000       # ~60% of default maxTokens (5000)
+
 # Custom debug logging (extends lib/logging.sh)
 log_debug() {
     if [[ "${VERBOSE}" == "true" ]]; then
@@ -347,45 +353,39 @@ is_git_operation() {
 
 # Calculate estimated token cost for banner + rules
 # Returns: Estimated total tokens (integer)
-# Simplicity: Uses fixed overhead estimates to avoid complex runtime calculation
+# Simplicity: Uses centralized constants, simple addition only
 # shellcheck disable=SC2317  # Function defined for future use in token display feature
 calculate_token_cost() {
-    # Constants for token estimation (based on empirical measurements)
-    # Simplicity: Named constants make the calculation transparent
-    local -r BANNER_BASE_TOKENS=500           # Banner display overhead
-    local -r METADATA_TOKENS=850              # skill-rules.json (~3400 chars ÷ 4)
-    local -r EXPECTED_RULES_TOKENS=3000       # ~60% of default maxTokens (5000)
-
-    # Security: Simple integer addition, no external input
-    local total=$((BANNER_BASE_TOKENS + METADATA_TOKENS + EXPECTED_RULES_TOKENS))
-
+    # Security: Simple integer addition using validated readonly constants
+    local total=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
     echo "$total"
 }
 
 # Generate verbose token breakdown for detailed analysis
 # Returns: Multi-line breakdown of token costs (empty if disabled/conditions not met)
-# Security: Uses same validated constants as calculate_token_cost()
+# Security: Uses validated readonly constants, guards against division by zero
 generate_verbose_token_breakdown() {
     # Only show if verbose mode is enabled and token display is not disabled
     [[ "$VERBOSE" != "true" ]] && return
     [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
 
-    # Use same constants as calculate_token_cost() for consistency
-    local -r BANNER_BASE_TOKENS=500           # Banner display overhead
-    local -r METADATA_TOKENS=850              # skill-rules.json (~3400 chars ÷ 4)
-    local -r EXPECTED_RULES_TOKENS=3000       # ~60% of default maxTokens (5000)
-    local -r total=$((BANNER_BASE_TOKENS + METADATA_TOKENS + EXPECTED_RULES_TOKENS))
+    # Security: Prevent division by zero (same validation as calculate_token_cost_display)
+    if [[ "$TOKEN_CONTEXT_BUDGET" -lt 1 ]]; then
+        log_debug "Invalid TOKEN_CONTEXT_BUDGET: $TOKEN_CONTEXT_BUDGET (skipping breakdown)"
+        return
+    fi
 
-    # Calculate percentage
+    # Simplicity: Use centralized constants (no duplication)
+    local -r total=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
     local percent=$((total * 100 / TOKEN_CONTEXT_BUDGET))
 
     # Output verbose breakdown
     cat <<EOF
 ───────────────────────────────────────────────────────
 📊 TOKEN USAGE BREAKDOWN (Verbose Mode)
-   Banner overhead:    ~${BANNER_BASE_TOKENS} tokens
-   Metadata (JSON):    ~${METADATA_TOKENS} tokens
-   Rule content:       ~${EXPECTED_RULES_TOKENS} tokens
+   Banner overhead:    ~${TOKEN_BANNER_BASE} tokens
+   Metadata (JSON):    ~${TOKEN_METADATA} tokens
+   Rule content:       ~${TOKEN_RULES_EXPECTED} tokens
    ─────────────────────────────────────
    Total estimated:    ~${total} tokens (~${percent}% of ${TOKEN_CONTEXT_BUDGET})
 
@@ -452,6 +452,49 @@ calculate_token_cost_display() {
     # Security: Safe string construction (no eval, no command substitution)
     # Format: " | 📊 Rules: ~4.3K tokens (~2%)"
     echo " | ${indicator} Rules: ~${display} tokens (~${percent}%)"
+}
+
+# Test function: Verify token calculation correctness
+# Returns: 0 if tests pass, 1 if tests fail
+# Testing: Can be invoked with RUN_TESTS=true environment variable
+# Security: Uses subshells to avoid modifying readonly variables
+test_token_calculations() {
+    local failures=0
+
+    # Test 1: calculate_token_cost returns expected total
+    local expected=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
+    local actual
+    actual=$(calculate_token_cost)
+    if [[ "$actual" != "$expected" ]]; then
+        echo "FAIL: calculate_token_cost returned $actual, expected $expected" >&2
+        ((failures++))
+    else
+        echo "PASS: calculate_token_cost returns correct total ($actual)" >&2
+    fi
+
+    # Test 2: Token cost is positive integer
+    if ! [[ "$actual" =~ ^[0-9]+$ ]] || [[ "$actual" -lt 1 ]]; then
+        echo "FAIL: calculate_token_cost returned non-positive integer: $actual" >&2
+        ((failures++))
+    else
+        echo "PASS: calculate_token_cost returns positive integer" >&2
+    fi
+
+    # Test 3: Token constants are readonly and positive
+    if [[ $TOKEN_BANNER_BASE -gt 0 ]] && [[ $TOKEN_METADATA -gt 0 ]] && [[ $TOKEN_RULES_EXPECTED -gt 0 ]]; then
+        echo "PASS: Token constants are positive" >&2
+    else
+        echo "FAIL: Token constants must be positive" >&2
+        ((failures++))
+    fi
+
+    if [[ $failures -eq 0 ]]; then
+        echo "✓ All token calculation tests passed" >&2
+        return 0
+    else
+        echo "✗ $failures test(s) failed" >&2
+        return 1
+    fi
 }
 
 # Generate activation instruction with forced evaluation pattern
@@ -631,6 +674,12 @@ EOF
     log_debug "Activation instruction generated successfully"
     exit 0
 }
+
+# Run tests if requested (for development/CI)
+if [[ "${RUN_TESTS:-false}" == "true" ]]; then
+    test_token_calculations
+    exit $?
+fi
 
 # Run main function
 main "$@"
