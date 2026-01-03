@@ -415,6 +415,54 @@ Add new categories to `skill-rules.json` under the appropriate section:
 }
 ```
 
+### Token Usage Display
+
+Configure how the hook displays token usage information for the centralized-rules overhead:
+
+**Environment Variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SHOW_TOKEN_USAGE` | `auto` | Control token display: `auto` (show if >2%), `true` (always), `false` (never) |
+| `TOKEN_WARNING_THRESHOLD` | `4000` | Show ⚠️  warning icon when rules exceed this token count |
+| `TOKEN_CONTEXT_BUDGET` | `200000` | Total context budget for percentage calculation |
+| `VERBOSE` | `false` | Show detailed token breakdown when `true` |
+
+**Usage Examples:**
+
+```bash
+# Always show token usage in banner header
+export SHOW_TOKEN_USAGE=true
+
+# Never show token usage
+export SHOW_TOKEN_USAGE=false
+
+# Show detailed breakdown (for debugging)
+export VERBOSE=true
+
+# Custom warning threshold
+export TOKEN_WARNING_THRESHOLD=5000
+```
+
+**Token Display Modes:**
+
+1. **Inline Display** (when enabled):
+   ```
+   🎯 Centralized Rules Active | Source: repo@commit | 📊 Rules: ~4.3K tokens (~2%)
+   ```
+
+2. **Verbose Breakdown** (when `VERBOSE=true`):
+   ```
+   📊 TOKEN USAGE BREAKDOWN (Verbose Mode)
+      Banner overhead:    ~500 tokens
+      Metadata (JSON):    ~850 tokens
+      Rule content:       ~3000 tokens
+      ─────────────────────────────────────
+      Total estimated:    ~4350 tokens (~2% of 200000)
+   ```
+
+**Note:** Token estimates use `~4 characters per token` formula and represent the overhead from centralized-rules system (banner + metadata + rule content), not total conversation usage.
+
 ### Organization-Wide Deployment
 
 **Option 1: Fork this repository**
