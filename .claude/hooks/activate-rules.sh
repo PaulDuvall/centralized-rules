@@ -28,6 +28,31 @@ source "${CLAUDE_DIR}/lib/detection.sh"
 # Configuration
 readonly VERBOSE=${VERBOSE:-false}
 
+# Token usage display configuration
+# Security: Validate SHOW_TOKEN_USAGE is one of the allowed values
+SHOW_TOKEN_USAGE_RAW="${SHOW_TOKEN_USAGE:-auto}"
+if [[ ! "$SHOW_TOKEN_USAGE_RAW" =~ ^(true|false|auto)$ ]]; then
+    log_warn "Invalid SHOW_TOKEN_USAGE value: $SHOW_TOKEN_USAGE_RAW (using 'auto')"
+    SHOW_TOKEN_USAGE_RAW="auto"
+fi
+readonly SHOW_TOKEN_USAGE="$SHOW_TOKEN_USAGE_RAW"
+
+# Security: Validate TOKEN_WARNING_THRESHOLD is a positive integer
+TOKEN_WARNING_THRESHOLD_RAW="${TOKEN_WARNING_THRESHOLD:-4000}"
+if ! [[ "$TOKEN_WARNING_THRESHOLD_RAW" =~ ^[0-9]+$ ]] || [[ "$TOKEN_WARNING_THRESHOLD_RAW" -lt 1 ]]; then
+    log_warn "Invalid TOKEN_WARNING_THRESHOLD: $TOKEN_WARNING_THRESHOLD_RAW (using 4000)"
+    TOKEN_WARNING_THRESHOLD_RAW=4000
+fi
+readonly TOKEN_WARNING_THRESHOLD="$TOKEN_WARNING_THRESHOLD_RAW"
+
+# Security: Validate TOKEN_CONTEXT_BUDGET is a positive integer
+TOKEN_CONTEXT_BUDGET_RAW="${TOKEN_CONTEXT_BUDGET:-200000}"
+if ! [[ "$TOKEN_CONTEXT_BUDGET_RAW" =~ ^[0-9]+$ ]] || [[ "$TOKEN_CONTEXT_BUDGET_RAW" -lt 1000 ]]; then
+    log_warn "Invalid TOKEN_CONTEXT_BUDGET: $TOKEN_CONTEXT_BUDGET_RAW (using 200000)"
+    TOKEN_CONTEXT_BUDGET_RAW=200000
+fi
+readonly TOKEN_CONTEXT_BUDGET="$TOKEN_CONTEXT_BUDGET_RAW"
+
 # Custom debug logging (extends lib/logging.sh)
 log_debug() {
     if [[ "${VERBOSE}" == "true" ]]; then
@@ -320,6 +345,84 @@ is_git_operation() {
     return 1
 }
 
+# Calculate estimated token cost for banner + rules
+# Returns: Estimated total tokens (integer)
+# Simplicity: Uses fixed overhead estimates to avoid complex runtime calculation
+# shellcheck disable=SC2317  # Function defined for future use in token display feature
+calculate_token_cost() {
+    # Constants for token estimation (based on empirical measurements)
+    # Simplicity: Named constants make the calculation transparent
+    local -r BANNER_BASE_TOKENS=500           # Banner display overhead
+    local -r METADATA_TOKENS=850              # skill-rules.json (~3400 chars ÷ 4)
+    local -r EXPECTED_RULES_TOKENS=3000       # ~60% of default maxTokens (5000)
+
+    # Security: Simple integer addition, no external input
+    local total=$((BANNER_BASE_TOKENS + METADATA_TOKENS + EXPECTED_RULES_TOKENS))
+
+    echo "$total"
+}
+
+# Format token cost for inline display with security-conscious output
+# Returns: Formatted string for banner display (e.g., " | 📊 Rules: ~4.2K tokens (~2.1%)")
+# Security: Input validation, integer-only math, no command injection risks
+# shellcheck disable=SC2317  # Function defined for future use in token display feature
+calculate_token_cost_display() {
+    # Constants for display logic
+    # Simplicity: Named thresholds make behavior explicit
+    local -r AUTO_MODE_THRESHOLD_PERCENT=2    # Show in auto mode if >2%
+    local -r KILOBYTE_THRESHOLD=1000          # Display as K if >=1000 tokens
+
+    # Check if disabled
+    [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
+
+    # Get token estimate (safe: function output is integer)
+    local total_tokens
+    total_tokens=$(calculate_token_cost)
+
+    # Security: Validate total_tokens is a positive integer (prevent injection)
+    if ! [[ "$total_tokens" =~ ^[0-9]+$ ]] || [[ "$total_tokens" -lt 0 ]]; then
+        log_debug "Invalid token count: $total_tokens (skipping display)"
+        return
+    fi
+
+    # Security: Prevent division by zero (defensive programming)
+    if [[ "$TOKEN_CONTEXT_BUDGET" -lt 1 ]]; then
+        log_debug "Invalid TOKEN_CONTEXT_BUDGET: $TOKEN_CONTEXT_BUDGET (skipping display)"
+        return
+    fi
+
+    # Calculate percentage (safe: all inputs are validated integers)
+    local percent=$((total_tokens * 100 / TOKEN_CONTEXT_BUDGET))
+
+    # Auto mode: only show if exceeds threshold
+    # Simplicity: Clear threshold comparison
+    if [[ "$SHOW_TOKEN_USAGE" == "auto" ]] && [[ $percent -le $AUTO_MODE_THRESHOLD_PERCENT ]]; then
+        return
+    fi
+
+    # Format display value
+    # Simplicity: Integer math only, no floating point complexity
+    local display
+    if [[ $total_tokens -ge $KILOBYTE_THRESHOLD ]]; then
+        local thousands=$((total_tokens / 1000))
+        local hundreds=$(((total_tokens % 1000) / 100))
+        display="${thousands}.${hundreds}K"
+    else
+        display="$total_tokens"
+    fi
+
+    # Select warning indicator based on threshold
+    # Simplicity: Clear conditional, explicit indicators
+    local indicator="📊"
+    if [[ $total_tokens -ge $TOKEN_WARNING_THRESHOLD ]]; then
+        indicator="⚠️"
+    fi
+
+    # Security: Safe string construction (no eval, no command substitution)
+    # Format: " | 📊 Rules: ~4.3K tokens (~2%)"
+    echo " | ${indicator} Rules: ~${display} tokens (~${percent}%)"
+}
+
 # Generate activation instruction with forced evaluation pattern
 generate_activation_instruction() {
     local prompt="$1"
@@ -391,55 +494,24 @@ generate_activation_instruction() {
     cat <<EOF
 ═══════════════════════════════════════════════════════
 🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}
-═══════════════════════════════════════════════════════
 EOF
 
-    # Add pre-commit quality gates if this is a git operation
+    # Add condensed pre-commit quality gates if this is a git operation
     if [[ "${is_git_op}" == "true" ]]; then
         cat <<'EOF'
-🚦 PRE-COMMIT GATES: Run tests → Security scan → Code quality → Refactoring
-   ⚠️  ALL checks must pass before committing/pushing
-───────────────────────────────────────────────────────
+⚠️ PRE-COMMIT: Tests → Security → Quality → Refactor
 EOF
     fi
 
-    cat <<'EOF'
-🔍 DETECTED CONTEXT
-EOF
-
-    # Build single-line context with pipe separator
-    local context_line=""
-    if [[ -n "${languages}" ]]; then
-        context_line="   Languages: ${languages// /, }"
-    fi
-    if [[ -n "${frameworks}" ]]; then
-        if [[ -n "${context_line}" ]]; then
-            context_line="${context_line} | Frameworks: ${frameworks// /, }"
-        else
-            context_line="   Frameworks: ${frameworks// /, }"
-        fi
-    fi
-    [[ -n "${context_line}" ]] && echo "${context_line}"
-
-    # Inline rules list (comma-separated)
+    # Inline rules list (comma-separated, no separate Languages/Frameworks display)
     local rules_inline
     rules_inline=$(echo "${matched_rules}" | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
     if [[ -n "${rules_inline}" ]]; then
-        echo "   Rules: ${rules_inline}"
+        echo "🔍 Rules: ${rules_inline}"
     fi
 
     cat <<'EOF'
-───────────────────────────────────────────────────────
-EOF
-
-    cat <<'EOF'
-📚 IMPLEMENTATION WORKFLOW
-
-1. EVALUATE: Review matched rules above for your task context
-2. IMPLEMENT: Apply relevant standards from matched rule categories
-3. VERIFY: Ensure code meets quality, testing, and security standards
-
-💡 Quick Reference: Follow detected language/framework standards • Include tests • Consider security
+💡 Follow language/framework standards • Include tests • Consider security
 ═══════════════════════════════════════════════════════
 EOF
 }
