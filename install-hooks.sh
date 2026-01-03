@@ -326,7 +326,9 @@ test_installation() {
     local test_output
     test_output=$(echo '{"prompt":"Write a test function"}' | "$hook_script" 2>&1) || true
 
-    if echo "$test_output" | grep -q "IMPLEMENTATION WORKFLOW"; then
+    # Check for the simplified banner components
+    if echo "$test_output" | grep -q "Centralized Rules Active" && \
+       echo "$test_output" | grep -q "systemMessage"; then
         success "Hook test passed!"
         return 0
     else
