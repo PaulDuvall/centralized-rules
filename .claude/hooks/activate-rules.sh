@@ -30,10 +30,10 @@ readonly VERBOSE=${VERBOSE:-false}
 
 # Token usage display configuration
 # Security: Validate SHOW_TOKEN_USAGE is one of the allowed values
-SHOW_TOKEN_USAGE_RAW="${SHOW_TOKEN_USAGE:-auto}"
+SHOW_TOKEN_USAGE_RAW="${SHOW_TOKEN_USAGE:-true}"
 if [[ ! "$SHOW_TOKEN_USAGE_RAW" =~ ^(true|false|auto)$ ]]; then
-    log_warn "Invalid SHOW_TOKEN_USAGE value: $SHOW_TOKEN_USAGE_RAW (using 'auto')"
-    SHOW_TOKEN_USAGE_RAW="auto"
+    log_warn "Invalid SHOW_TOKEN_USAGE value: $SHOW_TOKEN_USAGE_RAW (using 'true')"
+    SHOW_TOKEN_USAGE_RAW="true"
 fi
 readonly SHOW_TOKEN_USAGE="$SHOW_TOKEN_USAGE_RAW"
 
@@ -517,7 +517,7 @@ generate_activation_instruction() {
     prompt_lower=$(echo "${prompt}" | tr '[:upper:]' '[:lower:]')
 
     # Commit hash embedded at installation time (replaced by install script)
-    local installed_commit="__CENTRALIZED_RULES_COMMIT__"
+    local installed_commit="16c0aa5"
 
     # If placeholder wasn't replaced (e.g., in CI/dev), try to get commit from git
     # Note: Using a pattern that won't be replaced by sed during installation

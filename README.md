@@ -423,7 +423,7 @@ Configure how the hook displays token usage information for the centralized-rule
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SHOW_TOKEN_USAGE` | `auto` | Control token display: `auto` (show if >2%), `true` (always), `false` (never) |
+| `SHOW_TOKEN_USAGE` | `true` | Control token display: `true` (always), `false` (never), `auto` (show if >2%) |
 | `TOKEN_WARNING_THRESHOLD` | `4000` | Show ⚠️  warning icon when rules exceed this token count |
 | `TOKEN_CONTEXT_BUDGET` | `200000` | Total context budget for percentage calculation |
 | `VERBOSE` | `false` | Show detailed token breakdown when `true` |
