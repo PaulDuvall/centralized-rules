@@ -488,11 +488,15 @@ generate_activation_instruction() {
     local -r PRE_COMMIT_MSG="⚠️ PRE-COMMIT: Tests → Security → Quality → Refactor"
     local -r QUICK_REF="💡 Follow language/framework standards • Include tests • Consider security"
 
+    # Get token usage display (may be empty if disabled or below threshold)
+    local token_display
+    token_display=$(calculate_token_cost_display)
+
     # Build the activation instruction
     # Security: Quote all variable interpolations to prevent word splitting
     cat <<EOF
 ${SEPARATOR}
-🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}
+🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}${token_display}
 EOF
 
     # Add condensed pre-commit quality gates if this is a git operation
