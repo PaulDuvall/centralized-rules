@@ -426,9 +426,8 @@ calculate_token_cost_display() {
 # Generate activation instruction with forced evaluation pattern
 generate_activation_instruction() {
     local prompt="$1"
-    local context="$2"
-
-    IFS='|' read -r languages frameworks <<< "${context}"
+    # Note: context parameter (languages|frameworks) is kept for backward compatibility
+    # but no longer used since Languages/Frameworks display was removed in banner simplification
 
     # Match keywords to rule categories
     local matched_rules
@@ -442,12 +441,6 @@ generate_activation_instruction() {
     # Convert prompt to lowercase for git operation detection
     local prompt_lower
     prompt_lower=$(echo "${prompt}" | tr '[:upper:]' '[:lower:]')
-
-    # Check if this is a git operation
-    local is_git_op=false
-    if is_git_operation "${prompt_lower}"; then
-        is_git_op=true
-    fi
 
     # Commit hash embedded at installation time (replaced by install script)
     local installed_commit="__CENTRALIZED_RULES_COMMIT__"
@@ -490,29 +483,43 @@ generate_activation_instruction() {
 
     local repo_name="paulduvall/centralized-rules"
 
+    # Banner component constants (security: no variable interpolation in static text)
+    local -r SEPARATOR="═══════════════════════════════════════════════════════"
+    local -r PRE_COMMIT_MSG="⚠️ PRE-COMMIT: Tests → Security → Quality → Refactor"
+    local -r QUICK_REF="💡 Follow language/framework standards • Include tests • Consider security"
+
     # Build the activation instruction
+    # Security: Quote all variable interpolations to prevent word splitting
     cat <<EOF
-═══════════════════════════════════════════════════════
+${SEPARATOR}
 🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}
 EOF
 
     # Add condensed pre-commit quality gates if this is a git operation
-    if [[ "${is_git_op}" == "true" ]]; then
-        cat <<'EOF'
-⚠️ PRE-COMMIT: Tests → Security → Quality → Refactor
-EOF
+    # Simplicity: Direct function call instead of boolean variable
+    if is_git_operation "${prompt_lower}"; then
+        echo "${PRE_COMMIT_MSG}"
     fi
 
-    # Inline rules list (comma-separated, no separate Languages/Frameworks display)
-    local rules_inline
-    rules_inline=$(echo "${matched_rules}" | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-    if [[ -n "${rules_inline}" ]]; then
-        echo "🔍 Rules: ${rules_inline}"
+    # Format rules list (comma-separated, no separate Languages/Frameworks display)
+    if [[ -n "${matched_rules}" ]]; then
+        # Security: Validate matched_rules contains only safe characters (alphanumeric, /, -, _)
+        # Each line should match the pattern for valid rule paths
+        # This prevents potential injection attacks from malicious rule names
+        if echo "${matched_rules}" | grep -vqE '^[a-zA-Z0-9/_-]+$'; then
+            log_debug "Skipping rules display: contains unsafe characters"
+        else
+            # Simplicity: Single sed command instead of pipeline
+            local rules_inline
+            rules_inline=$(echo "${matched_rules}" | sed ':a;N;$!ba;s/\n/, /g')
+            echo "🔍 Rules: ${rules_inline}"
+        fi
     fi
 
-    cat <<'EOF'
-💡 Follow language/framework standards • Include tests • Consider security
-═══════════════════════════════════════════════════════
+    # Output footer
+    cat <<EOF
+${QUICK_REF}
+${SEPARATOR}
 EOF
 }
 
