@@ -362,6 +362,37 @@ calculate_token_cost() {
     echo "$total"
 }
 
+# Generate verbose token breakdown for detailed analysis
+# Returns: Multi-line breakdown of token costs (empty if disabled/conditions not met)
+# Security: Uses same validated constants as calculate_token_cost()
+generate_verbose_token_breakdown() {
+    # Only show if verbose mode is enabled and token display is not disabled
+    [[ "$VERBOSE" != "true" ]] && return
+    [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
+
+    # Use same constants as calculate_token_cost() for consistency
+    local -r BANNER_BASE_TOKENS=500           # Banner display overhead
+    local -r METADATA_TOKENS=850              # skill-rules.json (~3400 chars ÷ 4)
+    local -r EXPECTED_RULES_TOKENS=3000       # ~60% of default maxTokens (5000)
+    local -r total=$((BANNER_BASE_TOKENS + METADATA_TOKENS + EXPECTED_RULES_TOKENS))
+
+    # Calculate percentage
+    local percent=$((total * 100 / TOKEN_CONTEXT_BUDGET))
+
+    # Output verbose breakdown
+    cat <<EOF
+───────────────────────────────────────────────────────
+📊 TOKEN USAGE BREAKDOWN (Verbose Mode)
+   Banner overhead:    ~${BANNER_BASE_TOKENS} tokens
+   Metadata (JSON):    ~${METADATA_TOKENS} tokens
+   Rule content:       ~${EXPECTED_RULES_TOKENS} tokens
+   ─────────────────────────────────────
+   Total estimated:    ~${total} tokens (~${percent}% of ${TOKEN_CONTEXT_BUDGET})
+
+   Note: Estimates based on ~4 chars per token formula
+EOF
+}
+
 # Format token cost for inline display with security-conscious output
 # Returns: Formatted string for banner display (e.g., " | 📊 Rules: ~4.2K tokens (~2.1%)")
 # Security: Input validation, integer-only math, no command injection risks
@@ -504,6 +535,9 @@ EOF
     if is_git_operation "${prompt_lower}"; then
         echo "${PRE_COMMIT_MSG}"
     fi
+
+    # Add verbose token breakdown if enabled (after pre-commit gates)
+    generate_verbose_token_breakdown
 
     # Format rules list (comma-separated, no separate Languages/Frameworks display)
     if [[ -n "${matched_rules}" ]]; then
