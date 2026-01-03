@@ -513,9 +513,9 @@ EOF
         if echo "${matched_rules}" | grep -vqE '^[a-zA-Z0-9/_-]+$'; then
             log_debug "Skipping rules display: contains unsafe characters"
         else
-            # Simplicity: Single sed command instead of pipeline
+            # Simplicity: Portable approach compatible with both GNU and BSD sed
             local rules_inline
-            rules_inline=$(echo "${matched_rules}" | sed ':a;N;$!ba;s/\n/, /g')
+            rules_inline=$(echo "${matched_rules}" | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
             echo "🔍 Rules: ${rules_inline}"
         fi
     fi

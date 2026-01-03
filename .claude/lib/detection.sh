@@ -14,31 +14,24 @@
 [[ -n "${_LIB_DETECTION_LOADED:-}" ]] && return 0
 readonly _LIB_DETECTION_LOADED=1
 
-# File content cache to avoid repeated reads
-declare -A _FILE_CACHE
-
-# Read file with caching to avoid multiple I/O operations
+# Read file directly (bash 3.2 compatible - no caching)
 # Usage: read_file_cached "package.json"
+# Note: Function name kept for backward compatibility, but caching removed
+# for bash 3.2 compatibility (no associative arrays)
 read_file_cached() {
     local file="$1"
 
     # Return empty if file doesn't exist
     [[ ! -f "$file" ]] && return 1
 
-    # Check cache first
-    if [[ -n "${_FILE_CACHE[$file]:-}" ]]; then
-        echo "${_FILE_CACHE[$file]}"
-        return 0
-    fi
-
-    # Read and cache file content
-    _FILE_CACHE[$file]=$(cat "$file" 2>/dev/null)
-    echo "${_FILE_CACHE[$file]}"
+    # Read file content directly
+    cat "$file" 2>/dev/null
     return 0
 }
 
-# Check if cached file content contains pattern
+# Check if file content contains pattern
 # Usage: cached_file_contains "package.json" '"react"'
+# Note: Function name kept for backward compatibility, but no longer uses caching
 cached_file_contains() {
     local file="$1"
     local pattern="$2"
