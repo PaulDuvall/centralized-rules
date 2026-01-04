@@ -76,44 +76,53 @@
       "testing": {
         "keywords": ["test", "pytest", "jest", "mocha", "unittest", "spec", "tdd", "bdd", "coverage", "mock", "stub", "fixture", "vitest", "playwright", "cypress", "testcontainers", "@testing-library/react"],
         "slashCommands": ["/xtest", "/test", "/xtdd"],
-        "rules": ["base/testing-philosophy"]
+        "rules": ["base/testing-philosophy"],
+        "tip": "Write tests first - let them guide your design"
       },
       "security": {
         "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability"],
         "slashCommands": ["/xsecurity", "/security", "/xaudit"],
-        "rules": ["base/security-principles"]
+        "rules": ["base/security-principles"],
+        "tip": "Security isn't optional - validate all inputs"
       },
       "git": {
         "keywords": ["commit", "pr", "pullrequest", "merge", "branch", "git", "rebase", "cherry-pick", "push", "tag", "tagging", "release", "version", "semver", "semantic versioning"],
         "slashCommands": ["/xgit", "/git", "/xcommit", "/commit", "/push"],
         "rules": ["base/git-workflow", "base/git-tagging"],
-        "description": "Detects git operations including commits, pushes, tagging, and versioning"
+        "description": "Detects git operations including commits, pushes, tagging, and versioning",
+        "tip": "Small commits, clear messages - your future self will thank you"
       },
       "refactoring": {
         "keywords": ["refactor", "clean", "improve", "optimize", "simplify", "restructure", "extract", "inline", "rename"],
         "slashCommands": ["/xrefactor", "/xquality", "/xoptimize"],
-        "rules": ["base/refactoring-patterns"]
+        "rules": ["base/refactoring-patterns"],
+        "tip": "Refactor ruthlessly - simple code is maintainable code"
       },
       "architecture": {
         "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer", "tracer bullet", "tracer", "bullet", "steel thread", "walking skeleton", "end-to-end", "vertical slice"],
-        "rules": ["base/architecture-principles", "base/12-factor-app"]
+        "rules": ["base/architecture-principles", "base/12-factor-app"],
+        "tip": "Design for change - make it easy to evolve"
       },
       "metrics": {
         "keywords": ["metric", "monitoring", "observability", "logging", "tracing", "alert", "dashboard", "prometheus", "grafana"],
-        "rules": ["base/metrics-standards"]
+        "rules": ["base/metrics-standards"],
+        "tip": "Measure what matters - you can't improve what you don't measure"
       },
       "cicd": {
         "keywords": ["github actions", "gha", ".github/workflows", "gitlab ci", "gitlab", ".gitlab-ci.yml", "circleci", "jenkins", "github workflow", "workflow", "github", "actions", "ci pipeline", "pipeline", "cd pipeline", "ci", "cd", "continuous integration", "continuous deployment", "continuous", "integration", "deployment"],
         "slashCommands": ["/xcicd"],
-        "rules": ["base/cicd-comprehensive"]
+        "rules": ["base/cicd-comprehensive"],
+        "tip": "Automate everything - if you do it twice, script it"
       },
       "development": {
         "keywords": ["workflow", "process", "development", "ci/cd", "pipeline", "deploy"],
-        "rules": ["base/development-workflow"]
+        "rules": ["base/development-workflow"],
+        "tip": "Ship small, ship often - fast feedback wins"
       },
       "beads": {
         "keywords": ["beads", "bead", "bd", "bd-"],
-        "rules": ["tools/beads/issue-tracking"]
+        "rules": ["tools/beads/issue-tracking"],
+        "tip": "Track dependencies - know what blocks what"
       }
     },
     "languages": {
@@ -121,17 +130,21 @@
         "keywords": ["python", ".py", "pip", "pyproject", "virtualenv", "conda", "pep8", "pylint", "black", "mypy", "typehint"],
         "rules": ["languages/python"],
         "testing_rules": ["languages/python/testing"],
+        "tip": "Explicit is better than implicit - embrace The Zen of Python",
         "frameworks": {
           "fastapi": {
             "keywords": ["fastapi", "starlette", "pydantic", "async def", "dependencies"],
-            "rules": ["frameworks/fastapi"]
+            "rules": ["frameworks/fastapi"],
+            "tip": "Async is fast but blocking kills it - await wisely"
           },
           "django": {
             "keywords": ["django", "model", "view", "template", "orm", "queryset"],
-            "rules": ["frameworks/django"]
+            "rules": ["frameworks/django"],
+            "tip": "Fat models, thin views - keep logic in the model layer"
           },
           "flask": {
-            "keywords": ["flask", "route", "blueprint", "jinja"]
+            "keywords": ["flask", "route", "blueprint", "jinja"],
+            "tip": "Blueprints for structure - don't put everything in one file"
           }
         }
       },
@@ -139,61 +152,75 @@
         "keywords": ["typescript", ".ts", ".tsx", "interface", "type", "generic", "decorator", "tsc"],
         "rules": ["languages/typescript"],
         "testing_rules": ["languages/typescript/testing"],
+        "tip": "Type safety catches bugs before runtime",
         "frameworks": {
           "react": {
             "keywords": ["react", "component", "hook", "usestate", "useeffect", "jsx", "props", "@tanstack/react-query", "useMutation", "useQuery", "useSWR", "useNavigate", "useForm", "styled-components", "tailwindcss"],
-            "rules": ["frameworks/react"]
+            "rules": ["frameworks/react"],
+            "tip": "Think in components - composition over inheritance"
           },
           "nextjs": {
-            "keywords": ["next.js", "nextjs", "getserversideprops", "getstaticprops", "app router", "pages router"]
+            "keywords": ["next.js", "nextjs", "getserversideprops", "getstaticprops", "app router", "pages router"],
+            "tip": "Server components by default - use client only when needed"
           },
           "nestjs": {
-            "keywords": ["nestjs", "controller", "service", "module", "provider", "decorator"]
+            "keywords": ["nestjs", "controller", "service", "module", "provider", "decorator"],
+            "tip": "Modules define boundaries - keep them focused and cohesive"
           },
           "express": {
             "keywords": ["express", "middleware", "router", "req", "res"],
-            "rules": ["frameworks/express"]
+            "rules": ["frameworks/express"],
+            "tip": "Middleware chains are powerful - order matters"
           }
         }
       },
       "javascript": {
-        "keywords": ["javascript", ".js", "node", "npm", "yarn", "eslint"]
+        "keywords": ["javascript", ".js", "node", "npm", "yarn", "eslint"],
+        "tip": "Use modern JS - const over var, async over callbacks"
       },
       "go": {
         "keywords": ["go", "golang", ".go", "goroutine", "channel", "defer", "gomod"],
         "rules": ["languages/go"],
-        "testing_rules": ["languages/go/testing"]
+        "testing_rules": ["languages/go/testing"],
+        "tip": "Keep it simple - if the code is hard to read, it's wrong"
       },
       "rust": {
         "keywords": ["rust", ".rs", "cargo", "trait", "lifetime", "ownership", "borrow"],
         "rules": ["languages/rust"],
-        "testing_rules": ["languages/rust/testing"]
+        "testing_rules": ["languages/rust/testing"],
+        "tip": "The compiler is your friend - let it catch mistakes early"
       },
       "java": {
         "keywords": ["java", ".java", "maven", "gradle", "spring", "jvm"],
         "rules": ["languages/java"],
-        "testing_rules": ["languages/java/testing"]
+        "testing_rules": ["languages/java/testing"],
+        "tip": "Favor composition over inheritance - interfaces are contracts"
       },
       "bash": {
         "keywords": ["bash", "shell", "sh", ".sh", ".bash", "#!/bin/bash", "shellcheck", "shell script", "bash script", "bats-core", "shunit2", "zsh", "posix"],
         "rules": ["languages/bash"],
-        "testing_rules": ["languages/bash/testing"]
+        "testing_rules": ["languages/bash/testing"],
+        "tip": "Quote your variables - prevent word splitting and globbing"
       }
     },
     "cloud": {
       "aws": {
         "keywords": ["aws", "lambda", "s3", "dynamodb", "cloudformation", "terraform", "cdk", "ec2", "ecs", "fargate", "apigateway"],
-        "rules": ["cloud/aws"]
+        "rules": ["cloud/aws"],
+        "tip": "Infrastructure as code - everything should be version controlled"
       },
       "azure": {
-        "keywords": ["azure", "azurefunctions", "blobstorage", "cosmosdb", "armtemplate"]
+        "keywords": ["azure", "azurefunctions", "blobstorage", "cosmosdb", "armtemplate"],
+        "tip": "Resource groups organize - use them to manage lifecycle together"
       },
       "gcp": {
-        "keywords": ["gcp", "cloudfunctions", "firestore", "pubsub"]
+        "keywords": ["gcp", "cloudfunctions", "firestore", "pubsub"],
+        "tip": "Serverless scales automatically - but watch your cold starts"
       },
       "vercel": {
         "keywords": ["vercel", "edgefunction"],
-        "rules": ["cloud/vercel"]
+        "rules": ["cloud/vercel"],
+        "tip": "Edge functions run closer to users - use them for performance"
       }
     }
   },

@@ -351,20 +351,71 @@ is_git_operation() {
     return 1
 }
 
-# Calculate estimated token cost for banner + rules
+# Calculate actual token cost by reading matched rule files
+# Args: Space-separated list of rule paths (e.g., "base/security-principles base/code-quality")
 # Returns: Estimated total tokens (integer)
-# Simplicity: Uses centralized constants, simple addition only
-# shellcheck disable=SC2317  # Function defined for future use in token display feature
+# Security: Validates file paths, handles missing files gracefully
 calculate_token_cost() {
+    # shellcheck disable=SC2178,SC2128  # matched_rules is a string, not an array
+    local matched_rules="$1"
+    local rules_tokens=0
+
+    # Calculate actual size of matched rule files
+    # shellcheck disable=SC2128  # matched_rules is a string, not an array
+    if [[ -n "$matched_rules" ]]; then
+        # Convert newline-separated to space-separated for iteration
+        local rules_list
+        rules_list=$(echo "$matched_rules" | tr '\n' ' ')
+
+        for rule_path in $rules_list; do
+            # Security: Validate rule path contains only safe characters
+            if ! [[ "$rule_path" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+                log_debug "Skipping invalid rule path: $rule_path"
+                continue
+            fi
+
+            # Construct full path to rule file
+            local rule_file="${rule_path}.md"
+
+            # Try to find the rule file (could be in current dir or absolute path)
+            local found_file=""
+            if [[ -f "$rule_file" ]]; then
+                found_file="$rule_file"
+            elif [[ -f "./${rule_file}" ]]; then
+                found_file="./${rule_file}"
+            fi
+
+            # Count characters and estimate tokens (÷4)
+            if [[ -n "$found_file" ]]; then
+                local char_count
+                char_count=$(wc -c < "$found_file" 2>/dev/null || echo "0")
+                local file_tokens=$((char_count / 4))
+                rules_tokens=$((rules_tokens + file_tokens))
+                log_debug "Rule $rule_path: $char_count chars → ~$file_tokens tokens"
+            else
+                log_debug "Rule file not found: $rule_file"
+            fi
+        done
+    fi
+
+    # If no rules were found/calculated, use the expected estimate as fallback
+    if [[ $rules_tokens -eq 0 ]]; then
+        rules_tokens=$TOKEN_RULES_EXPECTED
+        log_debug "No rule files found, using fallback estimate: $rules_tokens"
+    fi
+
     # Security: Simple integer addition using validated readonly constants
-    local total=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
+    local total=$((TOKEN_BANNER_BASE + TOKEN_METADATA + rules_tokens))
     echo "$total"
 }
 
 # Generate verbose token breakdown for detailed analysis
+# Args: Matched rules (newline-separated)
 # Returns: Multi-line breakdown of token costs (empty if disabled/conditions not met)
 # Security: Uses validated readonly constants, guards against division by zero
 generate_verbose_token_breakdown() {
+    local matched_rules="$1"
+
     # Only show if verbose mode is enabled and token display is not disabled
     [[ "$VERBOSE" != "true" ]] && return
     [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
@@ -375,8 +426,10 @@ generate_verbose_token_breakdown() {
         return
     fi
 
-    # Simplicity: Use centralized constants (no duplication)
-    local -r total=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
+    # Calculate actual token cost based on matched rules
+    local -r total
+    total=$(calculate_token_cost "$matched_rules")
+    local rules_tokens=$((total - TOKEN_BANNER_BASE - TOKEN_METADATA))
     local percent=$((total * 100 / TOKEN_CONTEXT_BUDGET))
 
     # Output verbose breakdown
@@ -385,7 +438,7 @@ generate_verbose_token_breakdown() {
 📊 TOKEN USAGE BREAKDOWN (Verbose Mode)
    Banner overhead:    ~${TOKEN_BANNER_BASE} tokens
    Metadata (JSON):    ~${TOKEN_METADATA} tokens
-   Rule content:       ~${TOKEN_RULES_EXPECTED} tokens
+   Rule content:       ~${rules_tokens} tokens
    ─────────────────────────────────────
    Total estimated:    ~${total} tokens (~${percent}% of ${TOKEN_CONTEXT_BUDGET})
 
@@ -394,10 +447,13 @@ EOF
 }
 
 # Format token cost for inline display with security-conscious output
+# Args: Matched rules (newline-separated)
 # Returns: Formatted string for banner display (e.g., " | 📊 Rules: ~4.2K tokens (~2.1%)")
 # Security: Input validation, integer-only math, no command injection risks
 # shellcheck disable=SC2317  # Function defined for future use in token display feature
 calculate_token_cost_display() {
+    local matched_rules="$1"
+
     # Constants for display logic
     # Simplicity: Named thresholds make behavior explicit
     local -r AUTO_MODE_THRESHOLD_PERCENT=2    # Show in auto mode if >2%
@@ -406,9 +462,9 @@ calculate_token_cost_display() {
     # Check if disabled
     [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
 
-    # Get token estimate (safe: function output is integer)
+    # Get token estimate based on actual matched rules (safe: function output is integer)
     local total_tokens
-    total_tokens=$(calculate_token_cost)
+    total_tokens=$(calculate_token_cost "$matched_rules")
 
     # Security: Validate total_tokens is a positive integer (prevent injection)
     if ! [[ "$total_tokens" =~ ^[0-9]+$ ]] || [[ "$total_tokens" -lt 0 ]]; then
@@ -461,15 +517,15 @@ calculate_token_cost_display() {
 test_token_calculations() {
     local failures=0
 
-    # Test 1: calculate_token_cost returns expected total
+    # Test 1: calculate_token_cost with empty rules uses fallback
     local expected=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
     local actual
-    actual=$(calculate_token_cost)
+    actual=$(calculate_token_cost "")
     if [[ "$actual" != "$expected" ]]; then
-        echo "FAIL: calculate_token_cost returned $actual, expected $expected" >&2
+        echo "FAIL: calculate_token_cost with empty rules returned $actual, expected $expected" >&2
         ((failures++))
     else
-        echo "PASS: calculate_token_cost returns correct total ($actual)" >&2
+        echo "PASS: calculate_token_cost with empty rules uses fallback ($actual)" >&2
     fi
 
     # Test 2: Token cost is positive integer
@@ -488,6 +544,20 @@ test_token_calculations() {
         ((failures++))
     fi
 
+    # Test 4: calculate_token_cost with actual rule file (if available)
+    if [[ -f "base/code-quality.md" ]]; then
+        local with_rule
+        with_rule=$(calculate_token_cost "base/code-quality")
+        local min_expected=$((TOKEN_BANNER_BASE + TOKEN_METADATA))
+        # Should be at least banner+metadata (rule file must have some content)
+        if [[ "$with_rule" -gt "$min_expected" ]]; then
+            echo "PASS: calculate_token_cost with actual rule returns valid value ($with_rule > $min_expected)" >&2
+        else
+            echo "FAIL: calculate_token_cost with rule returned unexpected value: $with_rule (expected > $min_expected)" >&2
+            ((failures++))
+        fi
+    fi
+
     if [[ $failures -eq 0 ]]; then
         echo "✓ All token calculation tests passed" >&2
         return 0
@@ -495,6 +565,44 @@ test_token_calculations() {
         echo "✗ $failures test(s) failed" >&2
         return 1
     fi
+}
+
+# Select context-based tip from skill-rules.json
+select_contextual_tip() {
+    local matched_rules="$1"
+
+    # Find JSON file
+    local json_file="${CLAUDE_PROJECT_DIR:-.}/.claude/skills/skill-rules.json"
+    [[ ! -f "$json_file" ]] && json_file="$HOME/.claude/skills/skill-rules.json"
+
+    # Fallback if jq not available
+    if ! command -v jq &> /dev/null || [[ ! -f "$json_file" ]]; then
+        echo "Follow standards • Write tests • Ensure security • Refactor"
+        return
+    fi
+
+    # Load JSON once
+    local json
+    json=$(cat "$json_file" 2>/dev/null) || { echo "Follow standards • Write tests • Ensure security • Refactor"; return; }
+
+    # Try each matched rule until we find a tip
+    while IFS= read -r rule; do
+        [[ -z "$rule" ]] && continue
+
+        # Check all categories for this rule's tip
+        local tip
+        tip=$(echo "$json" | jq -r "
+            (.keywordMappings.base // {}) | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty,
+            (.keywordMappings.languages // {}) | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty,
+            (.keywordMappings.languages // {}) | to_entries[] | .value.frameworks | to_entries[]? | select(.value.rules[]? == \"$rule\") | .value.tip // empty,
+            (.keywordMappings.cloud // {}) | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty
+        " 2>/dev/null | head -1)
+
+        [[ -n "$tip" ]] && echo "$tip" && return
+    done <<< "$matched_rules"
+
+    # Fallback
+    echo "Follow standards • Write tests • Ensure security • Refactor"
 }
 
 # Generate activation instruction with forced evaluation pattern
@@ -560,11 +668,14 @@ generate_activation_instruction() {
     # Banner component constants (security: no variable interpolation in static text)
     local -r SEPARATOR="═══════════════════════════════════════════════════════"
     local -r PRE_COMMIT_MSG="⚠️ PRE-COMMIT: Tests → Security → Quality → Refactor"
-    local -r QUICK_REF="💡 Follow language/framework standards • Include tests • Consider security"
+
+    # Get context-based tip (dynamic based on matched rules)
+    local contextual_tip
+    contextual_tip=$(select_contextual_tip "${matched_rules}")
 
     # Get token usage display (may be empty if disabled or below threshold)
     local token_display
-    token_display=$(calculate_token_cost_display)
+    token_display=$(calculate_token_cost_display "${matched_rules}")
 
     # Build the activation instruction
     # Security: Quote all variable interpolations to prevent word splitting
@@ -580,7 +691,7 @@ EOF
     fi
 
     # Add verbose token breakdown if enabled (after pre-commit gates)
-    generate_verbose_token_breakdown
+    generate_verbose_token_breakdown "${matched_rules}"
 
     # Format rules list (comma-separated, no separate Languages/Frameworks display)
     if [[ -n "${matched_rules}" ]]; then
@@ -597,9 +708,9 @@ EOF
         fi
     fi
 
-    # Output footer
+    # Output footer with context-based tip
     cat <<EOF
-${QUICK_REF}
+💡 ${contextual_tip}
 ${SEPARATOR}
 EOF
 }
