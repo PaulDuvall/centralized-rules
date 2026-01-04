@@ -581,23 +581,25 @@ select_contextual_tip() {
         return
     fi
 
-    # Load JSON once
-    local json
-    json=$(cat "$json_file" 2>/dev/null) || { echo "Follow standards • Write tests • Ensure security • Refactor"; return; }
-
     # Try each matched rule until we find a tip
     while IFS= read -r rule; do
         [[ -z "$rule" ]] && continue
 
-        # Check all categories for this rule's tip
+        # Check base categories
         local tip
-        tip=$(echo "$json" | jq -r "
-            (.keywordMappings.base // {}) | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty,
-            (.keywordMappings.languages // {}) | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty,
-            (.keywordMappings.languages // {}) | to_entries[] | .value.frameworks | to_entries[]? | select(.value.rules[]? == \"$rule\") | .value.tip // empty,
-            (.keywordMappings.cloud // {}) | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty
-        " 2>/dev/null | head -1)
+        tip=$(jq -r ".keywordMappings.base | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty" "$json_file" 2>/dev/null | head -1)
+        [[ -n "$tip" ]] && echo "$tip" && return
 
+        # Check language categories
+        tip=$(jq -r ".keywordMappings.languages | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty" "$json_file" 2>/dev/null | head -1)
+        [[ -n "$tip" ]] && echo "$tip" && return
+
+        # Check framework categories
+        tip=$(jq -r ".keywordMappings.languages | to_entries[] | .value.frameworks | to_entries[]? | select(.value.rules[]? == \"$rule\") | .value.tip // empty" "$json_file" 2>/dev/null | head -1)
+        [[ -n "$tip" ]] && echo "$tip" && return
+
+        # Check cloud categories
+        tip=$(jq -r ".keywordMappings.cloud | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty" "$json_file" 2>/dev/null | head -1)
         [[ -n "$tip" ]] && echo "$tip" && return
     done <<< "$matched_rules"
 
