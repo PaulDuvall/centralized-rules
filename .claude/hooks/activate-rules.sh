@@ -106,6 +106,38 @@ escape_regex() {
     printf '%s' "$input" | sed 's/[.*+?\[\](){}^$|\\]/\\&/g'
 }
 
+# Check if prompt is asking ABOUT a topic rather than working WITH it
+# Returns 0 if it's a meta-question (should filter), 1 if it's actionable work
+is_meta_question() {
+    local prompt_lower="$1"
+    local keyword="$2"
+
+    # Patterns that indicate asking about something, not working with it
+    # Example: "why is django loading", "what is react", "how does pytest work"
+    local meta_patterns=(
+        "why (is|does|are) ${keyword}"
+        "what is ${keyword}"
+        "what('s| is) ${keyword}"
+        "how does ${keyword}"
+        "tell me about ${keyword}"
+        "explain ${keyword}"
+        "loading.*${keyword}"
+        "${keyword}.*loading"
+        "i('m| am) not using ${keyword}"
+        "not using ${keyword}"
+        "don('t|t) use ${keyword}"
+    )
+
+    for pattern in "${meta_patterns[@]}"; do
+        if echo "${prompt_lower}" | grep -qE "${pattern}"; then
+            log_debug "Meta-question detected for '${keyword}': matches pattern '${pattern}'"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # Load keyword mappings from skill-rules.json
 load_keyword_mappings() {
     local json_file="$1"
@@ -203,15 +235,18 @@ match_keywords() {
 
             # Match language keywords
             if [[ -n "$lang_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${lang_keywords})"; then
-                while IFS= read -r rule; do
-                    [[ -n "$rule" ]] && matched_rules+=("$rule")
-                done <<< "$lang_rules"
-
-                # Add testing rules if testing keywords also matched
-                if echo "${prompt_lower}" | grep -qE '(test|pytest|jest|mocha|unittest|spec|tdd|coverage|mock)'; then
+                # Filter out meta-questions (asking ABOUT the language, not using it)
+                if ! is_meta_question "${prompt_lower}" "${lang}"; then
                     while IFS= read -r rule; do
                         [[ -n "$rule" ]] && matched_rules+=("$rule")
-                    done <<< "$lang_testing_rules"
+                    done <<< "$lang_rules"
+
+                    # Add testing rules if testing keywords also matched
+                    if echo "${prompt_lower}" | grep -qE '(test|pytest|jest|mocha|unittest|spec|tdd|coverage|mock)'; then
+                        while IFS= read -r rule; do
+                            [[ -n "$rule" ]] && matched_rules+=("$rule")
+                        done <<< "$lang_testing_rules"
+                    fi
                 fi
             fi
 
@@ -229,9 +264,12 @@ match_keywords() {
                 framework_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.rules[]?" 2>/dev/null)
 
                 if [[ -n "$framework_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${framework_keywords})"; then
-                    while IFS= read -r rule; do
-                        [[ -n "$rule" ]] && matched_rules+=("$rule")
-                    done <<< "$framework_rules"
+                    # Filter out meta-questions (asking ABOUT the framework, not using it)
+                    if ! is_meta_question "${prompt_lower}" "${framework}"; then
+                        while IFS= read -r rule; do
+                            [[ -n "$rule" ]] && matched_rules+=("$rule")
+                        done <<< "$framework_rules"
+                    fi
                 fi
             done <<< "$frameworks"
         done <<< "$languages"
@@ -380,9 +418,25 @@ calculate_token_cost() {
             # Try to find the rule file (could be in current dir or absolute path)
             local found_file=""
             if [[ -f "$rule_file" ]]; then
+                # Direct file match (e.g., base/security-principles.md)
                 found_file="$rule_file"
             elif [[ -f "./${rule_file}" ]]; then
                 found_file="./${rule_file}"
+            else
+                # Look for common subdirectory patterns (languages/LANG/*, frameworks/FRAMEWORK/*)
+                if [[ -d "$rule_path" ]]; then
+                    # Prioritize primary files: coding-standards.md, best-practices.md
+                    if [[ -f "$rule_path/coding-standards.md" ]]; then
+                        found_file="$rule_path/coding-standards.md"
+                    elif [[ -f "$rule_path/best-practices.md" ]]; then
+                        found_file="$rule_path/best-practices.md"
+                    else
+                        # Fallback: find first .md file
+                        while IFS= read -r subfile; do
+                            [[ -f "$subfile" ]] && found_file="$subfile" && break
+                        done < <(find "$rule_path" -maxdepth 1 -name "*.md" 2>/dev/null)
+                    fi
+                fi
             fi
 
             # Count characters and estimate tokens (÷4)
