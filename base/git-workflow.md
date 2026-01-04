@@ -1,4 +1,5 @@
 # Git Workflow Guidelines
+<!-- TIP: Small commits, clear messages - your future self will thank you -->
 
 > **When to apply:** All git operations across any project
 

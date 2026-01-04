@@ -1,4 +1,5 @@
 # Code Quality Standards
+<!-- TIP: Follow standards - write tests, ensure security, refactor -->
 
 > **When to apply:** All code across any language or framework
 

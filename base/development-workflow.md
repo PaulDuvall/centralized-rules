@@ -1,4 +1,5 @@
 # Development Workflow
+<!-- TIP: Ship small, ship often - fast feedback wins -->
 
 > **When to apply:** All development work across any language or framework
 

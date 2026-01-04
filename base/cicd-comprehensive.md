@@ -1,4 +1,5 @@
 # Comprehensive CI/CD Best Practices
+<!-- TIP: Automate everything - if you do it twice, script it -->
 
 > **When to apply:** All projects using continuous integration and continuous deployment
 

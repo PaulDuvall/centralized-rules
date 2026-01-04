@@ -1,4 +1,5 @@
 # Architecture Principles
+<!-- TIP: Design for change - make it easy to evolve -->
 
 Universal architectural guidelines for building maintainable, scalable, and robust software systems.
 

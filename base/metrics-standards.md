@@ -1,4 +1,5 @@
 # Metrics and Limits Standards
+<!-- TIP: Measure what matters - you can't improve what you don't measure -->
 
 > **When to apply:** All applications requiring monitoring, observability, and performance tracking
 

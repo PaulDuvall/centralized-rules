@@ -1,4 +1,5 @@
 # Refactoring Patterns
+<!-- TIP: Refactor ruthlessly - simple code is maintainable code -->
 
 A comprehensive guide to code refactoring using Tidy First principles and Martin Fowler's catalog of refactoring patterns.
 

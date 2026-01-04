@@ -1,4 +1,5 @@
 # Security Principles
+<!-- TIP: Security isn't optional - validate all inputs -->
 
 > **When to apply:** All code across any language or framework
 

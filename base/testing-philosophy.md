@@ -1,4 +1,5 @@
 # Testing Philosophy
+<!-- TIP: Write tests first - let them guide your design -->
 
 > **When to apply:** All testing across any language or framework
 
