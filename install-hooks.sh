@@ -349,6 +349,15 @@ main() {
     detect_environment
     find_rules_repo
 
+    # Extract tips from rule files
+    echo ""
+    info "Extracting tips from rule files..."
+    if [[ -x "$RULES_REPO_PATH/extract-tips.sh" ]]; then
+        (cd "$RULES_REPO_PATH" && ./extract-tips.sh) || warning "Tip extraction failed (continuing anyway)"
+    else
+        warning "extract-tips.sh not found or not executable (skipping tip extraction)"
+    fi
+
     echo ""
     if [[ "$INSTALL_MODE" == "global" ]]; then
         info "Installing globally (all projects)"
