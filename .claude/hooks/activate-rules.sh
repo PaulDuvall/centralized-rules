@@ -427,8 +427,7 @@ generate_verbose_token_breakdown() {
     fi
 
     # Calculate actual token cost based on matched rules
-    local -r total
-    total=$(calculate_token_cost "$matched_rules")
+    local -r total=$(calculate_token_cost "$matched_rules")
     local rules_tokens=$((total - TOKEN_BANNER_BASE - TOKEN_METADATA))
     local percent=$((total * 100 / TOKEN_CONTEXT_BUDGET))
 

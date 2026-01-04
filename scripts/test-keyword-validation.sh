@@ -176,20 +176,20 @@ test_keyword() {
         local system_message
         system_message=$(echo "$hook_output" | jq -r '.systemMessage // empty')
 
-        # Parse new compact format: "   Rules: rule1, rule2, rule3"
+        # Parse banner format: "🔍 Rules: rule1, rule2, rule3"
         # Extract the rules line, split by comma, and trim whitespace
         matched_rules=$(echo "$system_message" | \
-            grep "^   Rules:" | \
-            sed 's/^   Rules: //' | \
+            grep "^🔍 Rules:" | \
+            sed 's/^🔍 Rules: //' | \
             tr ',' '\n' | \
             sed 's/^ *//' | \
             sed 's/ *$//' || echo "")
     else
         # Plain text output (fallback for testing)
-        # Try new format first
+        # Try banner format first
         matched_rules=$(echo "$hook_output" | \
-            grep "^   Rules:" | \
-            sed 's/^   Rules: //' | \
+            grep "^🔍 Rules:" | \
+            sed 's/^🔍 Rules: //' | \
             tr ',' '\n' | \
             sed 's/^ *//' | \
             sed 's/ *$//' || echo "")
