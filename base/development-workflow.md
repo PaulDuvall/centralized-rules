@@ -5,84 +5,62 @@
 
 ## Core Development Cycle
 
-### Standard Workflow
-
 ```
-1. Plan
-   ↓
-2. Implement
-   ↓
-3. Test
-   ↓
-4. Refactor
-   ↓
-5. Review
-   ↓
-6. Commit
-   ↓
-7. Deploy
+1. Plan → 2. Implement → 3. Test → 4. Refactor → 5. Review → 6. Commit → 7. Deploy
 ```
 
 ### Detailed Steps
 
-#### 1. Plan
+**1. Plan**
 - Understand requirements clearly
-- Break down into manageable tasks
+- Break down into manageable tasks (1-4 hours)
 - Identify dependencies and risks
 - Design approach before coding
-- Consider edge cases
 
-#### 2. Implement
+**2. Implement**
 - Write clean, readable code
 - Follow language conventions
 - Keep functions small and focused
-- Add appropriate documentation
 - Handle errors properly
 
-#### 3. Test
+**3. Test**
 - Write tests for new code
 - Run existing tests
 - Achieve adequate coverage
-- Test edge cases
 - All tests must pass
 
-#### 4. Refactor
-- Review code quality
+**4. Refactor**
 - Extract duplicated code
 - Improve naming
-- Optimize if needed
 - Keep it simple
+- Optimize only if needed
 
-#### 5. Review
+**5. Review**
 - Self-review changes
 - Run linters/formatters
 - Check security implications
-- Verify tests pass
 - Ensure documentation updated
 
-#### 6. Commit
+**6. Commit**
 - Make atomic commits
 - Write clear commit messages
 - Commit frequently
 - Push regularly
-- Keep commits focused
 
-#### 7. Deploy
+**7. Deploy**
 - Verify in staging
 - Run deployment checks
 - Monitor for issues
 - Be ready to rollback
-- Document changes
 
 ## Task Management
 
 ### Breaking Down Work
 
-- **Estimate task size** - Aim for 1-4 hour tasks
-- **Too large?** - Break into subtasks
-- **Dependencies** - Identify what needs to happen first
-- **Priorities** - Work on highest impact first
-- **Track progress** - Use todo lists or project management tools
+- **Task size:** Aim for 1-4 hour tasks
+- **Too large?** Break into subtasks
+- **Dependencies:** Identify what needs to happen first
+- **Priorities:** Work on highest impact first
 
 ### Task States
 
@@ -92,23 +70,23 @@
 - **In Review** - Under review
 - **Done** - Completed and deployed
 
-## Code Review Best Practices
+## Code Review
 
 ### For Authors
 
-- **Self-review first** - Catch obvious issues
-- **Keep changes focused** - One logical change per PR
-- **Write clear descriptions** - Explain what and why
-- **Add tests** - Demonstrate code works
-- **Respond to feedback** - Engage constructively
+- Self-review first
+- Keep changes focused (one logical change per PR)
+- Write clear descriptions (what and why)
+- Add tests
+- Respond to feedback constructively
 
 ### For Reviewers
 
-- **Be constructive** - Suggest improvements, don't just criticize
-- **Focus on substance** - Logic, security, maintainability
-- **Ask questions** - Understand before judging
-- **Praise good work** - Acknowledge quality
-- **Be timely** - Don't block teammates
+- Be constructive (suggest improvements)
+- Focus on substance (logic, security, maintainability)
+- Ask questions to understand
+- Acknowledge good work
+- Review promptly
 
 ## Continuous Integration
 
@@ -117,11 +95,11 @@
 - Run tests locally
 - Run linters/formatters
 - Check for secrets
-- Verify builds successfully
+- Verify build succeeds
 
 ### CI Pipeline
 
-- Automated tests run
+- Automated tests
 - Code quality checks
 - Security scanning
 - Build verification
@@ -141,28 +119,26 @@
 
 - **Inline comments** - Complex logic
 - **Function docs** - All public APIs
-- **README files** - Project overview and setup
+- **README** - Project overview and setup
 - **Architecture docs** - High-level design
 - **Runbooks** - Operational procedures
 
 ## Debugging Process
 
-### When Something Breaks
-
-1. **Reproduce** - Can you consistently trigger the bug?
-2. **Isolate** - Narrow down where the problem is
+1. **Reproduce** - Consistently trigger the bug
+2. **Isolate** - Narrow down where problem is
 3. **Understand** - Why is it happening?
-4. **Fix** - Address root cause, not just symptoms
-5. **Test** - Verify fix works and doesn't break other things
+4. **Fix** - Address root cause, not symptoms
+5. **Test** - Verify fix works, doesn't break others
 6. **Prevent** - Add test to catch regression
 
-### Debugging Techniques
+### Techniques
 
-- **Read error messages** - They usually tell you what's wrong
-- **Use debugger** - Step through code
-- **Add logging** - Trace execution flow
-- **Simplify** - Remove complexity to isolate issue
-- **Ask for help** - Fresh eyes help
+- Read error messages carefully
+- Use debugger to step through code
+- Add logging to trace execution
+- Simplify to isolate issue
+- Ask for help when stuck
 
 ## Performance Optimization
 
@@ -173,7 +149,7 @@
 - **After correctness** - Make it work, then make it fast
 - **When needed** - Premature optimization wastes time
 
-### Optimization Process
+### Process
 
 1. **Measure** - Profile to find bottlenecks
 2. **Optimize** - Improve the hot path
@@ -185,58 +161,56 @@
 
 ### Managing Debt
 
-- **Acknowledge it** - Track known issues
-- **Prioritize** - Not all debt is equal
-- **Pay down regularly** - Don't let it accumulate
-- **Prevent new debt** - Maintain quality standards
-- **Refactor continuously** - Small improvements add up
+- Acknowledge and track known issues
+- Prioritize (not all debt is equal)
+- Pay down regularly
+- Prevent new debt through quality standards
+- Refactor continuously
 
 ### When to Take On Debt
 
-- **Deliberate decision** - Understand trade-offs
-- **Time-boxed** - Plan to address soon
-- **Documented** - Record what and why
-- **Rare** - Should be exception, not rule
+- Deliberate decision (understand trade-offs)
+- Time-boxed (plan to address soon)
+- Documented (record what and why)
+- Rare (exception, not rule)
 
 ## Collaboration
 
 ### Working with Team
 
-- **Communicate clearly** - Share context and decisions
-- **Ask questions** - Don't assume
-- **Share knowledge** - Help others learn
-- **Give feedback** - Constructive and timely
-- **Be reliable** - Do what you commit to
+- Communicate clearly (share context and decisions)
+- Ask questions (don't assume)
+- Share knowledge (help others learn)
+- Give feedback (constructive and timely)
+- Be reliable (do what you commit to)
 
 ### Pair Programming
 
-- **Rotate driver** - Take turns typing
-- **Think aloud** - Share your reasoning
-- **Ask questions** - Understand decisions
-- **Take breaks** - Maintain focus
-- **Learn from each other** - Different perspectives valuable
+- Rotate driver (take turns typing)
+- Think aloud (share reasoning)
+- Ask questions (understand decisions)
+- Take breaks (maintain focus)
+- Learn from each other
 
 ## Continuous Learning
 
-### Stay Current
-
-- **Read code** - Learn from others
-- **Try new things** - Experiment and explore
-- **Follow best practices** - Learn patterns
-- **Get feedback** - Ask for code reviews
-- **Share knowledge** - Teaching reinforces learning
+- Read code to learn from others
+- Try new things and experiment
+- Follow best practices and patterns
+- Get feedback through code reviews
+- Share knowledge (teaching reinforces learning)
 
 ### Growth Mindset
 
-- **Mistakes are learning** - Fail forward
-- **Always improving** - Never stop learning
-- **Seek feedback** - Embrace criticism
-- **Challenge yourself** - Push boundaries
-- **Help others** - Lift the team
+- Mistakes are learning opportunities
+- Always improving
+- Seek feedback and embrace criticism
+- Challenge yourself
+- Help others grow
 
 ## Common Pitfalls
 
-### Avoid These
+### Avoid
 
 - ❌ Skipping tests to go faster
 - ❌ Committing failing code
@@ -247,7 +221,7 @@
 - ❌ Building without understanding requirements
 - ❌ Forgetting to commit/push work
 
-### Do These Instead
+### Do Instead
 
 - ✅ Write tests as you code
 - ✅ Commit only passing code
@@ -258,19 +232,17 @@
 - ✅ Clarify requirements upfront
 - ✅ Commit and push frequently
 
-## Summary
-
-### The Golden Rules
+## Golden Rules
 
 1. **Test everything** - All tests must pass
 2. **Commit frequently** - Small, focused commits
 3. **Refactor always** - Keep code clean
-4. **Security first** - Never compromise on security
+4. **Security first** - Never compromise
 5. **Document well** - Code is read more than written
-6. **Communicate clearly** - Share context and decisions
+6. **Communicate clearly** - Share context
 7. **Learn continuously** - Always improving
 
-### Success Metrics
+## Success Metrics
 
 - **Velocity** - Delivering features consistently
 - **Quality** - Low bug rate, high test coverage
