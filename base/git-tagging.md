@@ -4,8 +4,6 @@
 
 ## Maturity Level Indicators
 
-Apply tagging practices based on your project's maturity level:
-
 | Practice | MVP/POC | Pre-Production | Production |
 |----------|---------|----------------|------------|
 | Tag releases | ⚠️ Recommended | ✅ Required | ✅ Required |
@@ -13,227 +11,88 @@ Apply tagging practices based on your project's maturity level:
 | Signed tags (GPG) | ❌ Not needed | ❌ Optional | ⚠️ Recommended |
 | Tag naming conventions | ⚠️ Recommended | ✅ Required | ✅ Required |
 | Pre-release tags | ❌ Optional | ⚠️ Recommended | ✅ Required |
-| Tag cleanup policy | ❌ Not needed | ⚠️ Recommended | ✅ Required |
 | Changelog for each tag | ❌ Optional | ⚠️ Recommended | ✅ Required |
 
-**Legend:**
-- ✅ Required - Must implement this practice
-- ⚠️ Recommended - Should implement when feasible
-- ❌ Optional - Can skip or defer
-
 See `base/project-maturity-levels.md` for detailed maturity framework.
-
-## Table of Contents
-
-- [Tag Types](#tag-types)
-- [Naming Conventions](#naming-conventions)
-- [When to Create Tags](#when-to-create-tags)
-- [Creating Tags](#creating-tags)
-- [Tag Management](#tag-management)
-- [Best Practices](#best-practices)
-- [Integration with Workflows](#integration-with-workflows)
 
 ---
 
 ## Tag Types
 
-### Lightweight Tags
+| Type | Command | Use Case | Metadata |
+|------|---------|----------|----------|
+| **Lightweight** | `git tag my-tag` | Personal bookmarks, temporary markers | No |
+| **Annotated** | `git tag -a v1.0.0 -m "msg"` | **ALL releases**, milestones | Yes (tagger, date, message) |
+| **Signed** | `git tag -s v1.0.0 -m "msg"` | Production, security-critical releases | Yes + GPG signature |
 
-Simple pointer to a specific commit. Use for temporary or local markers.
-
-```bash
-# Create lightweight tag
-git tag my-temporary-marker
-
-# NOT recommended for releases
-```
-
-**Use cases:**
-- Personal bookmarks
-- Temporary markers during development
-- Local-only references
-
-### Annotated Tags
-
-Full git objects with metadata (tagger, date, message). **REQUIRED for all releases.**
-
-```bash
-# Create annotated tag
-git tag -a v1.2.3 -m "Release version 1.2.3"
-
-# Or open editor for detailed message
-git tag -a v1.2.3
-```
-
-**Use cases:**
-- All release tags
-- Milestone markers
-- Any tag that will be pushed to remote
-
-**Why annotated tags:**
-- ✅ Store who created the tag and when
-- ✅ Include release notes or changelog
-- ✅ Can be GPG signed for security
-- ✅ Show up in `git describe` output
-- ✅ Treated as full objects in git
-
-### Signed Tags
-
-Cryptographically signed tags for security and authenticity.
-
-```bash
-# Create GPG-signed tag
-git tag -s v1.2.3 -m "Signed release 1.2.3"
-
-# Verify signed tag
-git tag -v v1.2.3
-```
-
-**Use for:**
-- Production releases
-- Security-critical software
-- Public releases
-- Compliance requirements
+**Always use annotated tags for releases.** They store metadata, support signatures, appear in `git describe`, and are treated as full git objects.
 
 ---
 
 ## Naming Conventions
 
-### Convention 1: Date-Based Semantic Versioning with Description (Recommended for This Repository)
+### Recommended: Date-Based Semantic Versioning
 
-**Format:** `YYYY-MM-DD-vMAJOR.MINOR.PATCH-brief-description`
+**Format:** `YYYY-MM-DD-vMAJOR.MINOR.PATCH-description`
 
-**Structure:**
-- `YYYY-MM-DD`: Release date (ISO 8601)
-- `vMAJOR.MINOR.PATCH`: Semantic version following [SemVer 2.0.0](https://semver.org/)
-  - **MAJOR**: Breaking changes or incompatible API changes (v1.0.0, v2.0.0)
-  - **MINOR**: New features, backward compatible (v0.1.0, v0.2.0)
-  - **PATCH**: Bug fixes, backward compatible (v0.0.1, v0.0.2)
-- `brief-description`: Hyphenated description of changes (kebab-case)
+| Component | Purpose | Example |
+|-----------|---------|---------|
+| `YYYY-MM-DD` | Release date (ISO 8601) | `2025-12-21` |
+| `vMAJOR.MINOR.PATCH` | [SemVer 2.0.0](https://semver.org/) version | `v1.2.3` |
+| `description` | Brief change summary (kebab-case) | `add-user-auth` |
+
+**Semantic Version Rules:**
+
+| Version | Increment When | Example |
+|---------|----------------|---------|
+| **PATCH** (v0.0.X) | Bug fixes, backward compatible | v0.0.1 → v0.0.2 |
+| **MINOR** (v0.X.0) | New features, backward compatible | v0.1.0 → v0.2.0 |
+| **MAJOR** (vX.0.0) | Breaking changes | v0.9.0 → v1.0.0 |
 
 **Examples:**
-
 ```bash
-# First release of the day - new feature (minor version)
-git tag -a 2025-12-21-v0.1.0-add-user-authentication -m "Add user authentication with JWT"
-
-# Bug fix same day - patch version
-git tag -a 2025-12-21-v0.1.1-fix-login-validation -m "Fix login validation for edge cases"
-
-# Major feature release with breaking changes
-git tag -a 2025-12-21-v1.0.0-implement-payment-gateway -m "Implement Stripe payment gateway integration with breaking API changes"
-
-# Security patch
-git tag -a 2025-12-21-v0.1.2-security-patch-xss -m "Security patch: Fix XSS vulnerability in comment system"
+2025-12-21-v0.1.0-add-user-authentication      # New feature
+2025-12-21-v0.1.1-fix-login-validation         # Bug fix
+2025-12-21-v1.0.0-implement-payment-gateway    # Breaking change
+2025-12-21-v0.1.2-security-patch-xss           # Security fix
 ```
-
-**Benefits:**
-- ✅ Chronological ordering
-- ✅ Self-documenting with descriptions
-- ✅ Semantic versioning clarity (breaking changes, features, fixes)
-- ✅ Multiple releases per day supported
-- ✅ Easy to understand what changed and impact level
-- ✅ Searchable by date or topic
-- ✅ Compatible with automated tooling expecting SemVer
-
-**Semantic Version Guidelines:**
-- Start at `v0.0.1` for initial development
-- Increment **PATCH** (v0.0.X) for bug fixes and minor updates
-- Increment **MINOR** (v0.X.0) for new features (backward compatible)
-- Increment **MAJOR** (vX.0.0) for breaking changes
-- Use `v1.0.0` for first production-ready release
 
 **Description Guidelines:**
-- Keep it under 50 characters
+- Keep under 50 characters
 - Use lowercase with hyphens (kebab-case)
+- Use action words: add, fix, update, remove, implement
 - Be specific but concise
-- Focus on the primary change
-- Use action words (add, fix, update, remove, implement)
 
-**Good descriptions:**
-```
-add-user-authentication
-fix-memory-leak-in-parser
-update-dependencies-security
-remove-deprecated-api
-implement-redis-caching
-refactor-database-layer
-```
-
-**Bad descriptions:**
-```
-updates                    # Too vague
-NEW_FEATURE               # Wrong case
-add user auth             # Spaces not allowed
-this-fixes-the-really-annoying-bug-that-was-reported-last-week  # Too long
-stuff                      # Not descriptive
-```
-
-### Convention 2: Semantic Versioning (Alternative)
+### Alternative: Standard Semantic Versioning
 
 **Format:** `vMAJOR.MINOR.PATCH[-prerelease][+build]`
 
-Following [Semantic Versioning 2.0.0](https://semver.org/):
-
 ```bash
-# Production releases
-git tag -a v1.0.0 -m "Initial stable release"
-git tag -a v1.1.0 -m "Add new feature: user profiles"
-git tag -a v1.1.1 -m "Fix: email validation bug"
-git tag -a v2.0.0 -m "Breaking: new API structure"
-
-# Pre-release versions
-git tag -a v1.2.0-alpha.1 -m "Alpha release for testing"
-git tag -a v1.2.0-beta.1 -m "Beta release"
-git tag -a v1.2.0-rc.1 -m "Release candidate 1"
-
-# Build metadata
-git tag -a v1.2.0+build.123 -m "Build from CI pipeline #123"
-```
-
-**Semantic versioning rules:**
-- **MAJOR**: Incompatible API changes (breaking changes)
-- **MINOR**: New features, backward compatible
-- **PATCH**: Bug fixes, backward compatible
-
-**Pre-release identifiers:**
-- `alpha`: Early testing, unstable
-- `beta`: Feature complete, testing
-- `rc` (release candidate): Final testing before release
-
-### Convention 3: Hybrid Approach
-
-Combine semantic versioning with date for maximum clarity:
-
-```bash
-# Format: vMAJOR.MINOR.PATCH-YYYYMMDD-description
-git tag -a v1.2.3-20251221-auth-improvements -m "Version 1.2.3: Authentication improvements"
+v1.0.0                    # Production release
+v1.1.0                    # New feature
+v1.1.1                    # Bug fix
+v2.0.0                    # Breaking change
+v1.2.0-alpha.1            # Alpha release
+v1.2.0-beta.1             # Beta release
+v1.2.0-rc.1               # Release candidate
+v1.2.0+build.123          # Build metadata
 ```
 
 ---
 
 ## When to Create Tags
 
-### Always Tag:
-
-- ✅ **Production releases** - Every deployment to production
-- ✅ **Stable milestones** - Completed features or sprints
-- ✅ **Pre-production releases** - Staging deployments
-- ✅ **Security patches** - Any security fixes
-- ✅ **Major refactors** - Significant architecture changes
-
-### Consider Tagging:
-
-- ⚠️ **Development milestones** - End of sprint or iteration
-- ⚠️ **Breaking changes** - Before major API changes
-- ⚠️ **Archive points** - Before large refactors
-
-### Never Tag:
-
-- ❌ **Work in progress** - Incomplete features
-- ❌ **Failed builds** - Code that doesn't pass tests
-- ❌ **Every commit** - Tags should be meaningful
-- ❌ **Personal experiments** - Use branches instead
+| Tag | Never | Consider | Always |
+|-----|-------|----------|--------|
+| Production releases | | | ✅ |
+| Security patches | | | ✅ |
+| Pre-production deployments | | | ✅ |
+| Stable milestones | | | ✅ |
+| Development milestones | | ⚠️ | |
+| Before major refactors | | ⚠️ | |
+| Work in progress | ❌ | | |
+| Failed builds | ❌ | | |
+| Personal experiments | ❌ | | |
 
 ---
 
@@ -242,173 +101,70 @@ git tag -a v1.2.3-20251221-auth-improvements -m "Version 1.2.3: Authentication i
 ### Basic Workflow
 
 ```bash
-# 1. Ensure you're on the right commit
+# 1. Verify commit
 git log --oneline -5
 
-# 2. Create annotated tag with date-based semantic versioning
-git tag -a 2025-12-21-v0.1.0-add-api-logging -m "Add comprehensive API request logging"
+# 2. Create annotated tag
+git tag -a 2025-12-21-v0.1.0-add-api-logging -m "Add API request logging"
 
-# 3. Verify tag was created
-git tag -l "2025-12-21*"
+# 3. Verify tag
 git show 2025-12-21-v0.1.0-add-api-logging
 
-# 4. Push tag to remote
+# 4. Push tag
 git push origin 2025-12-21-v0.1.0-add-api-logging
-
-# Or push all tags
-git push origin --tags
 ```
 
-### Creating Tags with Detailed Messages
+### Detailed Changelog (Recommended)
 
-For major releases, include detailed information:
-
-```bash
-git tag -a 2025-12-21-v2.0.0-major-release
-
-# In editor, write detailed message:
-# Major Release: API v2.0 Launch
-#
-# BREAKING CHANGES (v2.0.0):
-# - REST API v1 deprecated
-# - Authentication now requires OAuth2
-# - Response format changed from XML to JSON
-#
-# New Features:
-# - GraphQL API endpoint
-# - Real-time subscriptions
-# - Advanced filtering
-#
-# Bug Fixes:
-# - Fixed race condition in cache
-# - Resolved memory leak in websocket handler
-#
-# Performance Improvements:
-# - 50% faster query responses
-# - Reduced memory footprint
-```
-
-### Creating Tags with Complete Changelog (Recommended)
-
-**Best Practice**: Always include a detailed description of all changes since the last tag.
+**Best Practice:** Include all changes since last tag.
 
 ```bash
-# 1. Find the last tag
+# Auto-generate detailed changelog
 LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-# 2. Get all commits since last tag
-if [ -z "$LAST_TAG" ]; then
-  # No previous tag, show all commits
-  CHANGES=$(git log --oneline --no-merges)
-else
-  # Show commits since last tag
-  CHANGES=$(git log ${LAST_TAG}..HEAD --oneline --no-merges)
-fi
-
-# 3. Create tag with detailed message
-TAG_NAME="2025-12-21-v0.0.2-brief-description"
+TAG_NAME="2025-12-21-v0.2.0-brief-description"
 
 git tag -a "${TAG_NAME}" -m "$(cat <<EOF
 Brief Summary of Changes
 
 Changes since ${LAST_TAG:-initial commit}:
+$(git log ${LAST_TAG}..HEAD --oneline --no-merges)
 
-${CHANGES}
-
-Detailed Changes:
-$(git log ${LAST_TAG}..HEAD --no-merges --format='- %s (%h)' 2>/dev/null || git log --no-merges --format='- %s (%h)')
-
-Files Modified:
+Files Changed:
 $(git diff ${LAST_TAG}..HEAD --stat 2>/dev/null || git diff --stat)
 EOF
 )"
 
-# 4. Push the tag
 git push origin "${TAG_NAME}"
 ```
 
-**Example with real output:**
+**Benefits:**
+- Complete release history in one place
+- Easy rollback decisions
+- Automatic release notes generation
+- Full context without checking commits
+
+### Tag Previous Commit
 
 ```bash
-# Create tag with all changes since last tag
-LAST_TAG=$(git describe --tags --abbrev=0)
-TAG_NAME="2025-12-21-v0.0.3-update-git-rules"
-
-git tag -a "${TAG_NAME}" -m "$(cat <<EOF
-Update Git Tagging Rules with Detailed Changelog Practice
-
-Changes since ${LAST_TAG}:
-
-$(git log ${LAST_TAG}..HEAD --oneline --no-merges)
-
-Detailed Commit Messages:
-$(git log ${LAST_TAG}..HEAD --no-merges --format='
-Commit: %h
-Author: %an <%ae>
-Date:   %ad
-Subject: %s
-
-%b
-' --date=short)
-
-Files Changed:
-$(git diff ${LAST_TAG}..HEAD --stat)
-
-Summary:
-- Added comprehensive changelog generation workflow
-- Enhanced tag message requirements
-- Included examples of detailed tag descriptions
-- Updated best practices for tag creation
-EOF
-)"
-```
-
-**Simplified One-Liner:**
-
-```bash
-# Quick detailed tag creation
-LAST_TAG=$(git describe --tags --abbrev=0)
-git tag -a 2025-12-21-v0.0.3-changes -m "Changes: $(git log ${LAST_TAG}..HEAD --oneline)"
-```
-
-**Why include detailed changelogs:**
-- ✅ Complete history of what changed in this release
-- ✅ Easy to review without checking commits manually
-- ✅ Useful for release notes and documentation
-- ✅ Helps team members understand the release scope
-- ✅ Provides context for rollbacks if needed
-
-### Tagging Previous Commits
-
-If you forgot to tag a release:
-
-```bash
-# Find the commit hash
-git log --oneline
-
-# Tag that specific commit (patch version for hotfix)
-git tag -a 2025-12-20-v0.0.2-hotfix-auth abc1234 -m "Hotfix: Authentication bypass vulnerability"
-
-# Push the tag
+# Tag specific commit
+git tag -a 2025-12-20-v0.0.2-hotfix-auth abc1234 -m "Hotfix message"
 git push origin 2025-12-20-v0.0.2-hotfix-auth
 ```
 
-### Creating Signed Tags
-
-For production releases requiring verification:
+### Signed Tags
 
 ```bash
-# Ensure GPG key is configured
+# Configure GPG key
 git config --global user.signingkey YOUR_GPG_KEY_ID
 
-# Create signed tag (v1.0.0 for production-ready release)
-git tag -s 2025-12-21-v1.0.0-production-release -m "Production release with security patches"
+# Create signed tag
+git tag -s 2025-12-21-v1.0.0-production -m "Production release"
 
 # Verify signature
-git tag -v 2025-12-21-v1.0.0-production-release
+git tag -v 2025-12-21-v1.0.0-production
 
-# Push (signatures are preserved)
-git push origin 2025-12-21-v1.0.0-production-release
+# Push (signature preserved)
+git push origin 2025-12-21-v1.0.0-production
 ```
 
 ---
@@ -418,225 +174,129 @@ git push origin 2025-12-21-v1.0.0-production-release
 ### Viewing Tags
 
 ```bash
-# List all tags
-git tag
-
-# List tags matching pattern
-git tag -l "2025-12-21*"
-git tag -l "*security*"
-
-# Show tag details
-git show 2025-12-21-v0.1.0-add-logging
-
-# List tags with messages
-git tag -n5  # Show first 5 lines of message
+git tag                                         # List all
+git tag -l "2025-12-21*"                       # Pattern match
+git tag -l --sort=-creatordate | head -10      # Recent tags
+git show 2025-12-21-v0.1.0-add-logging         # Tag details
+git tag -n5                                    # With messages
 ```
 
 ### Deleting Tags
 
 ```bash
-# Delete local tag
-git tag -d 2025-12-21-v0.1.0-wrong-tag
-
-# Delete remote tag
-git push origin --delete 2025-12-21-v0.1.0-wrong-tag
-
-# Or using colon syntax
-git push origin :refs/tags/2025-12-21-v0.1.0-wrong-tag
+git tag -d tag-name                            # Delete local
+git push origin --delete tag-name              # Delete remote
 ```
 
-### Updating Tags
+### Retention Policy
 
-**⚠️ WARNING: Never update tags that have been pushed to shared repositories!**
-
-If you must update a tag locally (before pushing):
-
-```bash
-# Force update local tag (increment semantic version instead)
-git tag -fa 2025-12-21-v0.1.1-updated -m "Updated message"
-
-# This is BAD practice for shared tags
-# Instead, create a new tag with incremented semantic version (e.g., v0.1.1 instead of v0.1.0)
-```
-
-### Tag Retention Policy
-
-Establish rules for tag cleanup:
-
-**Keep forever:**
-- Production releases
-- Major versions
-- Security patches
-
-**Keep for 90 days:**
-- Development milestones
-- Pre-release tags
-- Testing tags
-
-**Delete after use:**
-- Temporary markers
-- Personal bookmarks
-- Failed releases
+| Tag Type | Retention |
+|----------|-----------|
+| Production releases, major versions, security patches | Forever |
+| Development milestones, pre-releases | 90 days |
+| Temporary markers, failed releases | Delete after use |
 
 ```bash
-# Find old tags (example: older than 90 days)
+# Find old tags
 git for-each-ref --sort=-creatordate --format '%(refname:short) %(creatordate:short)' refs/tags | head -20
 
-# Delete old development tags
-git tag -d old-dev-tag-1 old-dev-tag-2
-git push origin --delete old-dev-tag-1 old-dev-tag-2
+# Delete old tags
+git tag -d old-tag
+git push origin --delete old-tag
 ```
 
 ---
 
 ## Best Practices
 
-### 1. Always Use Annotated Tags for Releases
+### 1. Always Use Annotated Tags
 
 ```bash
-# ✅ Good: Annotated tag
-git tag -a 2025-12-21-v1-release -m "Release notes here"
+# ✅ Correct
+git tag -a 2025-12-21-v1.0.0-release -m "Release notes"
 
-# ❌ Bad: Lightweight tag
-git tag 2025-12-21-v1-release
+# ❌ Wrong
+git tag 2025-12-21-v1.0.0-release
 ```
 
-### 2. Write Detailed Tag Messages with Complete Changelog
-
-**BEST PRACTICE**: Include all changes since the last tag in your tag message.
+### 2. Include Complete Changelog
 
 ```bash
-# ✅ EXCELLENT: Detailed changelog with all changes since last tag
+# ✅ Best: Detailed changelog
 LAST_TAG=$(git describe --tags --abbrev=0)
-git tag -a 2025-12-21-v0.0.2-auth-fix -m "$(cat <<EOF
-Fix authentication bypass in admin panel (CVE-2025-1234)
+git tag -a 2025-12-21-v0.2.0-auth-fix -m "$(cat <<EOF
+Fix authentication bypass (CVE-2025-1234)
 
 Changes since ${LAST_TAG}:
-$(git log ${LAST_TAG}..HEAD --oneline --no-merges)
+$(git log ${LAST_TAG}..HEAD --oneline)
 
 Files Changed:
 $(git diff ${LAST_TAG}..HEAD --stat)
-
-Summary:
-- Fixed authentication bypass vulnerability
-- Added additional security checks
-- Updated authentication tests
 EOF
 )"
 
-# ✅ Good: Descriptive one-line message
-git tag -a 2025-12-21-v0.0.2-auth-fix -m "Fix authentication bypass in admin panel (CVE-2025-1234)"
+# ✅ Good: Descriptive message
+git tag -a 2025-12-21-v0.2.0-auth-fix -m "Fix admin panel auth bypass"
 
 # ❌ Bad: Vague message
-git tag -a 2025-12-21-v0.0.2-auth-fix -m "updates"
+git tag -a 2025-12-21-v0.2.0-auth-fix -m "updates"
 ```
-
-**Why detailed changelogs matter:**
-- Provides complete context for the release
-- Makes it easy to understand what changed without checking commits
-- Useful for generating release notes
-- Helps with debugging and rollback decisions
-- Documents the full scope of changes in one place
 
 ### 3. Tag Before Deploying
 
 ```bash
-# Correct workflow (v1.0.0 for production-ready release)
-git tag -a 2025-12-21-v1.0.0-deploy-prod -m "Production deployment"
-git push origin 2025-12-21-v1.0.0-deploy-prod
+# ✅ Correct workflow
+git tag -a 2025-12-21-v1.0.0-deploy -m "Production deployment"
+git push origin 2025-12-21-v1.0.0-deploy
 ./deploy-to-production.sh
-
-# Not after deploying
 ```
 
-### 4. Include Tags in Changelog
-
-Update `CHANGELOG.md` with each tagged release:
+### 4. Update CHANGELOG.md
 
 ```markdown
 ## [2025-12-21-v0.2.0-api-improvements] - 2025-12-21
 
 ### Added
-- New API endpoint for bulk operations
+- Bulk operations API endpoint
 - Request rate limiting
 
 ### Fixed
 - Memory leak in connection pooling
-- Race condition in cache invalidation
-
-### Changed
-- Updated authentication flow
+- Cache invalidation race condition
 ```
 
-### 5. Use Tags for Deployment References
+### 5. Protect Production Tags
 
-```bash
-# Deploy specific tag to production (using semantic version)
-kubectl set image deployment/app app=registry/myapp:2025-12-21-v1.0.0-stable
-
-# Reference tag in CI/CD
-docker build -t myapp:$(git describe --tags --always) .
-```
-
-### 6. Protect Important Tags
-
-On GitHub/GitLab, protect production tags from deletion:
+Configure repository settings to prevent tag deletion:
 
 ```yaml
-# GitHub: Repository Settings → Tags → Protected tags
-# Pattern for semantic versions: *-v[0-9]*.[0-9]*.[0-9]*-*
-# Pattern for production: *-v[0-9]*.[0-9]*.[0-9]*-production-*
+# GitHub: Settings → Tags → Protected tags
+# Pattern: *-v[0-9]*.[0-9]*.[0-9]*-*
 
 # GitLab: Settings → Repository → Protected tags
-```
-
-### 7. Document Your Tagging Convention
-
-In your `README.md` or `CONTRIBUTING.md`:
-
-```markdown
-## Release Tagging
-
-We use date-based semantic versioning: `YYYY-MM-DD-vMAJOR.MINOR.PATCH-description`
-
-Version increment rules:
-- **PATCH** (v0.0.X): Bug fixes, backward compatible
-- **MINOR** (v0.X.0): New features, backward compatible
-- **MAJOR** (vX.0.0): Breaking changes
-
-Examples:
-- `2025-12-21-v0.1.0-add-user-auth` (new feature)
-- `2025-12-21-v0.1.1-fix-security-issue` (bug fix)
-- `2025-12-21-v1.0.0-breaking-api-changes` (breaking change)
-
-See `base/git-tagging.md` for complete guidelines.
 ```
 
 ---
 
 ## Integration with Workflows
 
-### Automated Tagging in CI/CD
+### Automated Tagging (CI/CD)
 
 ```yaml
-# GitHub Actions: Auto-tag on release with semantic versioning
+# GitHub Actions: Auto-tag with semantic versioning
 name: Create Release Tag
 
 on:
   workflow_dispatch:
     inputs:
       version_type:
-        description: 'Version increment type'
+        description: 'Version increment'
         required: true
         type: choice
-        options:
-          - patch  # Bug fixes (v0.0.X)
-          - minor  # New features (v0.X.0)
-          - major  # Breaking changes (vX.0.0)
+        options: [patch, minor, major]
       description:
-        description: 'Brief description of changes'
+        description: 'Change description'
         required: true
-        type: string
 
 jobs:
   tag:
@@ -646,27 +306,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create semantic version tag
+      - name: Create tag
         run: |
           DATE=$(date +%Y-%m-%d)
-
-          # Get latest tag and extract semantic version
           LATEST_TAG=$(git tag -l "${DATE}-v*" | sort -V | tail -1)
+
+          # Calculate new version
           if [ -z "$LATEST_TAG" ]; then
-            # No tag for today, start with appropriate version
             case "${{ inputs.version_type }}" in
               patch) VERSION="0.0.1" ;;
               minor) VERSION="0.1.0" ;;
               major) VERSION="1.0.0" ;;
             esac
           else
-            # Extract version from tag (e.g., 2025-12-21-v0.1.2-description -> 0.1.2)
-            CURRENT_VERSION=$(echo "$LATEST_TAG" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
-            MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
-            MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
-            PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+            CURRENT=$(echo "$LATEST_TAG" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
+            MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+            MINOR=$(echo "$CURRENT" | cut -d. -f2)
+            PATCH=$(echo "$CURRENT" | cut -d. -f3)
 
-            # Increment based on type
             case "${{ inputs.version_type }}" in
               patch) VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
               minor) VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
@@ -675,129 +332,101 @@ jobs:
           fi
 
           TAG_NAME="${DATE}-v${VERSION}-${{ inputs.description }}"
-
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git tag -a "${TAG_NAME}" -m "Release: ${{ inputs.description }} (v${VERSION})"
+          git tag -a "${TAG_NAME}" -m "Release: ${{ inputs.description }}"
           git push origin "${TAG_NAME}"
-
-          echo "Created tag: ${TAG_NAME}"
 ```
 
 ### Deployment from Tags
 
 ```bash
-# Deploy specific tagged version
-./deploy.sh --tag 2025-12-21-v1.0.0-production-release
+# Deploy specific tag
+./deploy.sh --tag 2025-12-21-v1.0.0-production
 
 # Rollback to previous tag
-git tag -l --sort=-creatordate | head -2 | tail -1
-./deploy.sh --tag 2025-12-20-v0.9.3-stable
+PREV_TAG=$(git tag -l --sort=-creatordate | head -2 | tail -1)
+./deploy.sh --tag $PREV_TAG
 ```
 
-### Generate Release Notes from Tags
+### Generate Release Notes
 
 ```bash
-# Get all tags between two dates
-git tag -l --sort=-creatordate | grep "^2025-12"
-
 # Show changes between tags
-git log 2025-12-20-v0.9.0-release..2025-12-21-v1.0.0-release --oneline
+git log tag1..tag2 --oneline
 
 # Generate changelog
-git log 2025-12-20-v0.9.0-release..2025-12-21-v1.0.0-release --pretty=format:"- %s (%h)" > RELEASE_NOTES.md
+git log tag1..tag2 --pretty=format:"- %s (%h)" > RELEASE_NOTES.md
 ```
 
-### Automated Version Detection
+### Version Detection
 
 ```bash
-# Get latest tag for builds
+# Get latest tag
 VERSION=$(git describe --tags --always)
-echo "Building version: $VERSION"
 
-# Use in application
+# Use in builds
+docker build -t myapp:$VERSION .
 echo "export const VERSION = '$VERSION';" > src/version.ts
 ```
 
 ---
 
-## Summary
+## Quick Reference
 
-### Quick Reference
+### Create Release Tag
 
-**Create release tag with detailed changelog (RECOMMENDED):**
 ```bash
-# Find last tag and create detailed tag message
+# With detailed changelog (RECOMMENDED)
 LAST_TAG=$(git describe --tags --abbrev=0)
-TAG_NAME="2025-12-21-v0.0.3-brief-description"
-
+TAG_NAME="2025-12-21-v0.1.0-brief-description"
 git tag -a "${TAG_NAME}" -m "$(cat <<EOF
-Brief Summary of Changes
+Summary
 
 Changes since ${LAST_TAG}:
 $(git log ${LAST_TAG}..HEAD --oneline --no-merges)
-
-Files Changed:
-$(git diff ${LAST_TAG}..HEAD --stat)
 EOF
 )"
-
 git push origin "${TAG_NAME}"
+
+# Simple release
+git tag -a 2025-12-21-v0.1.0-description -m "Message"
+git push origin 2025-12-21-v0.1.0-description
 ```
 
-**Create simple release tag:**
+### Common Operations
+
 ```bash
-# For bug fixes (patch version - v0.0.X)
-git tag -a 2025-12-21-v0.0.1-brief-description -m "Detailed message"
-git push origin 2025-12-21-v0.0.1-brief-description
-
-# For features (minor version - v0.X.0)
-git tag -a 2025-12-21-v0.1.0-brief-description -m "Detailed message"
-git push origin 2025-12-21-v0.1.0-brief-description
-
-# For breaking changes (major version - vX.0.0)
-git tag -a 2025-12-21-v1.0.0-brief-description -m "Detailed message"
-git push origin 2025-12-21-v1.0.0-brief-description
-```
-
-**List recent tags:**
-```bash
+# List recent tags
 git tag -l --sort=-creatordate | head -10
+
+# Delete tag
+git tag -d tag-name && git push origin --delete tag-name
+
+# Deploy from tag
+git checkout tag-name && ./deploy.sh
 ```
 
-**Delete tag:**
-```bash
-git tag -d tag-name
-git push origin --delete tag-name
-```
+---
 
-**Deploy from tag:**
-```bash
-git checkout 2025-12-21-v1.0.0-production-release
-./deploy.sh
-```
+## Golden Rules
 
-### The Golden Rules
-
-1. ✅ **Always use annotated tags** for releases (`-a` flag)
-2. ✅ **Use semantic versioning** in format `vMAJOR.MINOR.PATCH` (e.g., v0.0.1, v1.2.3)
-3. ✅ **Include detailed changelog** with all changes since last tag in tag message
-4. ✅ **Write descriptive tag names** (brief, kebab-case description)
-5. ✅ **Follow naming convention** consistently (date-based semantic versioning)
-6. ✅ **Tag before deploying** to production
-7. ✅ **Never modify pushed tags** - increment version and create new ones instead
-8. ✅ **Document tags in CHANGELOG.md**
-9. ✅ **Sign production tags** for security (when required)
-10. ❌ **Never tag broken code** - all tests must pass
+1. ✅ **Always use annotated tags** (`-a` flag) for releases
+2. ✅ **Follow semantic versioning** (vMAJOR.MINOR.PATCH)
+3. ✅ **Include detailed changelog** with changes since last tag
+4. ✅ **Use descriptive names** (kebab-case, action verbs)
+5. ✅ **Tag before deploying** to production
+6. ✅ **Never modify pushed tags** (create new version instead)
+7. ✅ **Document in CHANGELOG.md**
+8. ✅ **Sign production tags** when required
+9. ❌ **Never tag broken code** (tests must pass)
 
 ---
 
 ## Related Resources
 
-- See `base/git-workflow.md` for commit and push frequency
-- See `base/cicd-comprehensive.md` for artifact versioning
-- See `base/12-factor-app.md` for build/release/run separation
-- See `CHANGELOG.md` for release history format
-- External: [Semantic Versioning](https://semver.org/)
-- External: [Keep a Changelog](https://keepachangelog.com/)
+- `base/git-workflow.md` - Commit and push frequency
+- `base/cicd-comprehensive.md` - Artifact versioning
+- `base/12-factor-app.md` - Build/release/run separation
+- [Semantic Versioning](https://semver.org/)
+- [Keep a Changelog](https://keepachangelog.com/)
