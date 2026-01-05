@@ -120,9 +120,10 @@
         "tip": "Ship small, ship often - fast feedback wins"
       },
       "beads": {
-        "keywords": ["beads", "bead", "bd", "bd-"],
+        "keywords": ["beads", "bead", "bd", "bd-", "session start", "session end", "bd sync"],
+        "slashCommands": ["/bd", "/beads"],
         "rules": ["tools/beads/issue-tracking"],
-        "tip": "Track dependencies - know what blocks what"
+        "tip": "NEVER 'bd sync' without -m flag or --flush-only - avoid timestamp commits"
       }
     },
     "languages": {
