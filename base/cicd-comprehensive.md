@@ -2,9 +2,9 @@
 
 > **When to apply:** All projects using continuous integration and continuous deployment
 
-87 best practices for building robust, secure, and efficient CI/CD pipelines.
+Implementation-ready practices for robust, secure, and efficient CI/CD pipelines.
 
-## Maturity Level Indicators
+## Maturity Level Requirements
 
 | Practice | MVP/POC | Pre-Production | Production |
 |----------|---------|----------------|------------|
@@ -28,12 +28,11 @@ See `SUCCESS_METRICS.md` for DORA metrics (deployment frequency, lead time, MTTR
 
 ### 1. Pipeline as Code
 
-Store pipeline configuration in version control alongside code.
+Store pipeline configuration in version control.
 
 ```yaml
 # .github/workflows/ci.yml
 name: CI Pipeline
-
 on:
   push:
     branches: [main, develop]
@@ -45,8 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run tests
-        run: npm test
+      - run: npm test
 ```
 
 ### 2. Fail Fast
@@ -56,27 +54,21 @@ Run quick tests first, expensive tests last.
 ```yaml
 jobs:
   lint:
-    runs-on: ubuntu-latest
     steps:
-      - name: Lint (fast)
-        run: npm run lint
+      - run: npm run lint  # Fast
 
   unit-tests:
     needs: lint
     steps:
-      - name: Unit tests (medium)
-        run: npm test
+      - run: npm test  # Medium
 
   integration-tests:
     needs: unit-tests
     steps:
-      - name: Integration tests (slow)
-        run: npm run test:integration
+      - run: npm run test:integration  # Slow
 ```
 
 ### 3. Parallel Execution
-
-Run independent jobs in parallel for speed.
 
 ```yaml
 jobs:
@@ -95,21 +87,17 @@ jobs:
 
 ### 4. Conditional Execution
 
-Run jobs only when needed.
-
 ```yaml
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to production
-        run: ./deploy.sh
+      - run: ./deploy.sh
 
   preview-deploy:
     if: github.event_name == 'pull_request'
     steps:
-      - name: Deploy preview environment
-        run: ./deploy-preview.sh
+      - run: ./deploy-preview.sh
 ```
 
 ---
@@ -117,8 +105,6 @@ jobs:
 ## Build Automation
 
 ### 5. Single Command Build
-
-Entire build should run with one command.
 
 ```json
 {
@@ -136,32 +122,22 @@ Entire build should run with one command.
 Same inputs = same outputs, every time.
 
 ```dockerfile
-# Use specific versions, not "latest"
-FROM node:18.15.0-alpine3.17
-
-# Lock dependencies
+FROM node:18.15.0-alpine3.17  # Specific version, not "latest"
 COPY package-lock.json .
 RUN npm ci  # Use ci, not install
 ```
 
 ### 7. Build Caching
 
-Cache dependencies to speed up builds.
-
 ```yaml
-- name: Cache dependencies
-  uses: actions/cache@v3
+- uses: actions/cache@v3
   with:
     path: ~/.npm
     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-
-- name: Install dependencies
-  run: npm ci
+- run: npm ci
 ```
 
 ### 8. Build Artifacts
-
-Store build outputs for later stages.
 
 ```yaml
 jobs:
@@ -186,30 +162,26 @@ jobs:
 
 ## Testing in CI/CD
 
-### 9. Test Pyramid in CI
-
-70% unit, 20% integration, 10% E2E.
+### 9. Test Pyramid: 70% Unit, 20% Integration, 10% E2E
 
 ```yaml
 jobs:
   unit-tests:
     steps:
-      - run: pytest tests/unit  # Fast, many tests
+      - run: pytest tests/unit
 
   integration-tests:
     needs: unit-tests
     steps:
-      - run: pytest tests/integration  # Medium speed
+      - run: pytest tests/integration
 
   e2e-tests:
     needs: integration-tests
     steps:
-      - run: pytest tests/e2e  # Slow, critical paths only
+      - run: pytest tests/e2e  # Critical paths only
 ```
 
-### 10. Test in Production-Like Environment
-
-Use containers matching production.
+### 10. Production-Like Environment
 
 ```yaml
 services:
@@ -227,16 +199,11 @@ jobs:
       - run: pytest --postgres-url=postgresql://postgres:test@database/test
 ```
 
-### 11. Test Coverage Enforcement
-
-Fail build if coverage drops.
+### 11. Coverage Enforcement
 
 ```yaml
-- name: Run tests with coverage
-  run: pytest --cov=src --cov-report=xml --cov-fail-under=80
-
-- name: Upload coverage
-  uses: codecov/codecov-action@v3
+- run: pytest --cov=src --cov-report=xml --cov-fail-under=80
+- uses: codecov/codecov-action@v3
   with:
     fail_ci_if_error: true
 ```
@@ -244,6 +211,13 @@ Fail build if coverage drops.
 ---
 
 ## Deployment Strategies
+
+| Strategy | Use Case | Downtime | Rollback Speed | Cost |
+|----------|----------|----------|----------------|------|
+| Blue-Green | Zero-downtime required | None | Instant | 2x infrastructure |
+| Canary | Risk mitigation | None | Fast | 1.1-1.5x infrastructure |
+| Rolling | Standard deployments | Brief | Medium | 1x infrastructure |
+| Recreate | Non-critical apps | Yes | Slow | 1x infrastructure |
 
 ### 12. Blue-Green Deployment
 
@@ -279,16 +253,14 @@ spec:
   strategy:
     canary:
       steps:
-        - setWeight: 10   # 10% traffic
+        - setWeight: 10
         - pause: {duration: 5m}
-        - setWeight: 50   # 50% traffic
+        - setWeight: 50
         - pause: {duration: 5m}
-        - setWeight: 100  # Full rollout
+        - setWeight: 100
 ```
 
-### 14. Rollback Strategy
-
-Automated rollback on failure.
+### 14. Automated Rollback
 
 ```yaml
 - name: Deploy new version
@@ -310,8 +282,8 @@ Automated rollback on failure.
 Never modify running instances, always replace.
 
 ```bash
-# Bad: SSH and modify instance
-ssh ec2-instance "apt-get update && apt-get upgrade"
+# Bad: SSH and modify
+ssh ec2-instance "apt-get update"
 
 # Good: Build new AMI and replace
 packer build ami.json
@@ -323,8 +295,6 @@ terraform apply
 ## Security in CI/CD
 
 ### 16. Least Privilege Access
-
-CI/CD should have minimum permissions.
 
 ```json
 {
@@ -339,11 +309,8 @@ CI/CD should have minimum permissions.
 
 ### 17. No Hardcoded Secrets
 
-Use secret management services.
-
 ```yaml
-- name: Configure AWS credentials
-  uses: aws-actions/configure-aws-credentials@v2
+- uses: aws-actions/configure-aws-credentials@v2
   with:
     role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsRole
     aws-region: us-east-1
@@ -351,28 +318,18 @@ Use secret management services.
 
 ### 18. Dependency Scanning
 
-Scan for vulnerable dependencies.
-
 ```yaml
-- name: Run dependency audit
-  run: npm audit --audit-level=high
-
-- name: Snyk security scan
-  uses: snyk/actions/node@master
+- run: npm audit --audit-level=high
+- uses: snyk/actions/node@master
   env:
     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 ```
 
 ### 19. Container Image Scanning
 
-Scan Docker images for vulnerabilities.
-
 ```yaml
-- name: Build image
-  run: docker build -t myapp:${{ github.sha }} .
-
-- name: Scan image with Trivy
-  uses: aquasecurity/trivy-action@master
+- run: docker build -t myapp:${{ github.sha }} .
+- uses: aquasecurity/trivy-action@master
   with:
     image-ref: myapp:${{ github.sha }}
     severity: 'CRITICAL,HIGH'
@@ -381,14 +338,9 @@ Scan Docker images for vulnerabilities.
 
 ### 20. SAST (Static Application Security Testing)
 
-Scan code for security issues.
-
 ```yaml
-- name: Run CodeQL analysis
-  uses: github/codeql-action/analyze@v2
-
-- name: SonarQube scan
-  uses: sonarsource/sonarqube-scan-action@master
+- uses: github/codeql-action/analyze@v2
+- uses: sonarsource/sonarqube-scan-action@master
   env:
     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 ```
@@ -399,11 +351,8 @@ Scan code for security issues.
 
 ### 21. Use Secret Management Service
 
-Never commit secrets to version control.
-
 ```yaml
-- name: Get secrets from AWS Secrets Manager
-  run: |
+- run: |
     DB_PASSWORD=$(aws secretsmanager get-secret-value \
       --secret-id prod/database/password \
       --query SecretString --output text)
@@ -413,10 +362,7 @@ Never commit secrets to version control.
 
 ### 22. Encrypt Secrets at Rest
 
-Use encryption for stored secrets.
-
 ```bash
-# AWS Secrets Manager (automatically encrypted with KMS)
 aws secretsmanager create-secret \
   --name prod/api-key \
   --secret-string "super-secret-value" \
@@ -424,8 +370,6 @@ aws secretsmanager create-secret \
 ```
 
 ### 23. Environment-Specific Secrets
-
-Different secrets for each environment.
 
 ```yaml
 jobs:
@@ -450,19 +394,14 @@ jobs:
 
 ### 24. Version All Artifacts
 
-Use semantic versioning or commit SHAs.
-
 ```yaml
-- name: Build and tag Docker image
-  run: |
+- run: |
     VERSION=$(git describe --tags --always)
     docker build -t myapp:$VERSION .
     docker tag myapp:$VERSION myapp:latest
 ```
 
-### 25. Artifact Retention Policy
-
-Keep artifacts for defined period.
+### 25. Artifact Retention
 
 ```yaml
 - uses: actions/upload-artifact@v3
@@ -485,16 +424,14 @@ docker push registry/myapp:$VERSION
 kubectl set image deployment/app app=registry/myapp:$VERSION
 
 # Promote to prod (same artifact)
-kubectl set image deployment/app app=registry/myapp:$VERSION --namespace=production
+kubectl set image deployment/app app=registry/myapp:$VERSION -n production
 ```
 
 ---
 
 ## Performance Optimization
 
-### 27. Optimize Docker Builds
-
-Multi-stage builds for smaller images.
+### 27. Multi-Stage Docker Builds
 
 ```dockerfile
 # Build stage
@@ -515,16 +452,11 @@ CMD ["node", "dist/main.js"]
 
 ### 28. Parallel Test Execution
 
-Run tests in parallel.
-
 ```yaml
-- name: Run tests in parallel
-  run: pytest -n auto  # Auto-detect CPU count
+- run: pytest -n auto  # Auto-detect CPU count
 ```
 
 ### 29. Skip Unnecessary Builds
-
-Don't build if no code changed.
 
 ```yaml
 on:
@@ -541,10 +473,8 @@ on:
 
 ### 30. Pipeline Metrics
 
-Track pipeline success rate, duration.
-
 ```yaml
-- name: Send metrics to DataDog
+- name: Send metrics
   if: always()
   run: |
     curl -X POST "https://api.datadoghq.com/api/v1/series" \
@@ -552,7 +482,7 @@ Track pipeline success rate, duration.
       -d '{
         "series": [{
           "metric": "cicd.pipeline.duration",
-          "points": [['$(date +%s)', '${{ github.event.duration }}']],
+          "points": [["$(date +%s)", "${{ github.event.duration }}"]],
           "tags": ["status:${{ job.status }}"]
         }]
       }'
@@ -560,11 +490,8 @@ Track pipeline success rate, duration.
 
 ### 31. Deployment Notifications
 
-Notify team of deployments.
-
 ```yaml
-- name: Notify Slack on deployment
-  uses: slackapi/slack-github-action@v1
+- uses: slackapi/slack-github-action@v1
   with:
     payload: |
       {
@@ -586,39 +513,39 @@ Notify team of deployments.
 ## Best Practices Summary
 
 ### Build & Test
-✅ Pipeline as code
-✅ Fail fast with parallel execution
-✅ Matrix builds across versions
-✅ Reproducible builds with caching
-✅ Test pyramid (70% unit, 20% integration, 10% E2E)
-✅ Coverage enforcement (80%+ minimum)
+- Pipeline as code in version control
+- Fail fast with parallel execution
+- Matrix builds across OS/versions
+- Reproducible builds with caching
+- Test pyramid: 70% unit, 20% integration, 10% E2E
+- Coverage enforcement (80%+ minimum)
 
 ### Deployment
-✅ Blue-green deployments for zero downtime
-✅ Canary deployments for gradual rollout
-✅ Automated rollback on failure
-✅ Immutable infrastructure
-✅ Build once, deploy many times
+- Blue-green for zero downtime
+- Canary for gradual rollout
+- Automated rollback on failure
+- Immutable infrastructure
+- Build once, deploy many times
 
 ### Security
-✅ Least privilege for CI/CD roles
-✅ No hardcoded secrets
-✅ Dependency and container scanning
-✅ SAST for code security
-✅ Secret rotation every 90 days
+- Least privilege for CI/CD roles
+- No hardcoded secrets
+- Dependency and container scanning
+- SAST for code security
+- Secret rotation every 90 days
 
 ### Operations
-✅ Version all artifacts with SemVer
-✅ Cache aggressively
-✅ Multi-stage Docker builds
-✅ Pipeline metrics and monitoring
-✅ Deployment notifications
+- Version all artifacts with SemVer
+- Cache aggressively
+- Multi-stage Docker builds
+- Pipeline metrics and monitoring
+- Deployment notifications
 
 ---
 
 ## Related Resources
 
-- See `base/12-factor-app.md` for Factor V (Build, Release, Run)
-- See `cloud/aws/security-best-practices.md` for AWS CI/CD security
-- See `base/testing-philosophy.md` for testing strategies
-- See `/xcicd` slash command for CI/CD automation
+- `base/12-factor-app.md` - Factor V (Build, Release, Run)
+- `cloud/aws/security-best-practices.md` - AWS CI/CD security
+- `base/testing-philosophy.md` - Testing strategies
+- `/xcicd` - CI/CD automation command
