@@ -50,25 +50,9 @@ It **IS**:
 **NEVER EDIT `.beads/issues.jsonl` OR `.beads/beads.db` DIRECTLY!**
 
 The `.beads/issues.jsonl` file is a **GENERATED EXPORT** from the `beads.db` database.
-- ❌ Manually editing JSONL will NOT update the database
-- ❌ Direct edits to JSONL are **silently ignored**
+- ❌ Manually editing JSONL will NOT update the database - changes are silently ignored
 - ✅ **ALWAYS use `bd` commands** (`bd create`, `bd update`, `bd close`)
-- ✅ **ALWAYS verify** issues were created correctly using `bd list` or `bd show`
-
-**Wrong approach (will not work):**
-```bash
-# ❌ This does nothing - changes are ignored
-echo '{"id":"bd-99"...}' >> .beads/issues.jsonl
-```
-
-**Correct approach:**
-```bash
-# ✅ Use bd commands - they update the database
-bd create "Task title" --description "Details" -p 1 -t task --json
-
-# ✅ Verify it was created
-bd list --status open | grep "bd-"
-```
+- ✅ **ALWAYS verify** issues were created correctly (see "Verification After Creating Issues" section)
 
 ### Key Principles:
 
@@ -78,6 +62,150 @@ bd list --status open | grep "bd-"
 - **Discovered work pattern** captures bugs and tasks found during other work
 - **Dependency tracking** manages relationships between issues
 - **Git-native** storage in `.beads/` directory keeps issues with code
+
+## Universal Best-Practices Review
+
+**CRITICAL:** Apply this review checklist to **EVERY** Beads issue before marking it complete. This is **NON-NEGOTIABLE** regardless of issue type, size, or priority.
+
+### Pre-Completion Checklist
+
+Before closing any issue with `bd close`, you **MUST** verify:
+
+#### 1. Security Assessment
+- ✅ **No new vulnerabilities introduced** (XSS, SQL injection, command injection, CSRF, etc.)
+- ✅ **Input validation** at all system boundaries (user input, external APIs, file uploads)
+- ✅ **Authentication/authorization** properly enforced where required
+- ✅ **Sensitive data** properly handled (no secrets in logs, proper encryption)
+- ✅ **Dependencies** reviewed for known vulnerabilities (run `npm audit`, `pip-audit`, etc.)
+
+**Example:** `npm audit --production && bd close bd-42 --reason "Added auth with input validation, no vulnerabilities" --json`
+
+#### 2. Code Quality Assessment
+- ✅ **No code smells** (long methods, large classes, duplicate code, magic numbers)
+- ✅ **Cyclomatic complexity reduced** (prefer simple, linear code over nested conditionals)
+- ✅ **Single Responsibility Principle** honored (each function/class does one thing)
+- ✅ **DRY principle** applied (no copy-paste duplication)
+- ✅ **Meaningful names** used (no `x`, `temp`, `data` - use domain terms)
+
+**Example:** `eslint src/ --rule 'complexity: [error, 10]' && bd close bd-42 --reason "Refactored auth from complexity 15 to 6" --json`
+
+#### 3. Correctness Verification
+- ✅ **Tests pass** (all unit, integration, and relevant E2E tests)
+- ✅ **Edge cases handled** (null, empty, negative, boundary values)
+- ✅ **Error handling** appropriate (don't swallow errors, provide useful messages)
+- ✅ **Type safety** maintained (proper types in TypeScript, type hints in Python)
+- ✅ **Documentation accurate** (comments match behavior, API docs updated)
+
+**Example:** `pytest tests/ --cov && bd close bd-42 --reason "Auth tested: null user, empty token, expired JWT" --json`
+
+#### 4. Simplicity First
+- ✅ **Simplest viable change** implemented (no over-engineering)
+- ✅ **No premature optimization** (optimize only proven bottlenecks)
+- ✅ **No premature abstraction** (three uses rule before extracting)
+- ✅ **YAGNI applied** (You Aren't Gonna Need It - no speculative features)
+- ✅ **Minimal dependencies** added (prefer standard library)
+
+**Example:** ❌ `"Added configurable factory pattern with strategy injection"` ✅ `"Added JWT middleware in auth.js:45"`
+
+#### 5. Behavior-Preserving Refactoring
+- ✅ **Existing tests still pass** (refactoring doesn't change behavior)
+- ✅ **API contracts preserved** (public interfaces unchanged)
+- ✅ **No silent behavioral changes** (same inputs → same outputs)
+- ✅ **Refactoring separate from features** (don't mix refactor + new behavior)
+
+**Example:** `npm test && bd close bd-42 --reason "Refactored auth to extract middleware, all tests pass unchanged" --json`
+
+#### 6. Consistency with Existing Patterns
+- ✅ **Follow project conventions** (naming, file structure, error handling)
+- ✅ **Match existing architecture** (don't introduce new patterns without reason)
+- ✅ **Consistent style** (formatting, imports, logging)
+- ✅ **Respect .editorconfig, linting rules** without exceptions
+
+**Example:** `eslint --fix src/ && bd close bd-42 --reason "Auth follows project's Express middleware pattern" --json`
+
+#### 7. No Regressions
+- ✅ **Performance not degraded** (no new O(n²) algorithms, inefficient queries)
+- ✅ **Readability maintained or improved** (code is easier to understand)
+- ✅ **Maintainability not compromised** (no technical debt added)
+- ✅ **Accessibility preserved** (for UI changes)
+- ✅ **Bundle size monitored** (for frontend changes)
+
+**Example:** `npm run build && ls -lh dist/ && bd close bd-42 --reason "Auth added, bundle +2KB (tree-shaking applied)" --json`
+
+### When to Create Review Issues
+
+If you discover problems during this review, **DO NOT** close the original issue. Instead:
+
+```bash
+# Current issue has quality problems
+bd create "Reduce cyclomatic complexity in auth handler" \
+  --description "auth.js:authenticate() has complexity 18, should be < 10" \
+  -t task \
+  -p 1 \
+  --json
+
+bd dep add bd-46 bd-42 --type blocks  # Blocks closing of original issue
+
+# Fix the quality issue first
+bd update bd-46 --status in_progress --json
+# ... refactor ...
+bd close bd-46 --reason "Reduced authenticate() complexity to 7 by extracting validators" --json
+
+# Now close original issue
+bd close bd-42 --reason "Completed auth with quality standards met" --json
+```
+
+### Integration with Existing Rules
+
+This universal review **extends** existing practices:
+
+- **Testing philosophy**: Pre-existing requirement, now explicitly part of checklist
+- **Security principles**: Codifies security review for every change
+- **Refactoring patterns**: Ensures refactoring is behavior-preserving
+- **Code quality**: Makes quality gates explicit and mandatory
+
+### Why This Matters
+
+**Without universal review:**
+- ❌ Security vulnerabilities slip through
+- ❌ Technical debt accumulates
+- ❌ Code becomes unmaintainable
+- ❌ Performance degrades over time
+
+**With universal review:**
+- ✅ Consistent quality across all changes
+- ✅ Security baked into workflow
+- ✅ Codebase stays maintainable
+- ✅ Technical excellence is habitual
+
+### Quick Review Workflow
+
+**Template for closing any issue:**
+
+```bash
+# 1. Run quality gates
+npm test && npm run lint
+pytest && pylint src/
+go test ./... && golangci-lint run
+
+# 2. Security scan
+npm audit --production
+semgrep --config=auto src/
+
+# 3. Complexity check
+radon cc src/ --average
+eslint src/ --rule 'complexity: [error, 10]'
+
+# 4. Performance baseline
+npm run build && ls -lh dist/
+
+# 5. Document and close
+bd close bd-42 \
+  --reason "Added JWT auth: tests pass, complexity < 8, no vulnerabilities, bundle +2KB" \
+  --json
+```
+
+**Remember:** If ANY checklist item fails, file a blocking issue and fix it **before** closing.
 
 ## Session Start Protocol
 
@@ -656,115 +784,20 @@ Never end a session with:
 - **Audit trail**: Complete history of work requires pushed commits
 - **Recovery**: Unpushed work can be lost if system fails
 
-## Database Synchronization
+### Understanding Auto-Sync:
 
-Beads automatically syncs the database with a 30-second debounce, but manual sync is sometimes needed.
+Beads automatically syncs the database with **30-second debounce** to batch operations and reduce commits.
 
-### ⚠️ CRITICAL: Avoid Useless Commit Messages
+**Auto-sync triggers:** Creating/updating/closing issues, adding dependencies
+**Batching:** Multiple operations within 30 seconds = single commit
 
-**PROBLEM:** Running `bd sync` without arguments creates terrible commit messages:
-```
-bd sync: 2026-01-05 12:58:25
-```
+### What `bd sync` Does:
 
-**SOLUTION:** Always use `-m` flag or `--flush-only`:
-```bash
-# ✅ Good: Custom message
-bd sync -m "feat: completed authentication implementation [bd-42]"
-
-# ✅ Good: Export only, commit separately
-bd sync --flush-only
-git commit -m "feat: completed authentication [bd-42]"
-
-# ❌ Bad: Creates useless timestamp commit
-bd sync
-```
-
-### Auto-Sync:
-
-Beads batches operations within 30-second windows to reduce git commits.
-
-**What triggers auto-sync:**
-- Creating issues
-- Updating status
-- Closing issues
-- Adding dependencies
-
-**Batching behavior:**
-Multiple operations within 30 seconds = single commit
-
-### Manual Sync Options:
-
-**Custom commit message (RECOMMENDED):**
-```bash
-bd sync -m "feat: completed authentication implementation [bd-42]"
-```
-
-**Export to JSONL only (BEST for combining with code changes):**
-```bash
-bd sync --flush-only  # No git operations, just export
-```
-
-**Accumulate changes without committing:**
-```bash
-bd sync --squash  # During work - no commit created
-```
-
-**When to manually sync:**
-- At session end (required)
-- Before major operations (recommended)
-- After resolving conflicts (required)
-- When sharing work with team (recommended)
-
-### Sync Process:
-
-`bd sync` performs:
 1. **Export**: Database → `.beads/issues.jsonl`
-2. **Commit**: Commits the JSONL file (unless using `--squash` or `--flush-only`)
+2. **Commit**: Commits JSONL (unless using `--squash` or `--flush-only`)
 3. **Pull**: Fetches remote changes
 4. **Import**: `.beads/issues.jsonl` → Database
 5. **Push**: Sends commits to remote
-
-### Recommended Workflow (Clean Git History):
-
-**Best practice:** Combine code and beads changes into one meaningful commit.
-
-```bash
-# During work - accumulate beads changes without committing
-bd sync --squash
-
-# When ready to commit
-git add <your-files>
-bd sync --flush-only           # Export beads to JSONL
-git add .beads/issues.jsonl    # Stage beads changes
-git commit -m "feat: implement JWT authentication [bd-42]"
-git push
-```
-
-**Benefits:**
-- ✅ Single commit with meaningful message
-- ✅ Code and beads metadata together
-- ✅ No generic "bd sync: timestamp" commits
-- ✅ Clear git history
-
-### Conflict Resolution:
-
-If `.beads/issues.jsonl` has merge conflicts:
-
-```bash
-# Accept remote version
-git checkout --theirs .beads/issues.jsonl
-
-# Re-import to update local database
-bd import -i .beads/issues.jsonl
-
-# Stage and commit
-git add .beads/issues.jsonl
-git commit -m "Resolved beads conflict"
-
-# Push
-git push
-```
 
 ## Git Hooks (Recommended)
 
@@ -980,216 +1013,34 @@ bd show bd-42 --json | jq '.dependencies'
 
 ### Database Safety
 
-⚠️ **CRITICAL - DO NOT EDIT `.beads/issues.jsonl` DIRECTLY**
+⚠️ **See "CRITICAL DATABASE SAFETY WARNING" in Core Philosophy section above for complete rules.**
 
-The `.beads/issues.jsonl` file is a **GENERATED EXPORT** from the `beads.db` database.
-Manually editing it will **NOT** update the database!
-
-**Wrong approach (will not work):**
-```bash
-# ❌ This does nothing - changes are ignored
-echo '{"id":"bd-99"...}' >> .beads/issues.jsonl
-vim .beads/issues.jsonl  # Edits are silently ignored
-```
-
-**Correct approach:**
-```bash
-# ✅ Use bd commands - they update the database
-bd create "Task title" --description "Details" -p 1 -t task --json
-
-# ✅ Always verify
-bd list --status open | grep "Task title"
-```
-
-**Why this matters:**
-- Beads uses `beads.db` as the single source of truth
-- `issues.jsonl` is **exported FROM** the database, not imported TO it
-- Direct edits to JSONL are **silently ignored** by the database
-- You will think the issue exists, but it doesn't
-- Always use `bd create`, `bd update`, `bd close` commands
-
-**If you see issues.jsonl out of sync:**
-```bash
-# Export fresh copy from database
-bd export > .beads/issues.jsonl
-
-# Or force a sync
-bd sync
-```
-
-**Core safety rules:**
-
-1. **NEVER edit `.beads/` files manually** - Use `bd` commands only
-2. **ALWAYS verify after creating** - Use `bd list` or `bd show` to confirm
-3. **Always resolve conflicts** - Use `git checkout --theirs` + `bd import`
-4. **Install git hooks** - Automatic synchronization
-5. **Sync before major operations** - Prevent conflicts
-6. **Backup regularly** - `.beads/` is in git, but extra backups don't hurt
+**Key reminder:** NEVER edit `.beads/issues.jsonl` or `.beads/beads.db` directly - always use `bd` commands and verify with `bd list` or `bd show`.
 
 ## Integration with Development Workflow
 
 ### With Git Workflow (base/git-workflow.md)
 
-**Synergy:**
-- Beads session end protocol **extends** git workflow's commit/push requirements
-- Both emphasize frequent commits and clean working state
-- Beads adds issue tracking layer on top of git operations
-
-**How they work together:**
-
-1. **Commit messages**: Reference beads issues
-   ```bash
-   git commit -m "feat: add JWT authentication [bd-42]"
-   ```
-
-2. **Branch strategy**: Create feature branches per beads issue
-   ```bash
-   git checkout -b feature/bd-42-user-auth
-   bd update bd-42 --status in_progress --json
-   ```
-
-3. **Session end**: Combined protocol
-   ```bash
-   # Complete git workflow
-   git add .
-   git commit -m "feat: complete auth [bd-42]"
-
-   # Complete beads workflow
-   bd close bd-42 --reason "Implemented JWT auth" --json
-   bd sync
-   git push  # Pushes both code and .beads/ metadata
-   ```
-
-**Key insight:** Beads `.beads/` directory is tracked by git, so git-workflow rules apply to beads metadata too.
+**Synergy:** Beads extends git workflow with issue tracking. Reference issues in commits (`[bd-42]`), create feature branches per issue, and push both code + `.beads/` metadata together.
 
 ### With Testing Philosophy (base/testing-philosophy.md)
 
-**Synergy:**
-- Both require tests to pass before marking work complete
-- Testing philosophy's "never proceed with failing tests" applies to closing beads issues
-- Beads session end protocol includes running quality gates
-
-**How they work together:**
-
-1. **Before closing issues**: All tests must pass
-   ```bash
-   # Run tests first
-   pytest tests/
-
-   # Only close if tests pass
-   bd close bd-42 --reason "Added auth with tests" --json
-   ```
-
-2. **Bug workflow**: Create test, fix bug, verify test passes
-   ```bash
-   # Create failing test (Red)
-   # Fix bug (Green)
-   pytest tests/test_auth.py  # Verify passes
-
-   # Then close issue
-   bd close bd-44 --reason "Fixed auth bug, added regression test" --json
-   ```
-
-3. **Test coverage issues**: Track with beads
-   ```bash
-   bd create "Add integration tests for auth flow" \
-     -t task \
-     -p 2 \
-     --json
-   ```
-
-**Key insight:** Beads issue status reflects test status - if tests fail, issue isn't truly "done".
+**Synergy:** Tests must pass before closing issues. TDD workflow: create failing test (Red), fix bug (Green), verify passes, then close issue with `bd close`.
 
 ### With Task Management (TodoWrite)
 
-**Different purposes, complementary use:**
+**Different purposes:**
 
 | Aspect | TodoWrite | Beads |
 |--------|-----------|-------|
 | **Scope** | Single session | Cross-session |
-| **Persistence** | In-memory, conversation | Git-tracked, persistent |
-| **Granularity** | Fine-grained steps | Cohesive work units |
-| **Visibility** | AI agent only | Team-wide (via git) |
-| **Example** | "Update auth.py", "Run tests", "Commit changes" | "Implement user authentication" |
+| **Persistence** | In-memory | Git-tracked |
+| **Granularity** | Fine steps | Cohesive units |
+| **Example** | "Update auth.py", "Run tests" | "Implement authentication" |
 
-**How they work together:**
+**Workflow:** Start session with `bd ready`, use TodoWrite to break down beads issue into steps, discover new work → create beads issue, session end → close beads issue.
 
-1. **Session start**: Check beads for what to work on
-   ```bash
-   bd ready --json
-   # Output: bd-42 "Add user authentication"
-
-   bd update bd-42 --status in_progress --json
-   ```
-
-2. **During session**: Use TodoWrite to break down the beads issue
-   ```
-   TodoWrite:
-   - [pending] Create User model
-   - [pending] Add authentication endpoints
-   - [pending] Write tests
-   - [pending] Update documentation
-   ```
-
-3. **As you work**: Mark TodoWrite tasks complete
-   ```
-   TodoWrite:
-   - [completed] Create User model
-   - [in_progress] Add authentication endpoints
-   - [pending] Write tests
-   - [pending] Update documentation
-   ```
-
-4. **Discover new work**: Create beads issues immediately
-   ```bash
-   # While working, discover a bug
-   bd create "Fix email validation in User model" \
-     -t bug \
-     -p 1 \
-     --json
-   bd dep add bd-45 bd-42 --type discovered-from
-   ```
-
-5. **Session end**: All TodoWrite tasks done → Close beads issue
-   ```bash
-   # All todos completed
-   bd close bd-42 --reason "Completed user auth implementation" --json
-   ```
-
-**Key insight:** TodoWrite = tactical (how to do the work), Beads = strategic (what work to do).
-
-**Conversion pattern:**
-If a TodoWrite task will span multiple sessions, convert it to a beads issue:
-
-```bash
-# TodoWrite shows: "Refactor authentication module" is taking longer than expected
-
-# Convert to beads issue:
-bd create "Refactor authentication module" \
-  --description "Extract middleware, add proper error handling, improve testability" \
-  -t task \
-  -p 2 \
-  --json
-
-# Remove from TodoWrite, track in beads instead
-```
-
-### Progressive Disclosure: When to Load This Rule
-
-**Load beads rule when:**
-- ✅ User mentions "bd", "beads", "beas" (common misspelling), "session start", or "session end"
-- ✅ Beginning or ending a work session
-- ✅ User asks about issue tracking or workflow management
-- ✅ Creating/closing issues
-- ✅ Working with discovered bugs/tasks
-
-**Don't load if:**
-- ❌ Just doing normal coding without session context
-- ❌ Only using TodoWrite for in-session task management
-- ❌ No .beads/ directory exists in project
-
-**Token consideration:**
-This rule is ~20KB. Load it selectively at session boundaries or when explicitly needed, not for every coding task.
+**Conversion:** If TodoWrite task spans multiple sessions, convert to beads issue.
 
 ### Integration Summary
 
@@ -1326,12 +1177,13 @@ bd sync --status
 2. ✅ **NEVER edit `.beads/issues.jsonl` directly** - Use `bd` commands only
 3. ✅ **ALWAYS verify after creating** - Use `bd list` or `bd show` to confirm issue exists
 4. ✅ **NEVER use `bd sync` without -m or --flush-only** - Avoid useless timestamp commits
-5. ✅ **Session start with bd ready** to review work
-6. ✅ **Session end with meaningful commit** (use `-m` flag or `--flush-only`)
-7. ✅ **One issue in_progress** at a time
-8. ✅ **File discovered work** immediately
-9. ✅ **Detailed close reasons** document what was done
-10. ✅ **Tests must pass** before closing issues
+5. ✅ **Universal best-practices review MANDATORY** - Apply security, quality, correctness checklist before closing ANY issue
+6. ✅ **Session start with bd ready** to review work
+7. ✅ **Session end with meaningful commit** (use `-m` flag or `--flush-only`)
+8. ✅ **One issue in_progress** at a time
+9. ✅ **File discovered work** immediately
+10. ✅ **Detailed close reasons** document what was done (include quality metrics)
+11. ✅ **Tests must pass** before closing issues
 
 ---
 
