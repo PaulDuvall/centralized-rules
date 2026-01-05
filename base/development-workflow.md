@@ -1,19 +1,17 @@
 # Development Workflow
 <!-- TIP: Ship small, ship often - fast feedback wins -->
 
-> **When to apply:** All development work across any language or framework
+> **Scope:** All development work across any language or framework
 
 ## Core Development Cycle
 
 ```
-1. Plan → 2. Implement → 3. Test → 4. Refactor → 5. Review → 6. Commit → 7. Deploy
+Plan → Implement → Test → Refactor → Review → Commit → Deploy
 ```
-
-### Detailed Steps
 
 **1. Plan**
 - Understand requirements clearly
-- Break down into manageable tasks (1-4 hours)
+- Break into 1-4 hour tasks
 - Identify dependencies and risks
 - Design approach before coding
 
@@ -32,14 +30,14 @@
 **4. Refactor**
 - Extract duplicated code
 - Improve naming
-- Keep it simple
+- Simplify complexity
 - Optimize only if needed
 
 **5. Review**
 - Self-review changes
 - Run linters/formatters
 - Check security implications
-- Ensure documentation updated
+- Update documentation
 
 **6. Commit**
 - Make atomic commits
@@ -55,50 +53,40 @@
 
 ## Task Management
 
-### Breaking Down Work
+**Breaking Down Work:**
+- Task size: 1-4 hours
+- Too large? Break into subtasks
+- Identify dependencies
+- Prioritize highest impact
 
-- **Task size:** Aim for 1-4 hour tasks
-- **Too large?** Break into subtasks
-- **Dependencies:** Identify what needs to happen first
-- **Priorities:** Work on highest impact first
-
-### Task States
-
-- **Todo** - Not started
-- **In Progress** - Currently working
-- **Blocked** - Waiting on something
-- **In Review** - Under review
-- **Done** - Completed and deployed
+**Task States:**
+- Todo, In Progress, Blocked, In Review, Done
 
 ## Code Review
 
-### For Authors
-
+**Authors:**
 - Self-review first
 - Keep changes focused (one logical change per PR)
 - Write clear descriptions (what and why)
 - Add tests
-- Respond to feedback constructively
+- Respond constructively
 
-### For Reviewers
-
-- Be constructive (suggest improvements)
-- Focus on substance (logic, security, maintainability)
+**Reviewers:**
+- Be constructive, suggest improvements
+- Focus on logic, security, maintainability
 - Ask questions to understand
 - Acknowledge good work
 - Review promptly
 
 ## Continuous Integration
 
-### Pre-Commit
-
+**Pre-Commit:**
 - Run tests locally
 - Run linters/formatters
 - Check for secrets
 - Verify build succeeds
 
-### CI Pipeline
-
+**CI Pipeline:**
 - Automated tests
 - Code quality checks
 - Security scanning
@@ -107,111 +95,69 @@
 
 ## Documentation
 
-### What to Document
+**What to Document:**
+- API contracts - Function signatures and behavior
+- Architecture decisions - Why choices were made
+- Setup instructions - How to get started
+- Usage examples - How to use the code
+- Edge cases - Non-obvious behavior
 
-- **API contracts** - Function signatures and behavior
-- **Architecture decisions** - Why choices were made
-- **Setup instructions** - How to get started
-- **Usage examples** - How to use the code
-- **Edge cases** - Non-obvious behavior
-
-### Where to Document
-
-- **Inline comments** - Complex logic
-- **Function docs** - All public APIs
-- **README** - Project overview and setup
-- **Architecture docs** - High-level design
-- **Runbooks** - Operational procedures
+**Where to Document:**
+- Inline comments - Complex logic
+- Function docs - All public APIs
+- README - Project overview and setup
+- Architecture docs - High-level design
+- Runbooks - Operational procedures
 
 ## Debugging Process
 
 1. **Reproduce** - Consistently trigger the bug
-2. **Isolate** - Narrow down where problem is
-3. **Understand** - Why is it happening?
+2. **Isolate** - Narrow down location
+3. **Understand** - Determine root cause
 4. **Fix** - Address root cause, not symptoms
 5. **Test** - Verify fix works, doesn't break others
 6. **Prevent** - Add test to catch regression
 
-### Techniques
-
+**Techniques:**
 - Read error messages carefully
-- Use debugger to step through code
+- Use debugger to step through
 - Add logging to trace execution
 - Simplify to isolate issue
 - Ask for help when stuck
 
 ## Performance Optimization
 
-### When to Optimize
+**When to Optimize:**
+- Measure first (don't guess at bottlenecks)
+- Focus on hot paths (optimize what matters)
+- After correctness (make it work, then fast)
+- When needed (premature optimization wastes time)
 
-- **Measure first** - Don't guess at bottlenecks
-- **Focus on hot paths** - Optimize what matters
-- **After correctness** - Make it work, then make it fast
-- **When needed** - Premature optimization wastes time
-
-### Process
-
-1. **Measure** - Profile to find bottlenecks
-2. **Optimize** - Improve the hot path
-3. **Measure again** - Verify improvement
-4. **Test** - Ensure still correct
-5. **Document** - Explain optimizations
+**Process:**
+1. Measure - Profile to find bottlenecks
+2. Optimize - Improve the hot path
+3. Measure again - Verify improvement
+4. Test - Ensure still correct
+5. Document - Explain optimizations
 
 ## Technical Debt
 
-### Managing Debt
-
+**Managing Debt:**
 - Acknowledge and track known issues
 - Prioritize (not all debt is equal)
 - Pay down regularly
 - Prevent new debt through quality standards
 - Refactor continuously
 
-### When to Take On Debt
-
+**When to Take On Debt:**
 - Deliberate decision (understand trade-offs)
 - Time-boxed (plan to address soon)
 - Documented (record what and why)
 - Rare (exception, not rule)
 
-## Collaboration
-
-### Working with Team
-
-- Communicate clearly (share context and decisions)
-- Ask questions (don't assume)
-- Share knowledge (help others learn)
-- Give feedback (constructive and timely)
-- Be reliable (do what you commit to)
-
-### Pair Programming
-
-- Rotate driver (take turns typing)
-- Think aloud (share reasoning)
-- Ask questions (understand decisions)
-- Take breaks (maintain focus)
-- Learn from each other
-
-## Continuous Learning
-
-- Read code to learn from others
-- Try new things and experiment
-- Follow best practices and patterns
-- Get feedback through code reviews
-- Share knowledge (teaching reinforces learning)
-
-### Growth Mindset
-
-- Mistakes are learning opportunities
-- Always improving
-- Seek feedback and embrace criticism
-- Challenge yourself
-- Help others grow
-
 ## Common Pitfalls
 
-### Avoid
-
+**Avoid:**
 - ❌ Skipping tests to go faster
 - ❌ Committing failing code
 - ❌ Ignoring code review feedback
@@ -221,8 +167,7 @@
 - ❌ Building without understanding requirements
 - ❌ Forgetting to commit/push work
 
-### Do Instead
-
+**Do Instead:**
 - ✅ Write tests as you code
 - ✅ Commit only passing code
 - ✅ Engage with reviewers
@@ -241,11 +186,3 @@
 5. **Document well** - Code is read more than written
 6. **Communicate clearly** - Share context
 7. **Learn continuously** - Always improving
-
-## Success Metrics
-
-- **Velocity** - Delivering features consistently
-- **Quality** - Low bug rate, high test coverage
-- **Maintainability** - Easy to change code
-- **Reliability** - Systems stay up
-- **Team satisfaction** - Enjoyable work environment
