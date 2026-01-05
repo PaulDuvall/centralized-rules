@@ -1,14 +1,14 @@
-# Gemini/Codegemma Tool Configuration
+# Gemini/Codegemma Configuration
 
-This directory contains Google Gemini and Codegemma-specific configurations and templates for the centralized rules system.
+Google Gemini and Codegemma-specific configurations for the centralized rules system.
 
 ## Overview
 
-**Gemini** is Google's family of multimodal AI models, and **Codegemma** is a specialized variant optimized for code generation and understanding. This integration provides development rules in a format optimized for Gemini-based coding assistants.
+**Gemini** is Google's multimodal AI model family. **Codegemma** is a specialized variant optimized for code generation. This integration provides development rules in a format optimized for Gemini-based coding assistants.
 
 ## Output Format
 
-Gemini/Codegemma uses a `.gemini/` directory structure similar to Claude Code's approach:
+`.gemini/` directory structure with monolithic rules and structured metadata.
 
 **Structure:**
 ```
@@ -16,7 +16,7 @@ project-root/
 └── .gemini/
     ├── rules.md              # Main instructions file (monolithic)
     ├── context.json          # Project context metadata
-    └── rules/                # Optional hierarchical structure (future)
+    └── rules/                # Optional hierarchical (future)
         ├── base/
         ├── languages/
         ├── frameworks/
@@ -24,21 +24,19 @@ project-root/
 ```
 
 **Current Implementation:**
-- **Monolithic Format:** Single `.gemini/rules.md` file with all rules
+- **Monolithic Format:** Single `.gemini/rules.md` file
 - **Context Metadata:** Structured JSON with project configuration
-- **Future-Ready:** Directory structure prepared for hierarchical rules
+- **Future-Ready:** Directory prepared for hierarchical rules
 
 **Characteristics:**
-- **Google-Optimized:** Formatted for Gemini's instruction following
-- **Metadata-Rich:** Includes structured project context for better code generation
-- **Extensible:** Ready for future hierarchical rule support
-- **Clear Sections:** Organized by concern for easy parsing
+- Google-optimized formatting for Gemini's instruction following
+- Metadata-rich structured project context for better generation
+- Extensible for future hierarchical rule support
+- Organized by concern for easy parsing
 
 ## File Format
 
 ### rules.md
-
-Main instructions file in markdown format:
 
 ```markdown
 # Gemini Code Assistant - Development Rules
@@ -48,21 +46,18 @@ Generated: {{TIMESTAMP}}
 Source: https://github.com/PaulDuvall/centralized-rules
 
 ## Project Configuration
-
 Languages: {{LANGUAGES}}
 Frameworks: {{FRAMEWORKS}}
 Cloud: {{CLOUD_PROVIDERS}}
 Maturity: {{MATURITY_LEVEL}}
 
 ## Instructions for Gemini
-
-When generating code for this project:
-1. Follow the coding standards defined below
-2. Apply security principles to all generated code
+1. Follow coding standards defined below
+2. Apply security principles to all code
 3. Include appropriate error handling
 4. Generate tests for new functionality
 5. Add comments for complex logic
-6. Consider the project's maturity level requirements
+6. Consider project maturity level
 
 ## Base Development Rules
 
@@ -71,14 +66,6 @@ When generating code for this project:
 
 ### Code Quality
 [Content from base/code-quality.md]
-
-### Testing
-[Content from base/testing-philosophy.md]
-
-### Security
-[Content from base/security-principles.md]
-
-[... additional sections ...]
 ```
 
 ### context.json
@@ -102,61 +89,51 @@ Structured metadata for enhanced code generation:
     "code_style": {
       "indent": 4,
       "max_line_length": 100,
-      "quote_style": "double",
-      "trailing_commas": true
+      "quote_style": "double"
     },
     "naming": {
       "variables": "snake_case",
       "functions": "snake_case",
-      "classes": "PascalCase",
-      "constants": "SCREAMING_SNAKE_CASE"
+      "classes": "PascalCase"
     },
     "testing": {
       "framework": "pytest",
-      "coverage_threshold": 80,
-      "required_for_pr": true
+      "coverage_threshold": 80
     }
-  },
-  "rules_version": "1.0.0",
-  "sync_timestamp": "{{TIMESTAMP}}"
+  }
 }
 ```
 
-## Benefits
+## Benefits & Use Cases
 
 **Advantages:**
-- **Google Ecosystem:** Optimized for Gemini and Codegemma models
-- **Structured Context:** JSON metadata enables more precise code generation
-- **Clear Instructions:** Explicit guidance for Gemini's instruction-following capabilities
-- **Future-Proof:** Ready for hierarchical rule support when Gemini adds it
+- Google ecosystem optimized
+- Structured JSON context enables precise code generation
+- Clear instructions for Gemini's instruction-following
+- Future-proof for hierarchical rules
 
 **Use Cases:**
-- **Gemini API:** Use rules with Gemini API for code generation
-- **Codegemma:** Specialized code model for faster, more accurate suggestions
-- **Google IDEs:** Integration with Android Studio, IntelliJ (Google plugins)
-- **Custom Tools:** Build custom Gemini-powered coding assistants
+- Gemini API for code generation
+- Codegemma for faster, accurate suggestions
+- Google IDEs (Android Studio, IntelliJ with Google plugins)
+- Custom Gemini-powered coding assistants
 
 ## File Generation
-
-The sync script generates Gemini configuration:
 
 ```bash
 # Generate Gemini rules and context
 ./sync-ai-rules.sh --tool gemini
 
-# Gemini is included when using --tool all
+# Included when using --tool all
 ./sync-ai-rules.sh --tool all
 ```
 
 ## Environment Detection
 
-The sync script auto-detects Gemini environment via:
-
-1. **Environment Variable:** `GEMINI_AI`
-2. **Directory Presence:** `.gemini/` directory exists
-3. **Config File:** `.gemini/config.json` exists
-
-If detected, Gemini is automatically included in sync targets.
+Auto-detects Gemini via:
+1. Environment variable: `GEMINI_AI`
+2. Directory presence: `.gemini/` exists
+3. Config file: `.gemini/config.json` exists
 
 ## Integration Approaches
 
@@ -166,11 +143,9 @@ If detected, Gemini is automatically included in sync targets.
 import google.generativeai as genai
 import json
 
-# Load project context
+# Load context and rules
 with open('.gemini/context.json') as f:
     context = json.load(f)
-
-# Load rules
 with open('.gemini/rules.md') as f:
     rules = f.read()
 
@@ -181,23 +156,16 @@ model = genai.GenerativeModel('gemini-pro')
 # Generate code with context
 prompt = f"""
 Project Context: {json.dumps(context)}
-
-Development Rules:
-{rules}
-
+Development Rules: {rules}
 Task: Create a new FastAPI endpoint for user authentication
 """
-
 response = model.generate_content(prompt)
-print(response.text)
 ```
 
 ### 2. Custom CLI Tool
 
 ```bash
-# gemini-code - Custom CLI wrapper
 #!/bin/bash
-
 CONTEXT=$(cat .gemini/context.json)
 RULES=$(cat .gemini/rules.md)
 
@@ -209,16 +177,16 @@ gemini-api \
 
 ### 3. IDE Plugin
 
-Create a custom plugin that:
+Create a plugin that:
 - Loads `.gemini/rules.md` on project open
-- Injects context from `context.json` into code generation requests
-- Provides task-specific rule filtering (future enhancement)
+- Injects context from `context.json` into requests
+- Provides task-specific rule filtering (future)
 
 ## Customization
 
 ### Sync Configuration
 
-Create `.ai/sync-config.json`:
+`.ai/sync-config.json`:
 
 ```json
 {
@@ -255,10 +223,8 @@ Add project-specific context to `context.json`:
 
 ## Template Files
 
-This directory contains:
-
-- `template-rules.md` - Template structure for main rules file
-- `template-context.json` - Template for project context metadata
+- `template-rules.md` - Template for main rules file
+- `template-context.json` - Template for project metadata
 - `instruction-patterns.md` - Effective instruction patterns for Gemini
 - `examples/` - Example integrations and usage patterns
 
@@ -266,7 +232,6 @@ This directory contains:
 
 ### Enhanced Code Generation
 
-Gemini's multimodal capabilities enable:
 - **Image-to-Code:** Generate code from UI mockups or diagrams
 - **Code Explanations:** Natural language explanations of complex code
 - **Code Translation:** Convert between languages following project conventions
@@ -274,59 +239,58 @@ Gemini's multimodal capabilities enable:
 
 ### Instruction Following
 
-Gemini excels at following explicit instructions. The rules format includes:
-- **Numbered Steps:** Clear action items for code generation
-- **Examples:** Concrete code examples for each pattern
+Rules format includes:
+- **Numbered Steps:** Clear action items
+- **Examples:** Concrete code examples
 - **Anti-Patterns:** Explicit "do not" instructions
 - **Checklist Format:** Easy-to-follow validation criteria
 
 ### Context Understanding
 
 `context.json` enables Gemini to:
-- Understand project-wide conventions without repeating them
+- Understand project-wide conventions without repetition
 - Apply maturity-level requirements automatically
 - Use correct package managers and tools
 - Follow established naming conventions
 
-## Comparison to Other Tools
+## Comparison
 
 | Feature | Gemini | Claude Code | Cursor | Copilot |
 |---------|--------|-------------|--------|---------|
 | **File Format** | Monolithic + JSON | Hierarchical/Mono | Monolithic | Monolithic |
-| **Metadata** | Rich JSON context | Limited | None | Limited |
-| **Progressive Disclosure** | Future | Yes (hierarchical) | No | No |
+| **Metadata** | Rich JSON | Limited | None | Limited |
+| **Progressive Disclosure** | Future | Yes | No | No |
 | **Multimodal** | Yes | Yes | No | Limited |
 | **API Access** | Direct | Via API | Indirect | Limited |
 | **Customization** | High | High | Medium | Medium |
 
 **When to use Gemini:**
-- You're using Google Cloud Platform
-- You need multimodal capabilities (image, video, audio)
-- You want rich structured context
-- You're building custom code generation tools
-- You need fast, cost-effective code generation (Codegemma)
+- Using Google Cloud Platform
+- Need multimodal capabilities (image, video, audio)
+- Want rich structured context
+- Building custom code generation tools
+- Need fast, cost-effective code generation (Codegemma)
 
 **When to consider alternatives:**
-- You need progressive disclosure now (→ Claude Code hierarchical)
-- You prefer established IDE integrations (→ Copilot, Cursor)
-- You want simpler setup (→ Cursor)
+- Need progressive disclosure now → Claude Code hierarchical
+- Prefer established IDE integrations → Copilot, Cursor
+- Want simpler setup → Cursor
 
 ## Future Enhancements
 
-**Planned Features:**
-1. **Hierarchical Rules:** On-demand rule loading similar to Claude Code
+1. **Hierarchical Rules:** On-demand rule loading like Claude Code
 2. **Smart Context:** Auto-generate context from codebase analysis
 3. **Rule Versioning:** Track which rule version generated which code
 4. **Performance Metrics:** Measure code quality by rule adherence
 5. **IDE Plugins:** Native support in popular IDEs
-6. **Multimodal Rules:** Include diagrams and screenshots in rules
+6. **Multimodal Rules:** Include diagrams and screenshots
 
 ## Examples
 
 See `examples/` directory for:
 - `simple-api-generation.py` - Basic API code generation
 - `custom-cli-tool.sh` - Command-line code assistant
-- `ide-plugin-skeleton/` - Starter template for IDE integration
+- `ide-plugin-skeleton/` - Starter for IDE integration
 - `batch-refactoring.py` - Bulk code refactoring script
 
 ## Related Documentation
@@ -334,7 +298,6 @@ See `examples/` directory for:
 - [Google Gemini Documentation](https://ai.google.dev/gemini-api/docs)
 - [Codegemma Documentation](https://ai.google.dev/gemini-api/docs)
 - [Centralized Rules Architecture](../../ARCHITECTURE.md)
-- Centralized Rules on GitHub
 
 ## Support
 

@@ -2,28 +2,28 @@
 
 ## Progressive Disclosure System
 
-This project uses **centralized development rules** with **two-phase progressive disclosure** to maximize context efficiency.
+Two-phase progressive disclosure maximizes context efficiency.
 
 ### Phase 1: Project-Level Detection (Automatic)
 
-The sync script automatically detected this project configuration:
+Automatically detected project configuration:
 
 - **Languages:** {{DETECTED_LANGUAGES}}
 - **Frameworks:** {{DETECTED_FRAMEWORKS}}
 - **Cloud Providers:** {{DETECTED_CLOUD}}
 - **Maturity Level:** {{MATURITY_LEVEL}}
 
-Only rules relevant to these technologies are synced to this project.
+Only relevant rules synced to this project.
 
 ### Phase 2: Task-Level Loading (On-Demand)
 
-**⚠️ IMPORTANT:** Load only rules relevant to your current task. This maximizes context window efficiency.
+**⚠️ IMPORTANT:** Load only rules relevant to your current task to maximize context window efficiency.
 
 ## Rule Categories
 
 ### Base Rules (`rules/base/`)
 
-Universal best practices - **always relevant** regardless of task:
+Universal best practices - always relevant:
 
 - `git-workflow.md` - Commit messages, branching, frequency
 - `code-quality.md` - Function size, naming, DRY principle
@@ -57,7 +57,7 @@ Cloud provider-specific patterns for detected providers only.
 
 ## Task-Specific Loading Guidelines
 
-**Load ONLY what you need for the current task:**
+Load ONLY rules needed for current task:
 
 ### Code Review
 ```
@@ -112,7 +112,7 @@ Use the rule index to discover available rules:
 cat .claude/rules/index.json
 ```
 
-This JSON file contains metadata for all available rules including:
+This JSON file contains metadata for all available rules:
 - Category (base/language/framework/cloud)
 - Description
 - When to apply
@@ -120,7 +120,7 @@ This JSON file contains metadata for all available rules including:
 
 ## Measured Performance
 
-**Real-world validation** with Python + FastAPI project:
+Real-world validation with Python + FastAPI project:
 
 | Task Type | Rules Loaded | Token Savings |
 |-----------|-------------|---------------|
@@ -130,15 +130,15 @@ This JSON file contains metadata for all available rules including:
 | Git Commit | 2 files | 89.6% |
 | **Average** | **2.25 files** | **74.4%** |
 
-**Result:** 59% more context available for code analysis!
+**Result:** 59% more context available for code analysis
 
 ## Best Practices
 
-1. **Start narrow:** Load only rules for the immediate task
+1. **Start narrow:** Load only rules for immediate task
 2. **Add as needed:** Load additional rules only if task scope expands
 3. **Check index:** Use `rules/index.json` to find relevant rules quickly
 4. **Cite rules:** Reference specific rule files when making suggestions
-5. **Report issues:** If rules conflict or are unclear, note it in your response
+5. **Report issues:** If rules conflict or are unclear, note in response
 
 ## Maturity-Aware Guidance
 

@@ -22,36 +22,34 @@
 
 ## Instructions for Gemini
 
-When generating, reviewing, or refactoring code for this project, follow these guidelines:
+When generating, reviewing, or refactoring code:
 
 ### Primary Objectives
-1. **Follow Coding Standards:** Apply the language and framework-specific standards defined below
+1. **Follow Coding Standards:** Apply language and framework-specific standards below
 2. **Ensure Security:** Validate inputs, avoid hardcoded secrets, follow security principles
 3. **Include Error Handling:** Add appropriate error handling and logging
 4. **Generate Tests:** Create test cases for new functionality
 5. **Add Documentation:** Include docstrings/comments for complex logic
-6. **Apply Maturity Requirements:** Follow {{MATURITY_LEVEL}} level requirements (see sections below)
-7. **Maintain Consistency:** Use established patterns and conventions from this codebase
+6. **Apply Maturity Requirements:** Follow {{MATURITY_LEVEL}} level requirements
+7. **Maintain Consistency:** Use established patterns from this codebase
 
 ### Code Generation Checklist
 
-Before outputting generated code, verify:
-- [ ] Follows project's naming conventions
-- [ ] Includes type hints/annotations where applicable
+Before outputting code, verify:
+- [ ] Follows project naming conventions
+- [ ] Includes type hints/annotations
 - [ ] Has appropriate error handling
 - [ ] Validates external inputs
 - [ ] No hardcoded secrets or credentials
-- [ ] Includes unit tests (when creating new functions)
+- [ ] Includes unit tests (for new functions)
 - [ ] Has docstrings/comments for complex logic
 - [ ] Respects maximum function length ({{MAX_FUNCTION_LINES}} lines)
-- [ ] Uses established patterns from framework rules
+- [ ] Uses established framework patterns
 - [ ] Meets maturity level requirements
 
 ---
 
 ## Base Development Rules
-
-These rules apply to all code in this project, regardless of language or framework.
 
 ### Git Workflow Standards
 
@@ -109,8 +107,6 @@ These rules apply to all code in this project, regardless of language or framewo
 
 ## Code Style Preferences
 
-Based on detected configuration files and project conventions:
-
 ### Formatting
 - **Indentation:** {{INDENT_SIZE}} spaces
 - **Max Line Length:** {{MAX_LINE_LENGTH}} characters
@@ -118,10 +114,10 @@ Based on detected configuration files and project conventions:
 - **Trailing Commas:** {{TRAILING_COMMAS}}
 
 ### Naming Conventions
-- **Variables:** {{VARIABLE_NAMING}} (e.g., `user_id` or `userId`)
-- **Functions:** {{FUNCTION_NAMING}} (e.g., `get_user` or `getUser`)
-- **Classes:** {{CLASS_NAMING}} (e.g., `UserService` or `user_service`)
-- **Constants:** {{CONSTANT_NAMING}} (e.g., `MAX_RETRIES`)
+- **Variables:** {{VARIABLE_NAMING}}
+- **Functions:** {{FUNCTION_NAMING}}
+- **Classes:** {{CLASS_NAMING}}
+- **Constants:** {{CONSTANT_NAMING}}
 
 ### Documentation Style
 - **Docstring Format:** {{DOCSTRING_FORMAT}}
@@ -132,7 +128,7 @@ Based on detected configuration files and project conventions:
 
 ## Maturity Level Requirements
 
-This project is at **{{MATURITY_LEVEL}}** maturity level. Apply these requirements:
+This project is at **{{MATURITY_LEVEL}}** maturity level:
 
 ### MVP/POC Requirements
 **Focus:** Rapid iteration, basic quality gates
@@ -170,10 +166,6 @@ This project is at **{{MATURITY_LEVEL}}** maturity level. Apply these requiremen
 - ⚠️ Performance testing
 - ⚠️ Comprehensive documentation
 
-**Optional:**
-- ❌ Advanced optimization
-- ❌ Chaos engineering
-
 ### Production Requirements
 **Focus:** Full compliance, extensive testing, reliability
 
@@ -190,48 +182,43 @@ This project is at **{{MATURITY_LEVEL}}** maturity level. Apply these requiremen
 - ✅ Comprehensive documentation
 - ✅ Incident response procedures
 
-**Recommended:**
-- ⚠️ Chaos engineering
-- ⚠️ Advanced performance optimization
-- ⚠️ A/B testing framework
-
 ---
 
 ## Anti-Patterns to Avoid
 
 When generating code, **DO NOT** create these anti-patterns:
 
-### Code Quality Anti-Patterns
-1. **God Object:** Large classes that do too many things
+### Code Quality
+1. **God Object:** Large classes doing too many things
 2. **Magic Numbers:** Unexplained literal values (use named constants)
 3. **Copy-Paste Programming:** Duplicated code instead of reusable functions
 4. **Primitive Obsession:** Using primitives instead of domain objects
 5. **Long Functions:** Functions exceeding {{MAX_FUNCTION_LINES}} lines
 
-### Security Anti-Patterns
+### Security
 6. **Hardcoded Secrets:** API keys, passwords, tokens in code
 7. **SQL Injection:** Direct string concatenation in queries
-8. **Missing Input Validation:** Trusting external input without validation
+8. **Missing Input Validation:** Trusting external input
 9. **Weak Cryptography:** Using deprecated or weak algorithms
 10. **Exposed Sensitive Data:** Logging or returning sensitive information
 
-### Testing Anti-Patterns
-11. **Testing Implementation Details:** Tests that break on refactoring
-12. **Test Interdependence:** Tests that depend on execution order
+### Testing
+11. **Testing Implementation Details:** Tests breaking on refactoring
+12. **Test Interdependence:** Tests depending on execution order
 13. **Insufficient Coverage:** Critical paths without tests
 14. **No Edge Case Testing:** Only testing happy path
 
-### Architecture Anti-Patterns
+### Architecture
 15. **Big Ball of Mud:** No clear architecture or separation
 16. **Monolithic Database:** Single database for all concerns
 17. **Vendor Lock-In:** Tight coupling to specific vendors
 
-### AI Development Anti-Patterns
+### AI Development
 18. **Context Overload:** Loading all rules for every task
 19. **Blind AI Acceptance:** Using generated code without review
 20. **No Context Management:** Ignoring project-specific context
 
-See [ANTI_PATTERNS.md](https://github.com/PaulDuvall/centralized-rules/blob/main/ANTI_PATTERNS.md) for complete descriptions and solutions.
+See [ANTI_PATTERNS.md](https://github.com/PaulDuvall/centralized-rules/blob/main/ANTI_PATTERNS.md) for complete descriptions.
 
 ---
 
@@ -239,25 +226,17 @@ See [ANTI_PATTERNS.md](https://github.com/PaulDuvall/centralized-rules/blob/main
 
 ### Error Handling Pattern
 
-When generating error handling code, follow this pattern:
-
 {{ERROR_HANDLING_EXAMPLE}}
 
 ### Logging Pattern
-
-When adding logging, use this pattern:
 
 {{LOGGING_EXAMPLE}}
 
 ### Testing Pattern
 
-When generating tests, use this pattern:
-
 {{TESTING_EXAMPLE}}
 
 ### API Endpoint Pattern
-
-When creating API endpoints, follow this pattern:
 
 {{API_ENDPOINT_EXAMPLE}}
 
@@ -267,7 +246,7 @@ When creating API endpoints, follow this pattern:
 
 ### When Creating New Features
 1. Read relevant existing code to understand patterns
-2. Create function/class structure following naming conventions
+2. Create structure following naming conventions
 3. Implement core logic with error handling
 4. Add input validation for external inputs
 5. Include logging for key operations
@@ -277,24 +256,24 @@ When creating API endpoints, follow this pattern:
 
 ### When Refactoring Code
 1. Identify code smells and anti-patterns
-2. Ensure tests exist before refactoring (write them if not)
+2. Ensure tests exist (write them if not)
 3. Make incremental, focused changes
 4. Run tests after each change
-5. Maintain backward compatibility (or document breaking changes)
-6. Update documentation to reflect changes
+5. Maintain backward compatibility
+6. Update documentation
 7. Add comments explaining complex refactorings
 
 ### When Fixing Bugs
-1. Understand the root cause
-2. Write a failing test that reproduces the bug
-3. Implement the minimal fix
-4. Verify the test now passes
+1. Understand root cause
+2. Write failing test reproducing bug
+3. Implement minimal fix
+4. Verify test passes
 5. Check for similar bugs elsewhere
 6. Add logging to prevent future occurrences
-7. Document the fix in commit message
+7. Document fix in commit message
 
 ### When Writing Tests
-1. Follow the project's testing framework conventions
+1. Follow project's testing framework
 2. Use descriptive test names (test_should_do_x_when_y)
 3. Arrange-Act-Assert pattern
 4. Test one thing per test
@@ -306,7 +285,7 @@ When creating API endpoints, follow this pattern:
 
 ## Multimodal Capabilities
 
-As Gemini supports multimodal inputs, you can:
+As Gemini supports multimodal inputs:
 
 ### Image-to-Code
 - Convert UI mockups to frontend components
@@ -314,7 +293,7 @@ As Gemini supports multimodal inputs, you can:
 - Create data models from ER diagrams
 
 ### Code Explanation
-- Provide natural language explanations of complex algorithms
+- Provide natural language explanations of algorithms
 - Generate documentation from code
 - Create tutorials from implementation
 
@@ -327,17 +306,17 @@ As Gemini supports multimodal inputs, you can:
 
 ## Updating These Rules
 
-To update these rules to the latest version:
+Update to latest version:
 
 ```bash
 ./sync-ai-rules.sh --tool gemini
 ```
 
-This will refresh:
+This refreshes:
 - `.gemini/rules.md` (this file)
 - `.gemini/context.json` (project metadata)
 
-To customize which rules are loaded, create `.ai/sync-config.json`:
+Customize via `.ai/sync-config.json`:
 
 ```json
 {
@@ -365,7 +344,7 @@ To customize which rules are loaded, create `.ai/sync-config.json`:
 - This file is optimized for Gemini's instruction-following capabilities
 - Use `context.json` for structured project metadata
 - Future versions will support hierarchical rule loading
-- For custom integrations, see `tools/gemini/examples/` in the repository
+- For custom integrations, see `tools/gemini/examples/` in repository
 
 ---
 

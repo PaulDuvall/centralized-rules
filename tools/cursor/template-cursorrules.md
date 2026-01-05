@@ -1,6 +1,6 @@
 # Development Rules
 
-This file contains development standards and best practices for this project.
+Development standards and best practices for this project.
 
 **Auto-synced from:** https://github.com/PaulDuvall/centralized-rules
 **Last synced:** {{SYNC_TIMESTAMP}}
@@ -35,7 +35,7 @@ This file contains development standards and best practices for this project.
 
 ## Base Rules
 
-These rules apply to all code regardless of language or framework.
+Rules applying to all code regardless of language or framework.
 
 ### Git Workflow
 
@@ -69,8 +69,6 @@ These rules apply to all code regardless of language or framework.
 
 ### Additional Base Rules
 
-The following base rules are also loaded for this project:
-
 {{ADDITIONAL_BASE_RULES}}
 
 ---
@@ -101,9 +99,9 @@ Cloud provider-specific deployment and operational patterns.
 
 ## Maturity-Aware Requirements
 
-This project is at **{{MATURITY_LEVEL}}** maturity. Requirements vary by maturity level:
+This project is at **{{MATURITY_LEVEL}}** maturity:
 
-- **MVP/POC:** Focus on rapid iteration, basic quality gates
+- **MVP/POC:** Rapid iteration, basic quality gates
 - **Pre-Production:** Stricter standards, comprehensive testing, security scanning
 - **Production:** Full compliance, extensive testing, monitoring, documentation
 
@@ -113,13 +111,13 @@ Rules marked with maturity indicators show different requirements for each level
 
 ## Rule Updates
 
-To update these rules to the latest version:
+Update rules to latest version:
 
 ```bash
 ./sync-ai-rules.sh --tool cursor
 ```
 
-To customize which rules are loaded, create `.ai/sync-config.json`:
+Customize loaded rules via `.ai/sync-config.json`:
 
 ```json
 {
