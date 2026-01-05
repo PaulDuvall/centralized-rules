@@ -1,57 +1,59 @@
 # Refactoring Patterns
 
-Comprehensive guide to code refactoring using Tidy First principles and Martin Fowler's catalog.
+Code refactoring guide using Tidy First principles and Martin Fowler's catalog.
 
-## Refactoring Philosophy
+## Core Principles
 
-**Definition:** Improving code design without changing external behavior.
-
-### Core Principles
-
-1. **Preserve Behavior** - External behavior unchanged
-2. **Small Steps** - Tiny, incremental changes
-3. **Test After Each Change** - Verify nothing broke
-4. **Commit Frequently** - Save working state
-5. **One Refactoring at a Time** - Don't mix with feature work
+| Principle | Description |
+|-----------|-------------|
+| **Preserve Behavior** | External behavior unchanged |
+| **Small Steps** | Tiny, incremental changes (seconds to minutes) |
+| **Test After Each** | Verify nothing broke |
+| **Commit Frequently** | Save working state |
+| **One at a Time** | Don't mix refactoring with features |
 
 ### The Two Hats (Kent Beck)
 
 - **Feature Hat:** Adding functionality
 - **Refactoring Hat:** Improving structure
+- **Rule:** Never wear both simultaneously
 
-**Rule:** Never wear both simultaneously.
-
-```
-1. Refactoring Hat: Make code easy to change → Commit
-2. Feature Hat: Add the feature → Commit
-```
+**Workflow:** Refactor → Commit → Feature → Commit
 
 ---
 
-## Tidy First: Incremental Refactoring
+## Tidy First Workflow
 
-**Workflow:**
 ```
-1. List tidyings that would make change easier
+1. List tidyings that make change easier
 2. Perform tidyings one at a time
 3. Commit after each tidying
 4. Implement the feature
 5. (Optional) Tidy again if new messes emerged
 ```
 
-### Tidy First Patterns
+### Quick Tidy Patterns
 
-#### 1. Guard Clauses
+| Pattern | Before | After |
+|---------|--------|-------|
+| **Guard Clauses** | `if a: if b: if c: return x` | `if not a: return 0`<br>`if not b: return 0`<br>`if c: return x` |
+| **Dead Code** | Comments, unused code | Delete (VCS remembers) |
+| **Normalize Symmetries** | `getName()`, `get_email()`, `fetchAddress()` | `get_name()`, `get_email()`, `get_address()` |
+| **Reading Order** | Random method order | Top-to-bottom newspaper style |
+| **Explaining Variables** | `if user.age > 18 and user.country == 'US'` | `is_adult = user.age > 18`<br>`if is_adult and is_us_resident` |
+| **Explaining Constants** | `if risk > 0.75: return base * 1.5` | `HIGH_RISK = 0.75`<br>`MULTIPLIER = 1.5` |
+
+#### Guard Clauses Example
 
 ```python
-# ❌ Before: Nested conditions
+# ❌ Before: Nested
 def calculate_discount(customer, order):
     if customer.is_premium:
         if order.total > 1000:
             if customer.loyalty_years > 5:
                 return order.total * 0.20
 
-# ✅ After: Guard clauses
+# ✅ After: Guards
 def calculate_discount(customer, order):
     if not customer.is_premium:
         return 0
@@ -62,115 +64,26 @@ def calculate_discount(customer, order):
     return order.total * 0.15
 ```
 
-#### 2. Dead Code Elimination
-
-```python
-# ❌ Before
-def process_order(order):
-    # validate_customer(order.customer)  # Commented out
-    calculate_total(order)
-    # send_confirmation_email(order)  # Moved to service
-    save_order(order)
-
-# ✅ After
-def process_order(order):
-    calculate_total(order)
-    save_order(order)
-```
-
-#### 3. Normalize Symmetries
-
-```python
-# ❌ Before: Inconsistent naming
-class User:
-    def getName(self): pass  # camelCase
-    def get_email(self): pass  # snake_case
-    def fetchAddress(self): pass  # different verb
-
-# ✅ After: Consistent
-class User:
-    def get_name(self): pass
-    def get_email(self): pass
-    def get_address(self): pass
-```
-
-#### 4. Reading Order
-
-Arrange code top-to-bottom like a newspaper.
-
-```python
-# ✅ Good: Reads top to bottom
-class OrderProcessor:
-    def process(self, order):
-        self._validate(order)
-        self._calculate_total(order)
-        self._save(order)
-
-    def _validate(self, order):
-        pass
-
-    def _calculate_total(self, order):
-        pass
-
-    def _save(self, order):
-        pass
-```
-
-#### 5. Explaining Variables
-
-```python
-# ❌ Before
-if (user.age > 18 and user.country == 'US' and user.has_license):
-    allow_rental()
-
-# ✅ After
-is_adult = user.age > 18
-is_us_resident = user.country == 'US'
-has_drivers_license = user.has_license
-
-if is_adult and is_us_resident and has_drivers_license:
-    allow_rental()
-```
-
-#### 6. Explaining Constants
-
-```python
-# ❌ Before
-def calculate_premium(base_rate, risk_factor):
-    if risk_factor > 0.75:
-        return base_rate * 1.5
-    return base_rate
-
-# ✅ After
-HIGH_RISK_THRESHOLD = 0.75
-HIGH_RISK_MULTIPLIER = 1.5
-
-def calculate_premium(base_rate, risk_factor):
-    if risk_factor > HIGH_RISK_THRESHOLD:
-        return base_rate * HIGH_RISK_MULTIPLIER
-    return base_rate
-```
-
 ---
 
 ## When to Refactor
 
-### The Rule of Three
+### Rule of Three
 
-1. **First occurrence:** Just write it
+1. **First occurrence:** Write it
 2. **Second occurrence:** Notice duplication, but duplicate
-3. **Third occurrence:** Now refactor to remove duplication
+3. **Third occurrence:** Refactor to remove duplication
 
 **Rationale:** Premature abstraction worse than duplication.
 
-### Refactoring Opportunities
+### Do Refactor
 
 - ✅ Before adding a feature
 - ✅ During code review
 - ✅ When fixing a bug
 - ✅ Scheduled cleanup sessions
 
-### When NOT to Refactor
+### Don't Refactor
 
 - ❌ Code about to be deleted
 - ❌ Under extreme time pressure
@@ -179,64 +92,69 @@ def calculate_premium(base_rate, risk_factor):
 
 ---
 
-## Code Smells
-
-**22 smells in 5 categories:**
+## Code Smells (22 Total)
 
 ### Bloaters
 
-Things grown too large:
-
-| Smell | Solution |
-|-------|----------|
-| **Long Method** | Extract Method |
-| **Large Class** | Extract Class |
-| **Primitive Obsession** | Extract Class, Introduce Parameter Object |
-| **Long Parameter List** | Introduce Parameter Object |
-| **Data Clumps** | Extract Class |
+| Smell | Solution | Indicator |
+|-------|----------|-----------|
+| **Long Method** | Extract Method | Method >20 lines |
+| **Large Class** | Extract Class | Class >200 lines, many responsibilities |
+| **Primitive Obsession** | Extract Class, Parameter Object | Using primitives instead of small objects |
+| **Long Parameter List** | Parameter Object | >3-4 parameters |
+| **Data Clumps** | Extract Class | Same group of variables together |
 
 ### Object-Orientation Abusers
 
-| Smell | Solution |
-|-------|----------|
-| **Switch Statements** | Replace with Polymorphism |
-| **Temporary Field** | Extract Class |
-| **Refused Bequest** | Replace Inheritance with Delegation |
-| **Alternative Classes with Different Interfaces** | Rename Method, Extract Superclass |
+| Smell | Solution | Indicator |
+|-------|----------|-----------|
+| **Switch Statements** | Replace with Polymorphism | Type codes, case statements on type |
+| **Temporary Field** | Extract Class | Fields only set in certain circumstances |
+| **Refused Bequest** | Replace Inheritance with Delegation | Subclass doesn't use parent methods |
+| **Alternative Classes** | Rename Method, Extract Superclass | Different interfaces, same purpose |
 
 ### Change Preventers
 
-| Smell | Solution |
-|-------|----------|
-| **Divergent Change** | Extract Class |
-| **Shotgun Surgery** | Move Method, Move Field |
-| **Parallel Inheritance Hierarchies** | Move Method to collapse |
+| Smell | Solution | Indicator |
+|-------|----------|-----------|
+| **Divergent Change** | Extract Class | One class changed for multiple reasons |
+| **Shotgun Surgery** | Move Method/Field | One change requires edits across many classes |
+| **Parallel Hierarchies** | Move Method to collapse | Adding class in A requires adding in B |
 
 ### Dispensables
 
-| Smell | Solution |
-|-------|----------|
-| **Excessive Comments** | Extract Method, Rename Method |
-| **Duplicate Code** | Extract Method, Pull Up Method |
-| **Speculative Generality** | Collapse Hierarchy, Inline Class |
-| **Lazy Class** | Inline Class |
-| **Data Class** | Move Method to add behavior |
+| Smell | Solution | Indicator |
+|-------|----------|-----------|
+| **Excessive Comments** | Extract Method, Rename | Comments explain what code does |
+| **Duplicate Code** | Extract Method, Pull Up | Same code in multiple places |
+| **Speculative Generality** | Collapse Hierarchy, Inline | "Someday we might need..." |
+| **Lazy Class** | Inline Class | Class doesn't do enough |
+| **Data Class** | Move Method | Only fields, getters, setters |
 
 ### Couplers
 
-| Smell | Solution |
-|-------|----------|
-| **Feature Envy** | Move Method to data's class |
-| **Inappropriate Intimacy** | Move Method, Extract Class |
-| **Message Chains** | Hide Delegate |
-| **Middle Man** | Remove Middle Man, Inline Method |
-| **Incomplete Library Class** | Introduce Local Extension |
+| Smell | Solution | Indicator |
+|-------|----------|-----------|
+| **Feature Envy** | Move Method | Method uses another class more than own |
+| **Inappropriate Intimacy** | Move Method, Extract Class | Classes too coupled |
+| **Message Chains** | Hide Delegate | `a.getB().getC().getD()` |
+| **Middle Man** | Remove Middle Man, Inline | Class mostly delegates |
+| **Incomplete Library** | Introduce Local Extension | Need to extend library class |
 
 ---
 
-## Refactoring Catalog
+## Martin Fowler Refactoring Catalog
 
 ### Composing Methods
+
+| Refactoring | When | How |
+|-------------|------|-----|
+| **Extract Method** | Method too long, needs comment | Create new method, move code |
+| **Inline Method** | Method body as clear as name | Replace calls with method body |
+| **Extract Variable** | Complex expression | Put in variable with good name |
+| **Inline Variable** | Variable as clear as expression | Replace with expression directly |
+| **Replace Temp with Query** | Temp used multiple times | Extract to method |
+| **Split Temporary Variable** | Variable assigned multiple times | Separate variable for each use |
 
 #### Extract Method
 
@@ -255,21 +173,6 @@ def print_owing(self):
 def _print_details(self):
     print(f"name: {self.name}")
     print(f"amount: {self.amount}")
-```
-
-#### Inline Method
-
-```python
-# ❌ Before: Method as clear as name
-def get_rating(self):
-    return 2 if self._more_than_five_late_deliveries() else 1
-
-def _more_than_five_late_deliveries(self):
-    return self.late_deliveries > 5
-
-# ✅ After
-def get_rating(self):
-    return 2 if self.late_deliveries > 5 else 1
 ```
 
 #### Replace Temp with Query
@@ -292,7 +195,16 @@ def _base_price(self):
     return self.quantity * self.item_price
 ```
 
-### Moving Features Between Objects
+### Moving Features
+
+| Refactoring | When | How |
+|-------------|------|-----|
+| **Move Method** | Method uses another class more | Move to that class |
+| **Move Field** | Field used by another class more | Move to that class |
+| **Extract Class** | Class doing work of two | Create new class, move relevant fields/methods |
+| **Inline Class** | Class not doing much | Merge into another class |
+| **Hide Delegate** | Client calls delegate through server | Create method on server |
+| **Remove Middle Man** | Too much delegation | Call delegate directly |
 
 #### Move Method
 
@@ -339,7 +251,15 @@ class TelephoneNumber:
 
 ### Organizing Data
 
-#### Replace Magic Number with Symbolic Constant
+| Refactoring | When | How |
+|-------------|------|-----|
+| **Replace Magic Number** | Unexplained literal | Named constant |
+| **Encapsulate Field** | Public field | Make private, add getter/setter |
+| **Encapsulate Collection** | Field returns collection | Return read-only, provide add/remove |
+| **Replace Type Code** | Type code affects behavior | Subclass or State/Strategy |
+| **Replace Array** | Array holds different types | Object with named fields |
+
+#### Replace Magic Number
 
 ```python
 # ❌ Before
@@ -375,7 +295,17 @@ class Person:
         self._name = value
 ```
 
-### Simplifying Conditional Logic
+### Simplifying Conditionals
+
+| Refactoring | When | How |
+|-------------|------|-----|
+| **Decompose Conditional** | Complex if/else | Extract condition and branches to methods |
+| **Consolidate Conditional** | Multiple conditions, same result | Combine with logical operators |
+| **Consolidate Duplicates** | Same code in if/else | Move outside conditional |
+| **Replace Nested** | Deep nesting | Guard clauses |
+| **Replace Conditional** | Conditional based on type | Polymorphism |
+| **Introduce Null Object** | Checking for null | Null object pattern |
+| **Introduce Assertion** | Assumption about state | Assertion |
 
 #### Decompose Conditional
 
@@ -393,7 +323,7 @@ else:
     charge = summer_charge(quantity)
 ```
 
-#### Replace Nested Conditional with Guard Clauses
+#### Replace Nested Conditional with Guards
 
 ```python
 # ❌ Before
@@ -416,33 +346,54 @@ def pay_amount(self):
     return normal_amount()
 ```
 
+### Making Method Calls Simpler
+
+| Refactoring | When | How |
+|-------------|------|-----|
+| **Rename Method** | Name doesn't reveal purpose | Better name |
+| **Add Parameter** | Method needs more info | Add parameter |
+| **Remove Parameter** | Parameter not used | Remove it |
+| **Separate Query from Modifier** | Method returns value AND changes state | Split into two |
+| **Parameterize Method** | Similar methods differ only by value | One method with parameter |
+| **Replace Parameter with Method** | Getting value from parameter | Call method instead |
+| **Introduce Parameter Object** | Group of parameters always together | New object |
+| **Preserve Whole Object** | Getting multiple values from object | Pass object |
+
+### Dealing with Generalization
+
+| Refactoring | When | How |
+|-------------|------|-----|
+| **Pull Up Field** | Subclasses have same field | Move to superclass |
+| **Pull Up Method** | Subclasses have identical method | Move to superclass |
+| **Pull Up Constructor** | Subclasses have similar constructors | Superclass constructor |
+| **Push Down Method** | Method only relevant to some subclasses | Move to those subclasses |
+| **Push Down Field** | Field only used by some subclasses | Move to those subclasses |
+| **Extract Subclass** | Features used only in some instances | Subclass |
+| **Extract Superclass** | Two classes have similar features | Common superclass |
+| **Extract Interface** | Multiple clients use same subset | Interface for subset |
+| **Collapse Hierarchy** | Subclass not different enough | Merge into parent |
+| **Form Template Method** | Subclasses do similar steps | Template method in superclass |
+| **Replace Inheritance** | Subclass uses small part of parent | Delegation |
+| **Replace Delegation** | Too much simple delegation | Inheritance |
+
 ---
 
 ## Bash/Shell Refactoring
 
-Code smells apply universally across paradigms.
+### Common Smells
 
-### Long Script (Large Class)
+| Smell | Before | After |
+|-------|--------|-------|
+| **Long Script** | 800-line god script | Modular: `source lib/*.sh` |
+| **Duplicate Code** | Same validation in 5 functions | Extract to shared function |
+| **Long if-elif** | 20 elif conditions | Case statement + dispatch table |
+| **Magic Numbers** | `sleep 300` | `TIMEOUT_SECONDS=300; sleep $TIMEOUT_SECONDS` |
+| **Unclear Names** | `process()`, `do_it()` | `deploy_to_staging()`, `validate_config()` |
 
-```bash
-# ❌ SMELL: 800-line god script
-#!/usr/bin/env bash
-# Everything in one file
-setup_database() { ... }
-configure_aws() { ... }
-build_image() { ... }
-
-# ✅ BETTER: Modular
-# deploy.sh
-source "$(dirname "$0")/lib/database.sh"
-source "$(dirname "$0")/lib/aws.sh"
-source "$(dirname "$0")/lib/docker.sh"
-```
-
-### Duplicate Code
+#### Extract Function
 
 ```bash
-# ❌ SMELL: Repeated validation
+# ❌ Before: Duplicate validation
 deploy_to_staging() {
     if [[ -z "${AWS_PROFILE:-}" ]]; then
         echo "Error: AWS_PROFILE not set" >&2
@@ -459,7 +410,7 @@ deploy_to_production() {
     # ...
 }
 
-# ✅ BETTER: Extract function
+# ✅ After: Extract function
 validate_aws_profile() {
     [[ -n "${AWS_PROFILE:-}" ]] || error "AWS_PROFILE not set"
 }
@@ -468,24 +419,32 @@ deploy_to_staging() {
     validate_aws_profile
     # ...
 }
+
+deploy_to_production() {
+    validate_aws_profile
+    # ...
+}
 ```
 
-### Long if-elif Chain (Switch)
+#### Replace if-elif with Case
 
 ```bash
-# ❌ SMELL
+# ❌ Before
 handle_command() {
     if [[ "$cmd" == "start" ]]; then
         systemctl start myservice
     elif [[ "$cmd" == "stop" ]]; then
         systemctl stop myservice
-    # ... many more conditions
+    elif [[ "$cmd" == "restart" ]]; then
+        systemctl restart myservice
+    # ... many more
     fi
 }
 
-# ✅ BETTER: Case statement + dispatch
+# ✅ After: Case + dispatch
 cmd_start() { systemctl start myservice; }
 cmd_stop() { systemctl stop myservice; }
+cmd_restart() { systemctl restart myservice; }
 
 handle_command() {
     case "$cmd" in
@@ -501,9 +460,9 @@ handle_command() {
 
 ---
 
-## Safe Refactoring Practices
+## Safe Refactoring Workflow
 
-### The Workflow
+### The Process
 
 ```
 1. Ensure comprehensive test coverage
@@ -513,20 +472,23 @@ handle_command() {
 5. Repeat
 ```
 
-### Testing Requirements
+### Pre-Refactoring Checklist
 
-**Before refactoring:**
 - [ ] Comprehensive unit tests exist
 - [ ] Integration tests cover critical paths
 - [ ] All tests pass
+- [ ] Understand code behavior
 
-**During refactoring:**
+### During Refactoring
+
+- [ ] One refactoring at a time
 - [ ] Run tests after each micro-step
 - [ ] Commit after each successful change
+- [ ] Use IDE automated refactoring tools
 
-### Automated Refactoring Tools
+### Automated Tools
 
-**Use IDE features:**
+**Use IDE features for safety:**
 - Rename (variable, method, class)
 - Extract method/function
 - Inline variable/method
@@ -535,7 +497,7 @@ handle_command() {
 
 **Benefits:** Automatic updates, syntax-aware, reduces errors
 
-### Version Control Discipline
+### Version Control
 
 ```bash
 # Commit after each refactoring
@@ -546,11 +508,10 @@ git commit -m "refactor: simplify conditional in process_order"
 git commit -m "feat: add premium user discount"
 ```
 
-### Refactoring in Legacy Code
+### Legacy Code (No Tests)
 
-**When tests don't exist:**
-1. Write characterization tests
-2. Add tests for changing area
+1. Write characterization tests (document current behavior)
+2. Add tests for area you're changing
 3. Refactor incrementally
 4. Expand coverage gradually
 
@@ -558,43 +519,46 @@ git commit -m "feat: add premium user discount"
 
 ## Refactoring Metrics
 
-### Before/After Comparison
+### Measure Impact
 
-Measure:
-- **Lines of Code** - Should decrease or stay same
-- **Cyclomatic Complexity** - Should decrease
-- **Coupling** - Should decrease
-- **Cohesion** - Should increase
-- **Test Coverage** - Should remain 100% or increase
+| Metric | Goal |
+|--------|------|
+| **Lines of Code** | Decrease or stay same |
+| **Cyclomatic Complexity** | Decrease |
+| **Coupling** | Decrease |
+| **Cohesion** | Increase |
+| **Test Coverage** | Remain 100% or increase |
 
 ### Tools
 
 ```bash
 # Python
 pylint myapp/
-radon cc myapp/ -a  # Complexity
-radon mi myapp/  # Maintainability
+radon cc myapp/ -a      # Complexity
+radon mi myapp/         # Maintainability
+pytest --cov=myapp
 
 # JavaScript
 eslint src/
 npm run complexity
+jest --coverage
 
-# General
+# Multi-language
 sonarqube-scanner
 ```
 
 ---
 
-## Summary: Best Practices
+## Best Practices Summary
 
-1. **Refactor in tiny steps** - Seconds to minutes each
-2. **Run tests constantly** - After every micro-refactoring
+1. **Tiny steps** - Seconds to minutes each
+2. **Test constantly** - After every micro-refactoring
 3. **Commit frequently** - Save working state
-4. **One refactoring at a time** - Don't mix patterns
-5. **Don't change behavior** - External behavior unchanged
+4. **One at a time** - Don't mix patterns or with features
+5. **Preserve behavior** - External behavior unchanged
 6. **Use automated tools** - IDE refactoring safer than manual
 7. **Tidy First** - Clean before adding features
-8. **Trust the tests** - Tests enable confident refactoring
+8. **Trust tests** - Tests enable confident refactoring
 9. **Delete dead code** - Version control remembers
 10. **Document decisions** - Explain in commit messages
 

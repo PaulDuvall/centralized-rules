@@ -4,61 +4,30 @@ Universal architectural guidelines for building maintainable, scalable, and robu
 
 ## SOLID Principles
 
-### Single Responsibility Principle (SRP)
+| Principle | Rule | Good Example | Bad Example |
+|-----------|------|--------------|-------------|
+| **Single Responsibility (SRP)** | One reason to change | `UserRepository`, `EmailService`, `ReportGenerator` as separate classes | `UserManager` handling users, emails, and reports |
+| **Open/Closed (OCP)** | Open for extension, closed for modification | Strategy pattern with `PaymentProcessor` accepting different strategies | Adding if/else for each payment type |
+| **Liskov Substitution (LSP)** | Subtypes substitutable for base types | `Rectangle` and `Square` both extend `Shape` independently | `Square` extending `Rectangle` and breaking width/height contract |
+| **Interface Segregation (ISP)** | Many specific > one general | `Workable`, `Eatable` interfaces combined as needed | `Worker` interface forcing robots to implement `eat()` |
+| **Dependency Inversion (DIP)** | Depend on abstractions | Inject `MessageSender` interface | Hardcode `EmailSender` in constructor |
 
-**Rule:** A class should have one, and only one, reason to change.
+### SOLID Implementation Examples
 
 ```python
-# ❌ Bad: Multiple responsibilities
-class UserManager:
-    def create_user(self, data): pass
-    def send_email(self, user): pass
-    def generate_report(self, user): pass
-
-# ✅ Good: Single responsibility each
+# SRP: Single responsibility
 class UserRepository:
     def create_user(self, data): pass
 
 class EmailService:
     def send_email(self, user): pass
 
-class ReportGenerator:
-    def generate_report(self, user): pass
-```
-
-### Open/Closed Principle (OCP)
-
-**Rule:** Open for extension, closed for modification.
-
-```python
-# ✅ Good: Strategy pattern
+# OCP: Strategy pattern
 class PaymentProcessor:
     def __init__(self, strategy):
         self.strategy = strategy
 
-    def process(self, amount):
-        return self.strategy.process(amount)
-
-# Extend without modifying
-class CreditCardStrategy:
-    def process(self, amount): pass
-
-class PayPalStrategy:
-    def process(self, amount): pass
-```
-
-### Liskov Substitution Principle (LSP)
-
-**Rule:** Subtypes must be substitutable for their base types.
-
-```python
-# ❌ Bad: Square violates LSP
-class Square(Rectangle):
-    def set_width(self, w):
-        self.width = w
-        self.height = w  # Unexpected behavior change
-
-# ✅ Good: Separate hierarchies
+# LSP: Proper hierarchy
 class Shape:
     def area(self): pass
 
@@ -67,50 +36,14 @@ class Rectangle(Shape):
         self.width = width
         self.height = height
 
-class Square(Shape):
-    def __init__(self, side):
-        self.side = side
-```
-
-### Interface Segregation Principle (ISP)
-
-**Rule:** Many specific interfaces > one general-purpose interface.
-
-```python
-# ❌ Bad: Fat interface
-class Worker:
-    def work(self): pass
-    def eat(self): pass
-    def sleep(self): pass
-
-# ✅ Good: Segregated interfaces
+# ISP: Segregated interfaces
 class Workable:
     def work(self): pass
 
-class Eatable:
-    def eat(self): pass
-
-class Human(Workable, Eatable):
-    pass
-
 class Robot(Workable):  # Only what it needs
     pass
-```
 
-### Dependency Inversion Principle (DIP)
-
-**Rule:** Depend on abstractions, not concretions.
-
-```python
-# ❌ Bad: Hard dependency
-class NotificationService:
-    def __init__(self):
-        self.sender = EmailSender()  # Concrete
-
-# ✅ Good: Depend on abstraction
-class MessageSender(ABC):
-    def send(self, message): pass
-
+# DIP: Depend on abstraction
 class NotificationService:
     def __init__(self, sender: MessageSender):
         self.sender = sender
@@ -120,82 +53,48 @@ class NotificationService:
 
 ## Domain-Driven Design (DDD)
 
-### Ubiquitous Language
+### Core Concepts
 
-Use the same terminology in code as business stakeholders use.
+| Concept | Purpose | Example |
+|---------|---------|---------|
+| **Ubiquitous Language** | Code reflects business terminology | `Order.place()`, `Order.fulfill()`, `Order.cancel()` |
+| **Bounded Contexts** | Explicit model boundaries | Sales Context (Customer contact, Order pricing) vs Shipping Context (Customer address, Shipment tracking) |
+| **Entities** | Identity-driven, mutable, tracked by ID | `User` with unique ID, compared by ID |
+| **Value Objects** | Attribute-driven, immutable | `Money(amount, currency)`, compared by value |
+| **Aggregates** | Cluster with root entity | `Order` (root) containing `LineItem` objects |
+| **Repositories** | Abstract persistence | `OrderRepository.find_by_id()`, `save()` |
 
-```python
-class Order:
-    def place(self): pass
-    def fulfill(self): pass
-    def cancel(self): pass
-```
-
-### Bounded Contexts
-
-Explicitly define boundaries where a domain model applies.
-
-```
-Sales Context:
-  - Customer (contact, history)
-  - Order (items, pricing)
-
-Shipping Context:
-  - Customer (delivery address)
-  - Shipment (tracking, status)
-```
-
-### Entities vs Value Objects
-
-**Entities:** Have identity, mutable, tracked by ID
+### DDD Implementation
 
 ```python
+# Entity
 class User:
     def __init__(self, id, email):
-        self.id = id  # Identity
-
+        self.id = id
     def __eq__(self, other):
         return self.id == other.id
-```
 
-**Value Objects:** Defined by attributes, immutable
-
-```python
+# Value Object
 @dataclass(frozen=True)
 class Money:
     amount: float
     currency: str
-
     def add(self, other):
         if self.currency != other.currency:
             raise ValueError("Currency mismatch")
         return Money(self.amount + other.amount, self.currency)
-```
 
-### Aggregates
-
-Cluster entities with clear boundaries and root entity.
-
-```python
-class Order:  # Aggregate Root
+# Aggregate Root
+class Order:
     def __init__(self, id):
         self.id = id
         self._line_items = []
-
     def add_item(self, product, quantity):
         if quantity <= 0:
             raise ValueError("Quantity must be positive")
         self._line_items.append(LineItem(product, quantity))
 
-class LineItem:  # Not accessible outside Order
-    pass
-```
-
-### Repositories
-
-Abstract data persistence with collection-like interface.
-
-```python
+# Repository
 class OrderRepository:
     def find_by_id(self, order_id) -> Order: pass
     def save(self, order: Order): pass
@@ -203,9 +102,9 @@ class OrderRepository:
 
 ---
 
-## Layered Architecture
+## Architecture Patterns
 
-**Rule:** Organize into layers with one-way dependencies.
+### Layered Architecture
 
 ```
 [Presentation] → [Application] → [Domain]
@@ -214,16 +113,12 @@ class OrderRepository:
 ```
 
 **Layers:**
-1. **Presentation** - UI, API controllers, input validation
-2. **Application** - Use cases, workflows, transaction boundaries
-3. **Domain** - Business logic, entities, domain services
-4. **Infrastructure** - Database, external APIs, file system
+- **Presentation** - UI, API controllers, input validation
+- **Application** - Use cases, workflows, transaction boundaries
+- **Domain** - Business logic, entities, domain services
+- **Infrastructure** - Database, external APIs, file system
 
----
-
-## Clean/Hexagonal Architecture
-
-**Rule:** Isolate business logic using ports and adapters.
+### Hexagonal/Clean Architecture
 
 ```python
 # Port (interface)
@@ -242,29 +137,15 @@ class OrderService:
         self.repository = repository
 ```
 
----
+### Package by Feature, Not Layer
 
-## Package by Feature, Not Layer
+```
+# ❌ Bad: By layer
+src/controllers/, services/, repositories/
 
-**Anti-pattern:**
-```
-src/
-  controllers/
-  services/
-  repositories/
-```
-
-**Better:**
-```
-src/
-  users/
-    UserController
-    UserService
-    UserRepository
-  orders/
-    OrderController
-    OrderService
-    OrderRepository
+# ✅ Good: By feature
+src/users/UserController, UserService, UserRepository
+src/orders/OrderController, OrderService, OrderRepository
 ```
 
 **Benefits:** Related code together, easier to extract modules
@@ -275,14 +156,7 @@ src/
 
 ### Dependency Injection
 
-**Rule:** Provide dependencies from outside.
-
 ```python
-# ❌ Bad: Hard dependencies
-class OrderService:
-    def __init__(self):
-        self.repository = PostgresOrderRepository()
-
 # ✅ Good: Injected
 class OrderService:
     def __init__(self, repository: OrderRepository):
@@ -295,18 +169,11 @@ service = OrderService(repository)
 
 ### Avoid Circular Dependencies
 
-**Solutions:**
-1. Introduce abstraction
-2. Merge modules
-3. Extract common code
-4. Use events
+**Solutions:** Introduce abstraction, merge modules, extract common code, use events
 
 ```python
-# ✅ Good: Use abstraction
+# Use abstraction
 class UserInterface(ABC):
-    pass
-
-class User(UserInterface):
     pass
 
 class Order:
@@ -318,13 +185,9 @@ class Order:
 
 ## Design Patterns
 
-### Prefer Composition Over Inheritance
+### Composition Over Inheritance
 
 ```python
-# ❌ Bad: Rigid inheritance
-class Manager(Employee):
-    pass
-
 # ✅ Good: Composition
 class Employee:
     def __init__(self, pay_calculator, role):
@@ -334,34 +197,20 @@ class Employee:
 
 ### Common Patterns
 
-- **Factory** - Create objects without specifying exact class
-- **Builder** - Construct complex objects step by step
-- **Strategy** - Encapsulate algorithms, make interchangeable
-- **Observer** - Notify multiple objects of state changes
-- **Repository** - Abstract data persistence
-- **Adapter** - Make incompatible interfaces compatible
+| Pattern | Purpose | Use Case |
+|---------|---------|----------|
+| **Factory** | Create objects without specifying exact class | Creating different payment processors |
+| **Builder** | Construct complex objects step by step | Building multi-part configurations |
+| **Strategy** | Encapsulate algorithms, make interchangeable | Different sorting/calculation methods |
+| **Observer** | Notify multiple objects of state changes | Event handling, pub/sub |
+| **Repository** | Abstract data persistence | Database access layer |
+| **Adapter** | Make incompatible interfaces compatible | Legacy system integration |
 
 ---
 
 ## Tracer Bullet Development
 
-**Also known as:** Steel Thread, Walking Skeleton
-
 **Rule:** Build minimal end-to-end implementation first, then add features.
-
-### What Are Tracer Bullets?
-
-Build a **thin vertical slice** connecting all layers:
-
-```
-UI → API → Business Logic → Data Access → Database
-```
-
-**Characteristics:**
-- Production quality (not throwaway)
-- End-to-end (touches all layers)
-- Minimal but complete
-- Foundation that grows
 
 ### Tracer Bullets vs Prototyping
 
@@ -376,93 +225,10 @@ UI → API → Business Logic → Data Access → Database
 
 - Building new system with unfamiliar tech
 - Architecture or integration uncertain
-- Need early feedback on feasibility
 - Distributed systems/microservices
-- Team needs technical confidence
+- Need early validation
 
-### Implementation Approach
-
-**Step 1: Simplest Path**
-
-```python
-# Goal: User dashboard showing balance
-# Tracer Bullet: Hardcoded balance, minimal UI, basic auth
-
-# 1. Database
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    email VARCHAR(255),
-    balance DECIMAL(10,2) DEFAULT 0
-);
-
-# 2. Data Access
-class UserRepository:
-    def get_balance(self, user_id: str) -> Decimal:
-        return db.execute("SELECT balance FROM users WHERE id = %s", (user_id,)).scalar()
-
-# 3. Business Logic
-class AccountService:
-    def get_user_balance(self, user_id: str) -> Decimal:
-        return self.user_repo.get_balance(user_id)
-
-# 4. API
-@app.get("/api/balance")
-def get_balance(user_id: str):
-    balance = service.get_user_balance(user_id)
-    return {"balance": float(balance)}
-
-# 5. UI
-async function showBalance() {
-    const response = await fetch('/api/balance?user_id=123');
-    const data = await response.json();
-    document.getElementById('balance').textContent = `$${data.balance}`;
-}
-```
-
-**Result:** Complete flow from UI to DB. Simple, but works.
-
-**Step 2: Verify Integration**
-
-```bash
-curl http://localhost:8000/api/balance?user_id=123
-# Validates: DB connection, API routing, auth, UI calls, serialization
-```
-
-**Step 3: Incremental Enhancement**
-
-```python
-# Week 2: Add transaction history
-class UserRepository:
-    def get_transactions(self, user_id: str, limit: int = 10):
-        return db.execute("SELECT * FROM transactions...").fetchall()
-
-# Week 3: Add filtering, pagination
-# Week 4: Add export, analytics
-```
-
-### Development Flow
-
-```
-Phase 1: Tracer Bullet (Week 1)
-├─ Database: Minimal schema
-├─ Repository: One query
-├─ Service: Passthrough logic
-├─ API: One endpoint
-└─ UI: Basic display
-Goal: Prove architecture works
-
-Phase 2: Features (Week 2+)
-├─ Add related tables
-├─ Add CRUD operations
-├─ Add business rules
-├─ Add endpoints
-└─ Enhance interface
-Goal: Build on proven foundation
-```
-
-### Real Example: E-Commerce Search
-
-**Vision:** NLP search, AI recommendations, faceted filtering, autocomplete
+### Implementation: E-Commerce Search Example
 
 **Tracer Bullet (Day 1-2):**
 
@@ -490,7 +256,7 @@ def search(q: str):
 <div id="results"></div>
 ```
 
-**Validates:** DB queries, API works, UI submits, results display, latency acceptable
+**Validates:** DB queries, API works, UI submits, results display
 
 **Incremental Enhancement:**
 
@@ -510,41 +276,55 @@ def autocomplete(q: str):
     return {"suggestions": search_service.get_suggestions(q)}
 ```
 
-### Benefits
+### Development Flow
 
-1. **Early Risk Reduction** - Integration problems found immediately
-2. **Visible Progress** - Working software from day one
-3. **Easier Debugging** - Problems isolated to single layer
-4. **Better Estimates** - Real data on velocity
-5. **Flexible Direction** - Easy to pivot
+```
+Phase 1: Tracer Bullet (Week 1)
+├─ Database: Minimal schema
+├─ Repository: One query
+├─ Service: Passthrough logic
+├─ API: One endpoint
+└─ UI: Basic display
+Goal: Prove architecture works
 
-### Common Mistakes
+Phase 2: Features (Week 2+)
+├─ Add related tables
+├─ Add CRUD operations
+├─ Add business rules
+└─ Enhance interface
+Goal: Build on proven foundation
+```
 
-❌ Making tracer too complex
-❌ Building throwaway code
-❌ Skipping layers
-❌ Not validating integration
+### Best Practices
 
-✅ Keep minimal
-✅ Production quality from start
-✅ Touch all layers
-✅ Test end-to-end
+| Do | Don't |
+|----|-------|
+| Keep minimal | Make tracer too complex |
+| Production quality from start | Build throwaway code |
+| Touch all layers | Skip layers |
+| Test end-to-end | Skip integration validation |
 
 ---
 
-## AI-Specific Architecture
+## AI/ML Architecture
 
-### SOLID for ML
+### ML Bounded Contexts
+
+```
+Model Training Context:
+  - TrainingJob, Experiment, Hyperparameters, Metrics
+
+Feature Engineering Context:
+  - FeaturePipeline, Transformation, FeatureDefinition
+
+Model Serving Context:
+  - Endpoint, ModelVersion, PredictionRequest/Response
+```
+
+### ML Patterns
 
 ```python
-# ❌ Bad: God class
-class MLPipeline:
-    def load_data(self): pass
-    def preprocess(self): pass
-    def train(self): pass
-    def deploy(self): pass
-
-# ✅ Good: Separate responsibilities
+# Separate responsibilities
 class DataLoader:
     def load(self, source) -> Dataset: pass
 
@@ -553,27 +333,8 @@ class FeatureEngineer:
 
 class ModelTrainer:
     def train(self, features, labels) -> Model: pass
-```
 
-### ML Bounded Contexts
-
-```
-Model Training Context:
-  - TrainingJob, Experiment, Hyperparameters
-  - Metrics, DataSplit
-
-Feature Engineering Context:
-  - FeaturePipeline, Transformation
-  - FeatureDefinition, Statistics
-
-Model Serving Context:
-  - Endpoint, ModelVersion
-  - PredictionRequest, PredictionResponse
-```
-
-### Model Registry Pattern
-
-```python
+# Model Registry
 class ModelRegistry:
     def register_model(self, model: Model, metadata: ModelMetadata) -> ModelVersion:
         version = self._generate_version(metadata)
@@ -584,11 +345,8 @@ class ModelRegistry:
             'training_date': datetime.utcnow(),
         })
         return ModelVersion(version, metadata)
-```
 
-### Feature Store Pattern
-
-```python
+# Feature Store
 class FeatureStore:
     def __init__(self, online_store, offline_store):
         self.online_store = online_store  # Low-latency serving
@@ -617,18 +375,15 @@ Need database for order management with ACID requirements.
 Use PostgreSQL as primary relational database.
 
 ## Consequences
-**Positive:**
-- Strong ACID guarantees
-- Rich query capabilities
-
-**Negative:**
-- Vertical scaling limitations
-- Schema migration management
+**Positive:** Strong ACID guarantees, rich query capabilities
+**Negative:** Vertical scaling limitations, schema migration management
 ```
 
 ---
 
-## Key Principles Summary
+## Quick Reference
+
+### Key Principles
 
 1. **Single Responsibility** - One reason to change
 2. **Open/Closed** - Open for extension, closed for modification
@@ -637,18 +392,14 @@ Use PostgreSQL as primary relational database.
 5. **Dependency Inversion** - Depend on abstractions
 6. **Ubiquitous Language** - Code reflects domain
 7. **Bounded Contexts** - Explicit model boundaries
-8. **Layered Architecture** - Clear separation, one-way dependencies
-9. **Dependency Injection** - Provide from outside
-10. **Composition > Inheritance** - Favor has-a over is-a
-11. **Package by Feature** - Organize by business capability
-12. **Tracer Bullets** - Build end-to-end skeleton first
-13. **Document Decisions** - Use ADRs
+8. **Dependency Injection** - Provide from outside
+9. **Composition > Inheritance** - Favor has-a over is-a
+10. **Package by Feature** - Organize by business capability
+11. **Tracer Bullets** - Build end-to-end skeleton first
 
----
+### Related Resources
 
-## Related Resources
-
-- See `base/12-factor-app.md` for SaaS architecture
-- See `base/refactoring-patterns.md` for improvement techniques
-- See `base/code-quality.md` for quality standards
-- See `base/lean-development.md` for Progressive Enhancement vs Tracer Bullets
+- `base/12-factor-app.md` - SaaS architecture
+- `base/refactoring-patterns.md` - Improvement techniques
+- `base/code-quality.md` - Quality standards
+- `base/lean-development.md` - Progressive Enhancement vs Tracer Bullets
