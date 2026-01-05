@@ -526,6 +526,19 @@ bd close bd-42 bd-43 --reason "Completed authentication system" --json
 
 **CRITICAL:** The "Land the Plane" protocol ensures all work is saved and synchronized.
 
+### ⚠️ COMMIT MESSAGE WARNING
+
+**NEVER use `bd sync` without arguments!** It creates useless commit messages like:
+```
+bd sync: 2026-01-05 12:58:25
+```
+
+**ALWAYS use one of these approaches instead:**
+- `bd sync -m "meaningful message"` - Quick sync with custom message
+- `bd sync --flush-only` + `git commit` - Combine beads with code changes
+
+<!-- TIP: NEVER run bd sync without -m flag or --flush-only - default creates useless timestamp commits -->
+
 ### MANDATORY Steps (All Required):
 
 1. **File remaining work**
@@ -564,6 +577,7 @@ bd close bd-42 bd-43 --reason "Completed authentication system" --json
 
 4. **Sync and push to remote** ⚠️ **NON-NEGOTIABLE**
 
+   **Option 1: Combine beads + code in one commit (BEST)**
    ```bash
    # Pull latest changes
    git pull --rebase
@@ -572,13 +586,33 @@ bd close bd-42 bd-43 --reason "Completed authentication system" --json
    git checkout --theirs .beads/issues.jsonl
    bd import -i .beads/issues.jsonl
 
-   # Sync beads database
-   bd sync
+   # Stage your code changes
+   git add <your-files>
+
+   # Export beads changes to JSONL (no git operations)
+   bd sync --flush-only
+
+   # Stage beads metadata
+   git add .beads/issues.jsonl
+
+   # Commit everything with meaningful message
+   git commit -m "feat: completed authentication [bd-42, bd-43]"
 
    # Push to remote - MANDATORY
    git push
 
    # Verify clean state
+   git status
+   ```
+
+   **Option 2: Quick sync with custom message**
+   ```bash
+   git pull --rebase
+
+   # IMPORTANT: Always provide a meaningful commit message with -m flag
+   bd sync -m "feat: completed authentication [bd-42, bd-43]"
+
+   git push
    git status
    ```
 
@@ -626,6 +660,26 @@ Never end a session with:
 
 Beads automatically syncs the database with a 30-second debounce, but manual sync is sometimes needed.
 
+### ⚠️ CRITICAL: Avoid Useless Commit Messages
+
+**PROBLEM:** Running `bd sync` without arguments creates terrible commit messages:
+```
+bd sync: 2026-01-05 12:58:25
+```
+
+**SOLUTION:** Always use `-m` flag or `--flush-only`:
+```bash
+# ✅ Good: Custom message
+bd sync -m "feat: completed authentication implementation [bd-42]"
+
+# ✅ Good: Export only, commit separately
+bd sync --flush-only
+git commit -m "feat: completed authentication [bd-42]"
+
+# ❌ Bad: Creates useless timestamp commit
+bd sync
+```
+
 ### Auto-Sync:
 
 Beads batches operations within 30-second windows to reduce git commits.
@@ -639,11 +693,21 @@ Beads batches operations within 30-second windows to reduce git commits.
 **Batching behavior:**
 Multiple operations within 30 seconds = single commit
 
-### Manual Sync:
+### Manual Sync Options:
 
-Force immediate synchronization:
+**Custom commit message (RECOMMENDED):**
 ```bash
-bd sync
+bd sync -m "feat: completed authentication implementation [bd-42]"
+```
+
+**Export to JSONL only (BEST for combining with code changes):**
+```bash
+bd sync --flush-only  # No git operations, just export
+```
+
+**Accumulate changes without committing:**
+```bash
+bd sync --squash  # During work - no commit created
 ```
 
 **When to manually sync:**
@@ -656,10 +720,32 @@ bd sync
 
 `bd sync` performs:
 1. **Export**: Database → `.beads/issues.jsonl`
-2. **Commit**: Commits the JSONL file
+2. **Commit**: Commits the JSONL file (unless using `--squash` or `--flush-only`)
 3. **Pull**: Fetches remote changes
 4. **Import**: `.beads/issues.jsonl` → Database
 5. **Push**: Sends commits to remote
+
+### Recommended Workflow (Clean Git History):
+
+**Best practice:** Combine code and beads changes into one meaningful commit.
+
+```bash
+# During work - accumulate beads changes without committing
+bd sync --squash
+
+# When ready to commit
+git add <your-files>
+bd sync --flush-only           # Export beads to JSONL
+git add .beads/issues.jsonl    # Stage beads changes
+git commit -m "feat: implement JWT authentication [bd-42]"
+git push
+```
+
+**Benefits:**
+- ✅ Single commit with meaningful message
+- ✅ Code and beads metadata together
+- ✅ No generic "bd sync: timestamp" commits
+- ✅ Clear git history
 
 ### Conflict Resolution:
 
@@ -750,7 +836,12 @@ bd close bd-42 --reason "Implemented authentication" --json
 # Evening: Session end
 bd create "Add integration tests" -t task -p 2 --json
 pytest tests/
-bd sync
+
+# Recommended: Combine code and beads in one commit
+git add <your-files>
+bd sync --flush-only
+git add .beads/issues.jsonl
+git commit -m "feat: implement authentication with bug fixes [bd-42, bd-45]"
 git push
 git status  # Verify clean
 ```
@@ -772,8 +863,11 @@ bd close bd-44 \
   --reason "Fixed pagination bug in user list by correcting offset calculation in api.py:234" \
   --json
 
-# Sync and push
-bd sync
+# Sync and push with meaningful message
+git add api.py tests/
+bd sync --flush-only
+git add .beads/issues.jsonl
+git commit -m "fix: correct pagination offset calculation [bd-44]"
 git push
 ```
 
@@ -1174,9 +1268,35 @@ bd dep add <child-id> <parent-id> --type TYPE
 # Close issue
 bd close <id> --reason "What was done" --json
 
-# Session end
-bd sync
+# Session end (recommended workflow)
+git add <your-files>
+bd sync --flush-only           # Export to JSONL without git ops
+git add .beads/issues.jsonl
+git commit -m "feat: your message [bd-42]"
 git push
+
+# Session end (alternative with custom message)
+bd sync -m "feat: your message [bd-42]"
+git push
+```
+
+### Sync Options
+
+```bash
+# ❌ NEVER DO THIS - creates useless "bd sync: timestamp" commits
+bd sync
+
+# ✅ Custom commit message (RECOMMENDED)
+bd sync -m "your custom message here"
+
+# ✅ Export to JSONL only - best for combining with code changes
+bd sync --flush-only
+
+# Accumulate changes without committing (during work)
+bd sync --squash
+
+# Check sync status without syncing
+bd sync --status
 ```
 
 ### Dependency Types
@@ -1205,12 +1325,13 @@ git push
 1. ✅ **Always use --json flag** for agent compatibility
 2. ✅ **NEVER edit `.beads/issues.jsonl` directly** - Use `bd` commands only
 3. ✅ **ALWAYS verify after creating** - Use `bd list` or `bd show` to confirm issue exists
-4. ✅ **Session start with bd ready** to review work
-5. ✅ **Session end with bd sync + git push** (non-negotiable)
-6. ✅ **One issue in_progress** at a time
-7. ✅ **File discovered work** immediately
-8. ✅ **Detailed close reasons** document what was done
-9. ✅ **Tests must pass** before closing issues
+4. ✅ **NEVER use `bd sync` without -m or --flush-only** - Avoid useless timestamp commits
+5. ✅ **Session start with bd ready** to review work
+6. ✅ **Session end with meaningful commit** (use `-m` flag or `--flush-only`)
+7. ✅ **One issue in_progress** at a time
+8. ✅ **File discovered work** immediately
+9. ✅ **Detailed close reasons** document what was done
+10. ✅ **Tests must pass** before closing issues
 
 ---
 
