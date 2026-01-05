@@ -1,5 +1,4 @@
 # Git Workflow Guidelines
-<!-- TIP: Small commits, clear messages - your future self will thank you -->
 
 > **Scope:** All git operations across any project
 
@@ -13,8 +12,6 @@
 | Required code reviews | Optional | Required (1 approval) | Required (2 approvals) |
 | Automated commit hooks | Optional | Recommended | Required |
 | GPG signed commits | Not needed | Optional | Recommended |
-
-See `base/project-maturity-levels.md` for detailed framework.
 
 ## Commit Frequency
 
@@ -89,28 +86,6 @@ git commit -m "fix stuff"
 6. Repeat 2-5 until task complete
 ```
 
-### Example Session
-
-```bash
-# Start feature
-git checkout -b feature/token-masking
-
-# Write implementation
-git add <files>
-git commit -m "feat: add token masking function"
-git push origin feature/token-masking
-
-# Write tests
-git add <test files>
-git commit -m "test: add tests for token masking"
-git push origin feature/token-masking
-
-# Integrate
-git add <files>
-git commit -m "feat: integrate token masking in main workflow"
-git push origin feature/token-masking
-```
-
 ## What NOT to Commit
 
 - ❌ Failing tests (fix them first)
@@ -174,9 +149,3 @@ git push origin feature/dynamic-categories
 **Golden Rule:** Commit early, commit often, push regularly.
 
 Small, frequent commits with clear messages create better development experience and safer codebase.
-
-## Related Resources
-
-- `base/git-tagging.md` - Git tagging and versioning
-- `base/cicd-comprehensive.md` - CI/CD pipeline integration
-- `base/project-maturity-levels.md` - Maturity framework
