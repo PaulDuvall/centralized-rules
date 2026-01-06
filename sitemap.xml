@@ -13,19 +13,7 @@
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://paulduvall.github.io/centralized-rules/AUTO_DETECTION/</loc>
-         <lastmod>2026-01-06</lastmod>
-    </url>
-    <url>
-         <loc>https://paulduvall.github.io/centralized-rules/BASH_BRITTLE_AREAS/</loc>
-         <lastmod>2026-01-06</lastmod>
-    </url>
-    <url>
          <loc>https://paulduvall.github.io/centralized-rules/IMPLEMENTATION_GUIDE/</loc>
-         <lastmod>2026-01-06</lastmod>
-    </url>
-    <url>
-         <loc>https://paulduvall.github.io/centralized-rules/LICENSE/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
@@ -37,11 +25,7 @@
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://paulduvall.github.io/centralized-rules/blog-introduction/</loc>
-         <lastmod>2026-01-06</lastmod>
-    </url>
-    <url>
-         <loc>https://paulduvall.github.io/centralized-rules/classification-system/</loc>
+         <loc>https://paulduvall.github.io/centralized-rules/hook-system/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
@@ -49,11 +33,11 @@
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://paulduvall.github.io/centralized-rules/pre-commit-quality-gates/</loc>
+         <loc>https://paulduvall.github.io/centralized-rules/architecture/BASH_BRITTLE_AREAS/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://paulduvall.github.io/centralized-rules/slash-command-detection/</loc>
+         <loc>https://paulduvall.github.io/centralized-rules/architecture/classification-system/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
