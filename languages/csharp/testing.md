@@ -1,20 +1,12 @@
 # C# / .NET Testing Standards
 
 > **Language:** C# 12.0+ / .NET 8+
-> **Framework:** xUnit, NUnit, or MSTest
+> **Framework:** xUnit (recommended), NUnit, or MSTest
 > **Applies to:** All C# / .NET projects
 
-## Testing Framework
+## xUnit with Fact and Theory
 
-### xUnit (Recommended)
-
-```bash
-dotnet add package xUnit
-dotnet add package xunit.runner.visualstudio
-dotnet add package Microsoft.NET.Test.Sdk
-```
-
-**Example:**
+Use `[Fact]` for single test cases, `[Theory]` with `[InlineData]` for parametrized tests:
 
 ```csharp
 using Xunit;
@@ -24,71 +16,54 @@ public class CalculatorTests
     [Fact]
     public void Add_TwoNumbers_ReturnsSum()
     {
-        // Arrange
-        var calculator = new Calculator();
-
-        // Act
-        var result = calculator.Add(2, 3);
-
-        // Assert
-        Assert.Equal(5, result);
+        var calc = new Calculator();
+        Assert.Equal(5, calc.Add(2, 3));
     }
 
     [Theory]
     [InlineData(0, 0, 0)]
     [InlineData(1, 2, 3)]
     [InlineData(-1, 1, 0)]
-    public void Add_VariousInputs_ReturnsCorrectSum(int a, int b, int expected)
+    public void Add_VariousInputs(int a, int b, int expected)
     {
-        var calculator = new Calculator();
-        var result = calculator.Add(a, b);
-        Assert.Equal(expected, result);
+        Assert.Equal(expected, new Calculator().Add(a, b));
     }
 }
 ```
 
-### Mocking with Moq
+## Mocking with Moq
+
+Mock dependencies, setup return values, verify invocations:
 
 ```csharp
 using Moq;
 
-public class UserServiceTests
+[Fact]
+public async Task GetUser_ValidId_ReturnsUser()
 {
-    [Fact]
-    public async Task GetUser_ValidId_ReturnsUser()
-    {
-        // Arrange
-        var mockRepo = new Mock<IUserRepository>();
-        mockRepo.Setup(r => r.GetByIdAsync("123"))
-            .ReturnsAsync(new User { Id = "123", Name = "Test" });
+    var mockRepo = new Mock<IUserRepository>();
+    mockRepo.Setup(r => r.GetByIdAsync("123"))
+        .ReturnsAsync(new User { Id = "123", Name = "Test" });
 
-        var service = new UserService(mockRepo.Object);
+    var service = new UserService(mockRepo.Object);
+    var user = await service.GetUserAsync("123");
 
-        // Act
-        var user = await service.GetUserAsync("123");
-
-        // Assert
-        Assert.NotNull(user);
-        Assert.Equal("Test", user.Name);
-        mockRepo.Verify(r => r.GetByIdAsync("123"), Times.Once);
-    }
+    Assert.NotNull(user);
+    Assert.Equal("Test", user.Name);
+    mockRepo.Verify(r => r.GetByIdAsync("123"), Times.Once);
 }
 ```
 
-### Testing Async Code
+## Async Test Pattern
+
+Test async methods directly without blocking. Test names reflect behavior:
 
 ```csharp
 [Fact]
-public async Task ProcessAsync_ValidData_Succeeds()
+public async Task ProcessAsync_InvalidData_ThrowsException()
 {
-    // Arrange
     var service = new DataService();
-
-    // Act
-    var result = await service.ProcessAsync(data);
-
-    // Assert
-    Assert.True(result.Success);
+    await Assert.ThrowsAsync<ArgumentException>(() => service.ProcessAsync(null));
 }
 ```
 

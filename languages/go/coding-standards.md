@@ -1,6 +1,6 @@
 # Go Coding Standards
 
-Comprehensive coding standards for Go following Effective Go, Go Code Review Comments, and community best practices.
+Standards for Go 1.20+ following Effective Go and Go Code Review Comments.
 
 ## Table of Contents
 
@@ -11,431 +11,186 @@ Comprehensive coding standards for Go following Effective Go, Go Code Review Com
 - [Concurrency](#concurrency)
 - [Interfaces and Composition](#interfaces-and-composition)
 - [Package Design](#package-design)
-- [Performance Best Practices](#performance-best-practices)
+- [Performance](#performance)
 
 ---
 
 ## Project Structure
 
-### Standard Go Project Layout
-
 ```
 myproject/
-├── cmd/                    # Main applications
-│   └── myapp/
-│       └── main.go
-├── internal/               # Private application and library code
-│   ├── service/
-│   └── repository/
+├── cmd/                    # Application entry points
+├── internal/               # Private code (not importable)
 ├── pkg/                    # Public library code
-│   └── api/
-├── api/                    # API definitions (OpenAPI, Protocol Buffers)
-├── web/                    # Web application assets
+├── api/                    # API definitions
 ├── configs/                # Configuration files
-├── scripts/                # Build, install, analysis scripts
-├── build/                  # Packaging and CI
-├── deployments/            # IaaS, PaaS, container orchestration
-├── test/                   # External test data and apps
+├── scripts/                # Build and automation
+├── deployments/            # Infrastructure
+├── test/                   # Test data and fixtures
 ├── docs/                   # Documentation
-├── go.mod                  # Go module file
-├── go.sum                  # Go checksum file
-├── Makefile                # Build automation
+├── go.mod
+├── go.sum
+├── Makefile
 └── README.md
 ```
 
-**Key Principles:**
-- `cmd/`: Entry points for applications
-- `internal/`: Code that cannot be imported by other projects
-- `pkg/`: Code that can be imported by external projects (use sparingly)
-- Avoid deeply nested directory structures
+Use `internal/` for private code, `pkg/` for public APIs. Avoid deep nesting.
 
 ---
 
 ## Naming Conventions
 
-### Packages
-
-**Rules:**
-- Short, concise, lowercase names
-- No underscores or mixedCaps
-- Single-word names preferred
-- Use singular form (not plural)
-
+**Packages:** Lowercase, single-word, singular form. No underscores or capitals.
 ```go
-// Good
-package user
-package http
-package auth
-
-// Bad
-package user_service  // No underscores
-package users         // Use singular
-package UserService   // No capitals
+package user      // Good
+package users     // Bad: plural
+package user_service  // Bad: underscore
 ```
 
-### Functions and Methods
-
-**MixedCaps (camelCase or PascalCase):**
-- Exported: `PascalCase` (starts with capital)
-- Unexported: `camelCase` (starts with lowercase)
-
+**Functions/Methods:** Exported = PascalCase, Unexported = camelCase.
 ```go
-// Exported - visible outside package
-func NewUser(name string) *User { }
-func (u *User) GetEmail() string { }
-
-// Unexported - package-private
-func validateEmail(email string) bool { }
-func (u *User) calculateAge() int { }
+func NewUser(name string) *User {}      // Exported
+func validateEmail(email string) bool {} // Unexported
 ```
 
-### Variables
-
-**Naming Guidelines:**
-- Short names for local variables (`i`, `n`, `err`)
-- Descriptive names for package-level variables
-- Acronyms should be uppercase (`userID`, `httpServer`, `URL`)
-
+**Variables:** Short for locals (`i`, `err`), descriptive for package-level. Acronyms uppercase.
 ```go
-// Good
-var userID int
-var HTTPStatus int
-var db *sql.DB
-
-for i, user := range users {
-    // Short loop variables
-}
-
-// Bad
-var user_id int        // No underscores
-var HttpStatus int     // Acronym should be all caps
-var database *sql.DB   // Too verbose for common usage
+var userID int           // Good
+var db *sql.DB           // Good
+var user_id int          // Bad: underscore
+var HttpStatus int       // Bad: acronym mixed case
 ```
 
-### Constants
-
+**Constants:**
 ```go
-// Exported constants
 const MaxRetries = 3
-const DefaultTimeout = 30 * time.Second
-
-// Unexported constants
-const bufferSize = 1024
-
-// Enumerated constants (iota)
-type Status int
-
-const (
-    StatusPending Status = iota
-    StatusActive
-    StatusInactive
-)
+const bufferSize = 1024  // Unexported
 ```
 
-### Interfaces
-
-**Rules:**
-- Single-method interfaces end in "-er"
-- Prefer small interfaces (1-3 methods)
-
+**Interfaces:** Single-method = "-er" suffix. Keep to 1-3 methods.
 ```go
-// Good
 type Reader interface {
     Read(p []byte) (n int, err error)
 }
 
-type Writer interface {
-    Write(p []byte) (n int, err error)
-}
-
-type ReadWriter interface {
-    Reader
-    Writer
-}
-
-// Custom interfaces
 type UserRepository interface {
     Find(id int) (*User, error)
     Save(user *User) error
 }
-```
-
----
 
 ## Code Formatting
 
-### Use gofmt
+**Formatting:** Use `gofmt -w .` and `goimports -w .` before commit.
 
-**Rule:** Always run `gofmt` before committing. Configure your editor to format on save.
-
-```bash
-# Format all Go files
-gofmt -w .
-
-# Format with simplification
-gofmt -s -w .
-```
-
-### Imports
-
-**Grouping:** Standard library, third-party, local
-
+**Imports:** Group by standard library, third-party, local packages.
 ```go
 import (
-    // Standard library
-    "context"
     "fmt"
     "time"
 
-    // Third-party
-    "github.com/gin-gonic/gin"
-    "gorm.io/gorm"
+    "github.com/user/pkg"
 
-    // Local
     "myproject/internal/service"
-    "myproject/pkg/api"
 )
 ```
 
-**Use goimports:**
-```bash
-# Automatically adds/removes imports
-goimports -w .
-```
-
-### Line Length
-
-- **Guideline:** Keep lines under 100-120 characters
-- Break long function calls and signatures
-
+**Line Length:** Keep under 120 characters. Break long signatures and chains.
 ```go
-// Good
 func NewUserService(
     repo UserRepository,
     logger Logger,
-    config *Config,
 ) *UserService {
-    return &UserService{
-        repo:   repo,
-        logger: logger,
-        config: config,
-    }
-}
-
-// Long method chains - one call per line
-user, err := repo.
-    WithContext(ctx).
-    Where("age > ?", 18).
-    Order("created_at DESC").
-    First()
-```
-
-### Comments
-
-**Package Comments:**
-```go
-// Package user provides user management functionality.
-//
-// It handles user authentication, profile management, and
-// authorization across the application.
-package user
-```
-
-**Function Comments:**
-```go
-// NewUser creates a new user with the given name and email.
-// It returns an error if the email is invalid or already exists.
-func NewUser(name, email string) (*User, error) {
-    // Implementation
+    return &UserService{repo: repo, logger: logger}
 }
 ```
 
-**Comment Style:**
-- Full sentences starting with the name being documented
-- Exported names must have doc comments
-- Comment text should wrap at ~80 characters
+**Comments:**
+- Package: `// Package name describes purpose.`
+- Exported: Must have doc comment starting with name
+- Wrap at ~80 characters
 
 ---
 
 ## Error Handling
 
-### Error Checking
-
-**Always check errors:**
+**Check errors:** Never use `_` to ignore errors.
 ```go
-// Good
 file, err := os.Open("config.json")
 if err != nil {
-    return nil, fmt.Errorf("failed to open config: %w", err)
+    return nil, fmt.Errorf("open config: %w", err)
 }
 defer file.Close()
-
-// Bad
-file, _ := os.Open("config.json")  // Never ignore errors
 ```
 
-### Error Wrapping
-
-**Use `%w` for error wrapping (Go 1.13+):**
+**Wrap with `%w`:** Use `fmt.Errorf()` with `%w` for error chain.
 ```go
-func loadConfig(path string) (*Config, error)  {
-    file, err := os.Open(path)
-    if err != nil {
-        return nil, fmt.Errorf("loading config from %s: %w", path, err)
-    }
-    defer file.Close()
-
-    var config Config
-    if err := json.NewDecoder(file).Decode(&config); err != nil {
-        return nil, fmt.Errorf("parsing config: %w", err)
-    }
-
-    return &config, nil
-}
-
-// Caller can use errors.Is() and errors.As()
-if errors.Is(err, os.ErrNotExist) {
-    // Handle missing file
+if err != nil {
+    return nil, fmt.Errorf("operation: %w", err)
 }
 ```
 
-### Custom Errors
-
+**Sentinel errors:** Define at package level for known error cases.
 ```go
-// Sentinel errors (package-level)
 var (
-    ErrUserNotFound = errors.New("user not found")
-    ErrInvalidEmail = errors.New("invalid email address")
+    ErrNotFound = errors.New("not found")
+    ErrInvalid  = errors.New("invalid")
 )
 
-// Custom error types
+if errors.Is(err, ErrNotFound) {
+    // Handle
+}
+```
+
+**Custom types:** For domain-specific errors.
+```go
 type ValidationError struct {
-    Field string
-    Value interface{}
+    Field   string
     Message string
 }
 
 func (e *ValidationError) Error() string {
-    return fmt.Sprintf("validation failed for %s: %s", e.Field, e.Message)
-}
-
-// Usage
-func ValidateUser(user *User) error {
-    if user.Email == "" {
-        return &ValidationError{
-            Field:   "email",
-            Value:   "",
-            Message: "email is required",
-        }
-    }
-    return nil
+    return fmt.Sprintf("validation: %s: %s", e.Field, e.Message)
 }
 ```
 
-### Panic and Recover
-
-**Rule:** Use panic only for unrecoverable errors (programming bugs, not runtime errors)
-
-```go
-// Good: Return error
-func divide(a, b int) (int, error) {
-    if b == 0 {
-        return 0, errors.New("division by zero")
-    }
-    return a / b, nil
-}
-
-// Bad: Don't panic for expected errors
-func divide(a, b int) int {
-    if b == 0 {
-        panic("division by zero")  // Bad!
-    }
-    return a / b
-}
-
-// Acceptable panic use: programming errors
-func mustGetEnv(key string) string {
-    value := os.Getenv(key)
-    if value == "" {
-        panic(fmt.Sprintf("required environment variable %s is not set", key))
-    }
-    return value
-}
-```
+**Panic:** Only for unrecoverable errors (programming bugs). Return errors for runtime issues.
 
 ---
 
 ## Concurrency
 
-### Goroutines
-
-**Safe Concurrency Patterns:**
-
+**Goroutines:** Use `sync.WaitGroup` for synchronization. Pass data as parameters to avoid closure issues.
 ```go
-// Use WaitGroup for synchronization
-func processItems(items []Item) {
-    var wg sync.WaitGroup
-
-    for _, item := range items {
-        wg.Add(1)
-        go func(item Item) {
-            defer wg.Done()
-            process(item)
-        }(item)  // Pass item as parameter to avoid closure issues
-    }
-
-    wg.Wait()
+var wg sync.WaitGroup
+for _, item := range items {
+    wg.Add(1)
+    go func(item Item) {
+        defer wg.Done()
+        process(item)
+    }(item)
 }
+wg.Wait()
+```
 
-// Use context for cancellation
-func worker(ctx context.Context) {
-    for {
-        select {
-        case <-ctx.Done():
-            return  // Context cancelled
-        default:
-            // Do work
-        }
-    }
+**Context:** For cancellation and timeouts.
+```go
+select {
+case <-ctx.Done():
+    return
+default:
+    // Work
 }
 ```
 
-### Channels
-
-**Channel Patterns:**
-
+**Channels:** Specify direction. Only sender closes.
 ```go
-// Buffered vs Unbuffered
-ch := make(chan int)      // Unbuffered - blocks until receiver ready
-ch := make(chan int, 10)  // Buffered - blocks only when full
-
-// Direction specification
-func send(ch chan<- int) {  // Send-only
-    ch <- 42
-}
-
-func receive(ch <-chan int) {  // Receive-only
-    val := <-ch
-}
-
-// Close channels (only sender should close)
-func producer(ch chan<- int) {
-    defer close(ch)
-    for i := 0; i < 10; i++ {
-        ch <- i
-    }
-}
-
-// Range over channel
-for val := range ch {
-    fmt.Println(val)
-}
+ch := make(chan int, 10)      // Buffered
+func send(ch chan<- int) {}    // Send-only
+func recv(ch <-chan int) {}    // Receive-only
+defer close(ch)               // Close from sender
 ```
 
-### Mutexes
-
-**Protect shared state:**
-
+**Mutexes:** Protect shared state. Use `RWMutex` for read-heavy access.
 ```go
 type Counter struct {
     mu    sync.Mutex
@@ -447,99 +202,41 @@ func (c *Counter) Increment() {
     defer c.mu.Unlock()
     c.value++
 }
-
-func (c *Counter) Value() int {
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    return c.value
-}
-
-// RWMutex for read-heavy workloads
-type Cache struct {
-    mu   sync.RWMutex
-    data map[string]string
-}
-
-func (c *Cache) Get(key string) string {
-    c.mu.RLock()
-    defer c.mu.RUnlock()
-    return c.data[key]
-}
-
-func (c *Cache) Set(key, value string) {
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    c.data[key] = value
-}
 ```
 
-### Avoid Race Conditions
-
-```bash
-# Test with race detector
-go test -race ./...
-go build -race
-```
+**Race detection:** Test with `go test -race ./...`
 
 ---
 
 ## Interfaces and Composition
 
-### Interface Design
-
-**Prefer small interfaces:**
-
+**Small interfaces:** Keep 1-3 methods. Single-method interfaces end in "-er".
 ```go
-// Good: Small, focused interfaces
-type Stringer interface {
-    String() string
-}
-
 type Reader interface {
     Read(p []byte) (n int, err error)
-}
-
-// Bad: Large interfaces
-type UserService interface {
-    CreateUser(...) error
-    UpdateUser(...) error
-    DeleteUser(...) error
-    FindUser(...) error
-    ListUsers(...) error
-    ValidateUser(...) error
-    // Too many methods!
 }
 ```
 
 **Accept interfaces, return structs:**
-
 ```go
-// Good
 func SaveUser(repo UserRepository, user *User) error {
-    return repo.Save(user)  // Accept interface
+    return repo.Save(user)
 }
 
 func NewUser(name string) *User {
-    return &User{Name: name}  // Return concrete type
+    return &User{Name: name}
 }
 ```
 
-### Composition Over Inheritance
-
+**Composition:** Embed interfaces to combine behaviors.
 ```go
-// Embed to compose behavior
-type Logger interface {
-    Log(message string)
-}
-
 type Service struct {
     logger Logger
     db     *sql.DB
 }
 
-// Struct embedding
 type TimestampedLogger struct {
-    Logger  // Embedded interface
+    Logger
 }
 
 func (t *TimestampedLogger) Log(message string) {
@@ -551,194 +248,70 @@ func (t *TimestampedLogger) Log(message string) {
 
 ## Package Design
 
-### Package Cohesion
+**Cohesion:** One concept per package. Avoid mixing unrelated concerns.
+```
+Good:
+package user    // user.go, repository.go, service.go
+package order   // order.go, repository.go, service.go
 
-**One concept per package:**
-
-```go
-// Good package organization
-package user
-    - user.go          // User type
-    - repository.go    // UserRepository interface
-    - service.go       // UserService
-    - validator.go     // Validation logic
-
-// Bad: mixing unrelated concepts
-package utils
-    - string_helpers.go
-    - date_helpers.go
-    - http_helpers.go  // Too generic!
+Bad:
+package utils   // Too generic, mixed concerns
 ```
 
-### Package Dependencies
-
-**Avoid circular dependencies:**
-
+**No circular dependencies:** Extract common types if needed.
 ```
-❌ Bad:
-package user imports package order
-package order imports package user
+Good:
+package domain  // Shared types (User, Order)
+package user    // Uses domain
+package order   // Uses domain
 
-✅ Good:
-Extract common types to shared package
-package domain (User, Order types)
-package user (uses domain)
-package order (uses domain)
+Bad:
+package user imports order
+package order imports user
 ```
 
-### Internal Packages
-
-**Use `internal/` for private code:**
-
-```
-myproject/
-├── internal/
-│   └── user/         # Cannot be imported by other projects
-│       └── service.go
-└── pkg/
-    └── api/          # Can be imported externally
-        └── client.go
-```
+**Internal packages:** Use `internal/` for private code. Use `pkg/` for public libraries.
 
 ---
 
-## Performance Best Practices
+## Performance
 
-### Avoid Allocations
-
+**Pre-allocate slices:** Avoid repeated allocations.
 ```go
-// Bad: Creates new slice on every call
-func processItems(items []int) []int {
-    result := []int{}  // Creates allocation
-    for _, item := range items {
-        result = append(result, item * 2)
-    }
-    return result
+// Good
+result := make([]int, 0, len(items))
+for _, item := range items {
+    result = append(result, item*2)
 }
 
-// Good: Pre-allocate
-func processItems(items []int) []int {
-    result := make([]int, 0, len(items))
-    for _, item := range items {
-        result = append(result, item * 2)
-    }
-    return result
-}
+// Bad
+result := []int{}  // Reallocates on each append
 ```
 
-### String Building
-
+**Use `strings.Builder`:** For string concatenation.
 ```go
-// Bad: String concatenation creates many allocations
-func buildString(words []string) string {
-    result := ""
-    for _, word := range words {
-        result += word + " "  // Allocates new string each iteration
-    }
-    return result
+var builder strings.Builder
+for _, word := range words {
+    builder.WriteString(word)
 }
-
-// Good: Use strings.Builder
-func buildString(words []string) string {
-    var builder strings.Builder
-    for _, word := range words {
-        builder.WriteString(word)
-        builder.WriteString(" ")
-    }
-    return builder.String()
-}
+return builder.String()
 ```
 
-### Defer Overhead
+**Avoid defer in hot paths:** Has small overhead. Use sparingly in tight loops.
 
-```go
-// Defer has small overhead - avoid in tight loops
-func processLarge(items []Item) {
-    for _, item := range items {
-        mutex.Lock()
-        // process
-        mutex.Unlock()  // Don't use defer in hot path
-    }
-}
+**Benchmark:** Use `go test -bench=. -benchmem` to measure performance.
 
-// Use defer for normal cases
-func readFile(path string) error {
-    file, err := os.Open(path)
-    if err != nil {
-        return err
-    }
-    defer file.Close()  // Fine for non-hot path
-    // ...
-}
-```
-
-### Benchmark
-
-```bash
-# Run benchmarks
-go test -bench=. -benchmem
-
-# Profile CPU
-go test -cpuprofile=cpu.prof -bench=.
-go tool pprof cpu.prof
-```
+**Profile:** Use `go test -cpuprofile=cpu.prof -bench=.` and `go tool pprof cpu.prof`.
 
 ---
 
-## Code Quality Tools
+## Summary
 
-### Linting
-
-```bash
-# golangci-lint (comprehensive)
-golangci-lint run
-
-# Individual linters
-go vet ./...          # Official Go tool
-staticcheck ./...     # Advanced static analysis
-```
-
-### Configuration: `.golangci.yml`
-
-```yaml
-linters:
-  enable:
-    - gofmt
-    - goimports
-    - govet
-    - errcheck
-    - staticcheck
-    - gosimple
-    - ineffassign
-    - unused
-    - misspell
-    - goconst
-```
-
----
-
-## Summary: Key Rules
-
-1. **Formatting:** Always use `gofmt` and `goimports`
-2. **Errors:** Always check errors, never use `_`
-3. **Naming:** Follow Go conventions (mixedCaps, short names)
-4. **Concurrency:** Use goroutines safely, test with `-race`
-5. **Interfaces:** Small, focused, accept interfaces/return structs
-6. **Packages:** One concept per package, avoid circular dependencies
-7. **Comments:** Document all exported names
-8. **Testing:** Write table-driven tests (see testing.md)
-9. **Dependencies:** Use Go modules, vendor when necessary
-10. **Performance:** Profile before optimizing, use benchmarks
-
----
-
-## Related Resources
-
-- **Official:**
-  - [Effective Go](https://golang.org/doc/effective_go)
-  - [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
-  - [Go Modules Reference](https://golang.org/ref/mod)
-
-- **Related Rules:**
-  - See `languages/go/testing.md` for testing guidelines
-  - See `base/architecture-principles.md` for general design patterns
+1. Format with `gofmt` and `goimports`
+2. Always check errors, never ignore with `_`
+3. Follow Go naming conventions
+4. Use goroutines safely, test with `-race`
+5. Write small, focused interfaces
+6. One concept per package, no circular dependencies
+7. Document all exported names
+8. See testing.md for testing guidelines

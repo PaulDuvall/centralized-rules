@@ -4,84 +4,50 @@
 > **Framework:** JUnit 5, Mockito
 > **Applies to:** All Java projects
 
-## Testing Framework
+## Test Structure
 
-### JUnit 5
-
-```xml
-<!-- pom.xml -->
-<dependency>
-    <groupId>org.junit.jupiter</groupId>
-    <artifactId>junit-jupiter</artifactId>
-    <version>5.10.0</version>
-    <scope>test</scope>
-</dependency>
-```
-
-**Example:**
+Use AAA pattern (Arrange-Act-Assert). Name tests: `method_Scenario_ExpectedResult`. One assertion per test where practical.
 
 ```java
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import static org.junit.jupiter.api.Assertions.*;
+@Test
+void add_TwoNumbers_ReturnsSum() {
+    var calc = new Calculator();
+    assertEquals(5, calc.add(2, 3));
+}
 
-class CalculatorTest {
-
-    @Test
-    void add_TwoNumbers_ReturnsSum() {
-        // Arrange
-        var calculator = new Calculator();
-
-        // Act
-        int result = calculator.add(2, 3);
-
-        // Assert
-        assertEquals(5, result);
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {1, 2, 3, 4, 5})
-    void isPositive_PositiveNumbers_ReturnsTrue(int number) {
-        assertTrue(number > 0);
-    }
+@ParameterizedTest
+@ValueSource(ints = {1, 2, 3})
+void isPositive_ValidNumbers_ReturnsTrue(int n) {
+    assertTrue(n > 0);
 }
 ```
 
-### Mocking with Mockito
+## Mocking Dependencies
+
+Use `@Mock` for dependencies and `@ExtendWith(MockitoExtension.class)` on test class. Verify interactions only when behavior is critical.
 
 ```java
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-
-    @Mock
-    private UserRepository repository;
+    @Mock private UserRepository repository;
 
     @Test
     void getUser_ValidId_ReturnsUser() {
-        // Arrange
-        when(repository.findById("123"))
-            .thenReturn(Optional.of(new User("123", "test@example.com")));
-
-        var service = new UserService(repository);
-
-        // Act
-        var user = service.getUserById("123");
-
-        // Assert
+        when(repository.findById("123")).thenReturn(Optional.of(new User("123", "user@test.com")));
+        var user = new UserService(repository).getUserById("123");
         assertTrue(user.isPresent());
-        assertEquals("test@example.com", user.get().email());
-        verify(repository, times(1)).findById("123");
+        assertEquals("user@test.com", user.get().email());
     }
 }
 ```
+
+## Test Organization
+
+- One test class per production class
+- Use setup methods only if reused across 3+ tests
+- Keep test scope focused: one logical behavior per test
+- Use fixtures or builders for complex object setup
 
 ## Related Resources
 
 - See `languages/java/coding-standards.md` for coding standards
-- See `base/testing-philosophy.md` for testing principles
