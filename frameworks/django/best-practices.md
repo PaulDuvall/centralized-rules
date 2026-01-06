@@ -4,17 +4,14 @@
 > **Framework:** Django 4.2+, Django REST Framework 3.14+
 > **Language:** Python 3.11+
 
-Best practices for building production-ready Django applications with models, views, DRF APIs, testing, and performance optimization.
+Production-ready Django development with models, views, DRF APIs, testing, and performance optimization.
 
 ## Project Structure
-
-### Recommended Layout
 
 ```
 myproject/
 ├── manage.py
 ├── myproject/              # Project config
-│   ├── __init__.py
 │   ├── settings/           # Split settings
 │   │   ├── base.py
 │   │   ├── development.py
@@ -36,11 +33,10 @@ myproject/
 
 ## Model Design
 
-### Model Best Practices
+**Rule:** Use Meta class for ordering and indexes. Add `__str__` for string representation. Use verbose names.
 
 ```python
 from django.db import models
-from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 
 class Post(models.Model):
@@ -54,14 +50,8 @@ class Post(models.Model):
             models.Index(fields=['-created_at']),
         ]
 
-    title = models.CharField(
-        max_length=200,
-        help_text=_('Post title')
-    )
-    slug = models.SlugField(
-        unique=True,
-        max_length=200
-    )
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, max_length=200)
     content = models.TextField()
     author = models.ForeignKey(
         'users.User',
@@ -80,7 +70,9 @@ class Post(models.Model):
         return reverse('blog:post-detail', kwargs={'slug': self.slug})
 ```
 
-### Manager Methods
+## Custom QuerySets
+
+**Rule:** Use custom managers and querysets for reusable queries.
 
 ```python
 class PostQuerySet(models.QuerySet):
@@ -94,8 +86,6 @@ class PostQuerySet(models.QuerySet):
 
 
 class Post(models.Model):
-    # ... fields ...
-
     objects = PostQuerySet.as_manager()
 
 # Usage
@@ -103,18 +93,17 @@ published_posts = Post.objects.published()
 author_posts = Post.objects.by_author(user).published()
 ```
 
-## Views
+## Class-Based Views
 
-### Class-Based Views
+**Rule:** Use generic views. Override get_queryset for filtering. Use mixins for authentication.
 
 ```python
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 
 class PostListView(ListView):
     """Display list of published posts."""
-
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
@@ -126,7 +115,6 @@ class PostListView(ListView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     """Create new post."""
-
     model = Post
     fields = ['title', 'content']
     template_name = 'blog/post_form.html'
@@ -139,11 +127,10 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 ## Django REST Framework
 
-### Serializers
+**Rule:** Use ModelSerializer. Define read-only fields. Add custom validation.
 
 ```python
 from rest_framework import serializers
-from .models import Post
 
 class PostSerializer(serializers.ModelSerializer):
     """Serializer for Post model."""
@@ -156,27 +143,22 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            'id',
-            'title',
-            'slug',
-            'content',
-            'author',
-            'author_name',
-            'created_at',
-            'is_published',
+            'id', 'title', 'slug', 'content',
+            'author', 'author_name',
+            'created_at', 'is_published'
         ]
         read_only_fields = ['id', 'created_at', 'author']
 
     def validate_title(self, value: str) -> str:
         """Validate title length."""
         if len(value) < 5:
-            raise serializers.ValidationError(
-                'Title must be at least 5 characters'
-            )
+            raise serializers.ValidationError('Title must be at least 5 characters')
         return value
 ```
 
-### ViewSets
+## ViewSets
+
+**Rule:** Use ModelViewSet for CRUD. Filter queryset based on permissions. Add custom actions.
 
 ```python
 from rest_framework import viewsets, permissions
@@ -209,11 +191,10 @@ class PostViewSet(viewsets.ModelViewSet):
 
 ## Forms
 
-### Model Forms
+**Rule:** Use ModelForm. Add custom validation. Provide helpful widgets.
 
 ```python
 from django import forms
-from .models import Post
 
 class PostForm(forms.ModelForm):
     """Form for creating/editing posts."""
@@ -226,26 +207,27 @@ class PostForm(forms.ModelForm):
         }
 
     def clean_title(self) -> str:
-        """Validate and clean title."""
+        """Validate title is unique."""
         title = self.cleaned_data['title']
         if Post.objects.filter(title__iexact=title).exists():
-            raise forms.ValidationError(
-                'A post with this title already exists'
-            )
+            raise forms.ValidationError('A post with this title already exists')
         return title
 ```
 
 ## Testing
 
-### Model Tests
+**Rule:** Use TestCase for database tests. Set up test data in setUp. Test both success and failure cases.
 
 ```python
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from .models import Post
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.urls import reverse
 
 User = get_user_model()
 
+# Model tests
 class PostModelTest(TestCase):
     """Test Post model."""
 
@@ -262,29 +244,11 @@ class PostModelTest(TestCase):
             content='Test content',
             author=self.user
         )
-
         self.assertEqual(post.title, 'Test Post')
         self.assertEqual(post.author, self.user)
         self.assertFalse(post.is_published)
 
-    def test_str_representation(self):
-        """Test string representation."""
-        post = Post.objects.create(
-            title='Test Post',
-            content='Content',
-            author=self.user
-        )
-
-        self.assertEqual(str(post), 'Test Post')
-```
-
-### API Tests
-
-```python
-from rest_framework.test import APITestCase
-from rest_framework import status
-from django.urls import reverse
-
+# API tests
 class PostAPITest(APITestCase):
     """Test Post API."""
 
@@ -298,10 +262,7 @@ class PostAPITest(APITestCase):
     def test_create_post(self):
         """Test creating post via API."""
         url = reverse('post-list')
-        data = {
-            'title': 'Test Post',
-            'content': 'Test content'
-        }
+        data = {'title': 'Test Post', 'content': 'Test content'}
 
         response = self.client.post(url, data)
 
@@ -312,11 +273,12 @@ class PostAPITest(APITestCase):
 
 ## Settings Management
 
-### Split Settings
+**Rule:** Split settings by environment. Use environment variables for secrets. Never commit secrets.
 
 ```python
 # settings/base.py
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -325,7 +287,6 @@ SECRET_KEY = os.environ['SECRET_KEY']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
-    # ...
     'rest_framework',
     'apps.users',
     'apps.blog',
@@ -344,9 +305,9 @@ DEBUG = False
 ALLOWED_HOSTS = [os.environ['ALLOWED_HOST']]
 ```
 
-## Security
+## Security Settings
 
-### Security Checklist
+**Rule:** Enable all security settings in production. Use HTTPS. Set secure cookie flags.
 
 ```python
 # settings/production.py
@@ -367,9 +328,9 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 ```
 
-## Performance
+## Query Optimization
 
-### Query Optimization
+**Rule:** Use select_related for foreign keys. Use prefetch_related for many-to-many. Avoid N+1 queries.
 
 ```python
 # ❌ N+1 queries
@@ -385,7 +346,9 @@ for post in posts:
 posts = Post.objects.prefetch_related('tags').all()
 ```
 
-### Database Indexes
+## Database Indexes
+
+**Rule:** Add indexes to frequently queried and filtered fields.
 
 ```python
 class Post(models.Model):
@@ -398,10 +361,9 @@ class Post(models.Model):
 
 ## Middleware
 
-### Custom Middleware
+**Rule:** Add unique request IDs. Handle exceptions globally. Process requests efficiently.
 
 ```python
-# middleware/request_id.py
 import uuid
 from django.utils.deprecation import MiddlewareMixin
 
@@ -418,44 +380,14 @@ class RequestIDMiddleware(MiddlewareMixin):
         return response
 ```
 
-### Authentication Middleware
-
-```python
-# middleware/auth.py
-from django.http import JsonResponse
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework_simplejwt.exceptions import TokenError
-
-class JWTAuthenticationMiddleware:
-    """Extract user from JWT token."""
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        auth_header = request.headers.get('Authorization', '')
-
-        if auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
-            try:
-                access_token = AccessToken(token)
-                request.user_id = access_token['user_id']
-            except TokenError:
-                pass
-
-        return self.get_response(request)
-```
-
 ## Signals
 
-### Model Signals
+**Rule:** Use signals for cross-app communication. Clean up related data on delete.
 
 ```python
-# signals.py
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.core.cache import cache
-from .models import Post
 
 @receiver(post_save, sender=Post)
 def clear_post_cache(sender, instance, created, **kwargs):
@@ -470,47 +402,13 @@ def cleanup_post_files(sender, instance, **kwargs):
         instance.image.delete(save=False)
 ```
 
-### Custom Signals
-
-```python
-# signals.py
-from django.dispatch import Signal
-
-# Define custom signal
-post_published = Signal()
-
-# In model or view
-class Post(models.Model):
-    def publish(self):
-        self.is_published = True
-        self.save()
-
-        # Send signal
-        post_published.send(
-            sender=self.__class__,
-            instance=self,
-            user=self.author
-        )
-
-# In receivers.py
-from .signals import post_published
-
-@receiver(post_published)
-def notify_subscribers(sender, instance, user, **kwargs):
-    """Notify subscribers when post is published."""
-    # Send notifications
-    pass
-```
-
 ## Admin Customization
 
-### ModelAdmin Best Practices
+**Rule:** Customize list display. Add filters and search. Optimize with select_related.
 
 ```python
-# admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
@@ -523,12 +421,8 @@ class PostAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
     fieldsets = (
-        ('Content', {
-            'fields': ('title', 'slug', 'content', 'author')
-        }),
-        ('Publication', {
-            'fields': ('is_published',)
-        }),
+        ('Content', {'fields': ('title', 'slug', 'content', 'author')}),
+        ('Publication', {'fields': ('is_published',)}),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
@@ -538,28 +432,17 @@ class PostAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         """Display publication status with color."""
         if obj.is_published:
-            color = 'green'
-            text = 'Published'
-        else:
-            color = 'red'
-            text = 'Draft'
-
-        return format_html(
-            '<span style="color: {};">{}</span>',
-            color,
-            text
-        )
-    status_badge.short_description = 'Status'
+            return format_html('<span style="color: green;">Published</span>')
+        return format_html('<span style="color: red;">Draft</span>')
 
     def get_queryset(self, request):
         """Optimize queryset with select_related."""
-        qs = super().get_queryset(request)
-        return qs.select_related('author')
+        return super().get_queryset(request).select_related('author')
 ```
 
 ## Caching
 
-### Cache Patterns
+**Rule:** Cache expensive queries. Set appropriate timeouts. Invalidate on changes.
 
 ```python
 from django.core.cache import cache
@@ -567,15 +450,13 @@ from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 
 # Function-based view caching
-@cache_page(60 * 15)  # Cache for 15 minutes
+@cache_page(60 * 15)  # 15 minutes
 def post_list(request):
     posts = Post.objects.published()
     return render(request, 'posts.html', {'posts': posts})
 
 # Class-based view caching
 class PostListView(ListView):
-    model = Post
-
     @method_decorator(cache_page(60 * 15))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
@@ -591,48 +472,21 @@ def get_post(post_id: int) -> Post:
         cache.set(cache_key, post, 60 * 15)
 
     return post
-
-# Template fragment caching
-{% load cache %}
-{% cache 500 post_sidebar post.id %}
-    <div class="sidebar">
-        {{ post.related_posts }}
-    </div>
-{% endcache %}
 ```
 
-### Cache Invalidation
+## Celery Tasks
+
+**Rule:** Use async tasks for slow operations. Implement retry logic. Return meaningful results.
 
 ```python
-from django.db.models.signals import post_save
-from django.core.cache import cache
-
-@receiver(post_save, sender=Post)
-def invalidate_post_cache(sender, instance, **kwargs):
-    """Invalidate cache on post save."""
-    cache.delete(f'post_{instance.id}')
-    cache.delete('post_list')
-
-    # Invalidate related caches
-    cache.delete(f'author_{instance.author_id}_posts')
-```
-
-## Async and Background Tasks
-
-### Celery Tasks
-
-```python
-# tasks.py
 from celery import shared_task
 from django.core.mail import send_mail
-from .models import Post
 
 @shared_task
 def send_notification_email(post_id: int):
     """Send email notification for new post."""
     try:
         post = Post.objects.get(id=post_id)
-
         send_mail(
             subject=f'New Post: {post.title}',
             message=post.content[:200],
@@ -640,7 +494,6 @@ def send_notification_email(post_id: int):
             recipient_list=['subscribers@example.com'],
             fail_silently=False,
         )
-
         return f'Email sent for post {post_id}'
     except Post.DoesNotExist:
         return f'Post {post_id} not found'
@@ -653,108 +506,46 @@ def process_image(self, post_id: int):
         # Process image
         return f'Image processed for post {post_id}'
     except Exception as exc:
-        # Retry after 60 seconds
         raise self.retry(exc=exc, countdown=60)
-
-# Usage in views
-from .tasks import send_notification_email
-
-def publish_post(request, post_id):
-    post = Post.objects.get(id=post_id)
-    post.is_published = True
-    post.save()
-
-    # Queue background task
-    send_notification_email.delay(post_id)
-
-    return redirect('post-detail', pk=post_id)
 ```
 
-## Advanced DRF Patterns
+## Custom Permissions
 
-### Nested Serializers
-
-```python
-# serializers.py
-from rest_framework import serializers
-
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = ['id', 'content', 'author', 'created_at']
-
-class PostDetailSerializer(serializers.ModelSerializer):
-    """Detailed post serializer with nested comments."""
-
-    comments = CommentSerializer(many=True, read_only=True)
-    author_name = serializers.CharField(source='author.get_full_name', read_only=True)
-
-    class Meta:
-        model = Post
-        fields = [
-            'id', 'title', 'slug', 'content',
-            'author', 'author_name',
-            'comments', 'created_at', 'is_published'
-        ]
-```
-
-### Custom Permissions
+**Rule:** Implement object-level permissions. Deny by default.
 
 ```python
-# permissions.py
 from rest_framework import permissions
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
     """Allow authors to edit their own posts."""
 
     def has_object_permission(self, request, view, obj):
-        # Read permissions for any request
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        # Write permissions only for author
         return obj.author == request.user
 
-# Usage in ViewSet
+# Usage
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
     permission_classes = [IsAuthorOrReadOnly]
-```
-
-### Pagination
-
-```python
-# pagination.py
-from rest_framework.pagination import PageNumberPagination
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-# settings.py
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'myapp.pagination.StandardResultsSetPagination',
-}
 ```
 
 ## Advanced Testing
 
-### Factory Pattern with Factory Boy
+**Rule:** Use Factory Boy for test data. Use pytest-django for modern testing.
 
 ```python
-# factories.py
+import pytest
 import factory
 from factory.django import DjangoModelFactory
-from .models import Post, User
 
+# Factories
 class UserFactory(DjangoModelFactory):
     class Meta:
         model = User
 
     username = factory.Sequence(lambda n: f'user{n}')
     email = factory.LazyAttribute(lambda obj: f'{obj.username}@example.com')
+
 
 class PostFactory(DjangoModelFactory):
     class Meta:
@@ -764,25 +555,8 @@ class PostFactory(DjangoModelFactory):
     content = factory.Faker('paragraph')
     author = factory.SubFactory(UserFactory)
 
-# Usage in tests
-from .factories import PostFactory, UserFactory
 
-class PostTest(TestCase):
-    def test_create_post(self):
-        user = UserFactory()
-        post = PostFactory(author=user)
-
-        self.assertEqual(post.author, user)
-```
-
-### Pytest-Django
-
-```python
-# tests/test_models.py
-import pytest
-from myapp.models import Post
-from myapp.factories import UserFactory, PostFactory
-
+# Pytest tests
 @pytest.mark.django_db
 class TestPost:
     """Test Post model."""
@@ -791,46 +565,21 @@ class TestPost:
         """Test creating a post."""
         post = PostFactory()
         assert post.id is not None
-        assert post.title.startswith('Post')
 
     def test_published_queryset(self):
         """Test published posts queryset."""
         PostFactory(is_published=True)
         PostFactory(is_published=False)
-
-        published = Post.objects.published()
-        assert published.count() == 1
-
-# conftest.py
-import pytest
-from rest_framework.test import APIClient
-
-@pytest.fixture
-def api_client():
-    """Provide API client for tests."""
-    return APIClient()
-
-@pytest.fixture
-def authenticated_client(api_client, user):
-    """Provide authenticated API client."""
-    api_client.force_authenticate(user=user)
-    return api_client
+        assert Post.objects.published().count() == 1
 ```
 
-## Deployment
+## Production Configuration
 
-### Production Settings
+**Rule:** Use PostgreSQL in production. Configure logging. Use static file storage.
 
 ```python
 # settings/production.py
-import os
-from .base import *
 
-DEBUG = False
-
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
-
-# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -847,10 +596,6 @@ DATABASES = {
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
-
 # Logging
 LOGGING = {
     'version': 1,
@@ -866,7 +611,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/django/app.log',
-            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'maxBytes': 1024 * 1024 * 15,
             'backupCount': 10,
             'formatter': 'verbose',
         },
@@ -878,75 +623,8 @@ LOGGING = {
 }
 ```
 
-### Docker Configuration
-
-```dockerfile
-# Dockerfile
-FROM python:3.11-slim
-
-ENV PYTHONUNBUFFERED=1
-
-WORKDIR /app
-
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy project
-COPY . .
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-EXPOSE 8000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi:application"]
-```
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  web:
-    build: .
-    command: gunicorn myproject.wsgi:application --bind 0.0.0.0:8000
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-
-  db:
-    image: postgres:15
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=myapp
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
-```
-
 ## Related Resources
 
-- See `languages/python/coding-standards.md` for Python patterns
-- See `languages/python/testing.md` for testing strategies
-- See `base/security-principles.md` for security guidelines
-
-## References
-
-- **Django Documentation:** https://docs.djangoproject.com
-- **Django REST Framework:** https://www.django-rest-framework.org
-- **Two Scoops of Django:** https://www.feldroy.com
+- `languages/python/coding-standards.md` - Python patterns
+- `languages/python/testing.md` - Testing strategies
+- `base/security-principles.md` - Security guidelines

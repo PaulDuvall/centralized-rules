@@ -1,9 +1,10 @@
 # Express Best Practices
 
 > **When to apply:** All Node.js applications using Express framework
+> **Framework:** Express 4.18+
 > **Language:** TypeScript/JavaScript
 
-Best practices for building production-ready Express applications with middleware, routing, error handling, security, and TypeScript integration.
+Production-ready Express development with middleware, routing, error handling, security, and TypeScript integration.
 
 ## Project Structure
 
@@ -13,33 +14,19 @@ myapp/
 │   ├── index.ts              # App entry point
 │   ├── app.ts                # Express app configuration
 │   ├── config/               # Configuration
-│   │   ├── database.ts
-│   │   └── env.ts
 │   ├── routes/               # Route handlers
-│   │   ├── index.ts
-│   │   ├── users.ts
-│   │   └── posts.ts
 │   ├── controllers/          # Request handlers
-│   │   ├── userController.ts
-│   │   └── postController.ts
 │   ├── services/             # Business logic
-│   │   ├── userService.ts
-│   │   └── authService.ts
 │   ├── models/               # Data models
-│   │   ├── User.ts
-│   │   └── Post.ts
 │   ├── middleware/           # Custom middleware
-│   │   ├── auth.ts
-│   │   ├── errorHandler.ts
-│   │   └── validation.ts
-│   └── utils/                # Utilities
+│   └── utils/
 ├── tests/
 └── package.json
 ```
 
-## Middleware Best Practices
+## Middleware Configuration
 
-### Ordering Matters
+**Rule:** Apply middleware in correct order: security → parsing → logging → compression → routes → error handling.
 
 ```typescript
 import express from 'express';
@@ -50,14 +37,14 @@ import morgan from 'morgan';
 
 const app = express();
 
-// 1. Security middleware (first)
+// 1. Security (first)
 app.use(helmet());
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(','),
   credentials: true,
 }));
 
-// 2. Request parsing
+// 2. Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -69,16 +56,16 @@ app.use(compression());
 
 // 5. Routes
 app.use('/api/users', userRoutes);
-app.use('/api/posts', postRoutes);
 
 // 6. Error handling (last)
 app.use(errorHandler);
 ```
 
-### Custom Middleware
+## Custom Middleware
+
+**Rule:** Define typed middleware with proper error handling. Use `NextFunction` for middleware chaining.
 
 ```typescript
-// middleware/auth.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
@@ -93,14 +80,12 @@ export const authenticate = async (
 ) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
     req.userId = decoded.userId;
-    
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid token' });
@@ -110,10 +95,9 @@ export const authenticate = async (
 
 ## Routing
 
-### Router-Based Organization
+**Rule:** Organize routes by resource. Use Router for modular route definitions. Apply validation middleware.
 
 ```typescript
-// routes/users.ts
 import { Router } from 'express';
 import * as userController from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
@@ -134,10 +118,11 @@ router.delete('/account', authenticate, userController.deleteAccount);
 export default router;
 ```
 
-### Controller Pattern
+## Controller Pattern
+
+**Rule:** Controllers handle HTTP. Delegate business logic to services. Return consistent response structure.
 
 ```typescript
-// controllers/userController.ts
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import * as userService from '../services/userService';
@@ -154,11 +139,9 @@ export const register = async (req: Request, res: Response) => {
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const user = await userService.getUserById(req.userId!);
-    
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
     res.json({ user });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
@@ -168,15 +151,14 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 
 ## Error Handling
 
-### Centralized Error Handler
+**Rule:** Use centralized error handler. Create custom error classes. Never expose stack traces in production.
 
 ```typescript
-// middleware/errorHandler.ts
 import { Request, Response, NextFunction } from 'express';
 
 export class AppError extends Error {
   statusCode: number;
-  
+
   constructor(message: string, statusCode: number = 500) {
     super(message);
     this.statusCode = statusCode;
@@ -193,28 +175,19 @@ export const errorHandler = (
   console.error(err);
 
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      error: err.message,
-    });
+    return res.status(err.statusCode).json({ error: err.message });
   }
 
-  // Validation errors
   if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      error: 'Validation failed',
-      details: err.message,
-    });
+    return res.status(400).json({ error: 'Validation failed', details: err.message });
   }
 
-  // Default error
   res.status(500).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message,
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
   });
 };
 
-// Async error wrapper
+// Async wrapper
 export const asyncHandler = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
@@ -224,12 +197,13 @@ export const asyncHandler = (fn: Function) => {
 
 ## Request Validation
 
-### Using Zod
+**Rule:** Validate all input with Zod schemas. Apply validation middleware before controllers.
 
 ```typescript
-// schemas/user.ts
 import { z } from 'zod';
+import { Request, Response, NextFunction } from 'express';
 
+// Schema definition
 export const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -241,73 +215,59 @@ export const updateUserSchema = z.object({
   bio: z.string().max(500).optional(),
 });
 
-// middleware/validation.ts
-import { Request, Response, NextFunction } from 'express';
-import { ZodSchema } from 'zod';
-
-export const validate = (schema: ZodSchema) => {
+// Validation middleware
+export const validate = (schema: z.ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse(req.body);
       next();
     } catch (error) {
-      res.status(400).json({
-        error: 'Validation failed',
-        details: error.errors,
-      });
+      res.status(400).json({ error: 'Validation failed', details: error.errors });
     }
   };
 };
 ```
 
-## Security Best Practices
+## Security
 
-### Rate Limiting
+**Rule:** Apply rate limiting. Sanitize input. Use helmet for security headers.
 
 ```typescript
 import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
 
+// Global rate limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests, please try again later',
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests',
 });
-
 app.use('/api/', limiter);
 
-// Stricter limit for auth endpoints
+// Strict limiter for auth
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: 'Too many login attempts',
 });
-
 app.use('/api/auth/login', authLimiter);
-```
 
-### Input Sanitization
-
-```typescript
-import mongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
-
-// Prevent NoSQL injection
-app.use(mongoSanitize());
-
-// Prevent XSS attacks
-app.use(xss());
+// Input sanitization
+app.use(mongoSanitize());  // Prevent NoSQL injection
+app.use(xss());             // Prevent XSS attacks
 ```
 
 ## Testing
 
-### Integration Tests
+**Rule:** Use supertest for integration tests. Test all routes and error cases.
 
 ```typescript
 import request from 'supertest';
 import app from '../app';
 
 describe('User API', () => {
-  it('should register a new user', async () => {
+  it('should register new user', async () => {
     const response = await request(app)
       .post('/api/users/register')
       .send({
@@ -329,12 +289,11 @@ describe('User API', () => {
 });
 ```
 
-## Performance
+## Database Connection
 
-### Database Connection Pooling
+**Rule:** Use connection pooling. Handle connection errors gracefully.
 
 ```typescript
-// config/database.ts
 import { Pool } from 'pg';
 
 export const pool = new Pool({
@@ -343,13 +302,15 @@ export const pool = new Pool({
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  max: 20, // Maximum pool size
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 ```
 
-### Response Caching
+## Response Caching
+
+**Rule:** Cache static or infrequently changing data. Use cache headers.
 
 ```typescript
 import mcache from 'memory-cache';
@@ -379,6 +340,6 @@ app.get('/api/posts', cache(300), postController.list);
 
 ## Related Resources
 
-- See `languages/typescript/coding-standards.md` for TypeScript patterns
-- See `languages/typescript/testing.md` for testing strategies
-- See `base/security-principles.md` for security guidelines
+- `languages/typescript/coding-standards.md` - TypeScript patterns
+- `languages/typescript/testing.md` - Testing strategies
+- `base/security-principles.md` - Security guidelines

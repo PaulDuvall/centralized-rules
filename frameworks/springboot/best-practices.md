@@ -1,36 +1,24 @@
 # Spring Boot Best Practices
 
 > **When to apply:** All Java applications using Spring Boot framework
+> **Framework:** Spring Boot 3.x
 > **Language:** Java 17+
 
-Best practices for building production-ready Spring Boot applications with annotations, dependency injection, Spring Data, REST APIs, and testing.
+Production-ready Spring Boot development with annotations, dependency injection, Spring Data, REST APIs, and testing.
 
 ## Project Structure
 
 ```
 myapp/
 ├── src/main/java/com/example/myapp/
-│   ├── MyAppApplication.java        # Main application class
-│   ├── config/                      # Configuration classes
-│   │   ├── SecurityConfig.java
-│   │   └── DatabaseConfig.java
+│   ├── MyAppApplication.java        # Main application
+│   ├── config/                      # Configuration
 │   ├── controller/                  # REST controllers
-│   │   ├── UserController.java
-│   │   └── PostController.java
 │   ├── service/                     # Business logic
-│   │   ├── UserService.java
-│   │   └── PostService.java
 │   ├── repository/                  # Data access
-│   │   ├── UserRepository.java
-│   │   └── PostRepository.java
 │   ├── model/                       # Domain entities
-│   │   ├── User.java
-│   │   └── Post.java
 │   ├── dto/                         # Data transfer objects
-│   │   ├── UserDTO.java
-│   │   └── CreateUserRequest.java
 │   └── exception/                   # Custom exceptions
-│       └── ResourceNotFoundException.java
 ├── src/main/resources/
 │   ├── application.yml
 │   ├── application-dev.yml
@@ -38,36 +26,36 @@ myapp/
 └── src/test/java/
 ```
 
-## Annotations and Dependency Injection
+## Controller Layer
 
-### Controller Layer
+**Rule:** Use `@RestController` for REST APIs. Apply validation with `@Valid`. Return `ResponseEntity` for explicit status codes.
 
 ```java
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-    
+
     private final UserService userService;
-    
+
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.findAll());
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         return userService.findById(id)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO createUser(@Valid @RequestBody CreateUserRequest request) {
         return userService.create(request);
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(
         @PathVariable Long id,
@@ -77,7 +65,7 @@ public class UserController {
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
@@ -86,40 +74,41 @@ public class UserController {
 }
 ```
 
-### Service Layer
+## Service Layer
+
+**Rule:** Annotate with `@Service`. Use `@Transactional` for database operations. Mark read-only methods with `@Transactional(readOnly = true)`.
 
 ```java
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
+
     @Transactional(readOnly = true)
     public List<UserDTO> findAll() {
         return userRepository.findAll().stream()
             .map(this::toDTO)
             .toList();
     }
-    
+
     @Transactional(readOnly = true)
     public Optional<UserDTO> findById(Long id) {
-        return userRepository.findById(id)
-            .map(this::toDTO);
+        return userRepository.findById(id).map(this::toDTO);
     }
-    
+
     public UserDTO create(CreateUserRequest request) {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
-        
+
         User saved = userRepository.save(user);
         return toDTO(saved);
     }
-    
+
     private UserDTO toDTO(User user) {
         return new UserDTO(
             user.getId(),
@@ -131,27 +120,29 @@ public class UserService {
 }
 ```
 
-## Spring Data JPA
+## Repository Layer
 
-### Repository
+**Rule:** Extend `JpaRepository`. Use method naming conventions or `@Query` for custom queries.
 
 ```java
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    
+
     Optional<User> findByEmail(String email);
-    
+
     @Query("SELECT u FROM User u WHERE u.active = true")
     List<User> findActiveUsers();
-    
+
     @Query("SELECT u FROM User u WHERE u.createdAt >= :since")
     List<User> findRecentUsers(@Param("since") LocalDateTime since);
-    
+
     boolean existsByEmail(String email);
 }
 ```
 
-### Entity
+## Entity Design
+
+**Rule:** Use `@Entity` and `@Table`. Apply indexes to frequently queried columns. Use lifecycle callbacks for timestamps.
 
 ```java
 @Entity
@@ -162,32 +153,32 @@ public interface UserRepository extends JpaRepository<User, Long> {
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
     @Column(nullable = false)
     private String password;
-    
+
     @Column(nullable = false)
     private String name;
-    
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
@@ -195,9 +186,9 @@ public class User {
 }
 ```
 
-## REST API Design
+## DTOs
 
-### Request/Response DTOs
+**Rule:** Use records for immutable DTOs. Apply validation annotations.
 
 ```java
 public record CreateUserRequest(
@@ -212,35 +203,21 @@ public record UserDTO(
     String name,
     LocalDateTime createdAt
 ) {}
+
+public record UpdateUserRequest(
+    @Email String email,
+    @Size(min = 2, max = 100) String name
+) {}
 ```
 
-### Response Wrapper
+## Global Exception Handling
 
-```java
-public record ApiResponse<T>(
-    boolean success,
-    T data,
-    String message,
-    LocalDateTime timestamp
-) {
-    public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, data, null, LocalDateTime.now());
-    }
-    
-    public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, null, message, LocalDateTime.now());
-    }
-}
-```
-
-## Exception Handling
-
-### Global Exception Handler
+**Rule:** Use `@RestControllerAdvice` for centralized error handling. Return consistent error responses.
 
 ```java
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -250,7 +227,7 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
-    
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         List<String> errors = ex.getBindingResult()
@@ -258,7 +235,7 @@ public class GlobalExceptionHandler {
             .stream()
             .map(error -> error.getField() + ": " + error.getDefaultMessage())
             .toList();
-            
+
         ErrorResponse error = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
             "Validation failed: " + String.join(", ", errors),
@@ -266,7 +243,7 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.badRequest().body(error);
     }
-    
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
         ErrorResponse error = new ErrorResponse(
@@ -278,23 +255,19 @@ public class GlobalExceptionHandler {
     }
 }
 
-public record ErrorResponse(
-    int status,
-    String message,
-    LocalDateTime timestamp
-) {}
+public record ErrorResponse(int status, String message, LocalDateTime timestamp) {}
 ```
 
 ## Configuration
 
-### Application Properties
+**Rule:** Split configuration by environment. Use YAML for readability. Externalize secrets.
 
 ```yaml
 # application.yml
 spring:
   application:
     name: myapp
-  
+
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USER}
@@ -303,7 +276,7 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-  
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -312,11 +285,6 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  
-  security:
-    jwt:
-      secret: ${JWT_SECRET}
-      expiration: 86400000 # 24 hours
 
 server:
   port: 8080
@@ -325,22 +293,21 @@ server:
     include-stacktrace: never
 ```
 
-### Configuration Class
-
+**Configuration class:**
 ```java
 @Configuration
 public class AppConfig {
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
     }
-    
+
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
@@ -350,18 +317,18 @@ public class AppConfig {
 }
 ```
 
-## Security
+## Security Configuration
 
-### Security Configuration
+**Rule:** Use Spring Security for authentication. Implement JWT validation. Apply method-level security.
 
 ```java
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    
+
     private final JwtAuthenticationFilter jwtAuthFilter;
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -375,7 +342,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
 }
@@ -383,27 +350,28 @@ public class SecurityConfig {
 
 ## Testing
 
-### Integration Tests
+**Rule:** Use `@SpringBootTest` for integration tests. Use `MockMvc` for controller tests. Use `@MockBean` for service mocks.
 
 ```java
+// Integration tests
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 class UserControllerIntegrationTest {
-    
+
     @Autowired
     private MockMvc mockMvc;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
     }
-    
+
     @Test
     void shouldCreateUser() throws Exception {
         CreateUserRequest request = new CreateUserRequest(
@@ -411,7 +379,7 @@ class UserControllerIntegrationTest {
             "password123",
             "Test User"
         );
-        
+
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -420,23 +388,20 @@ class UserControllerIntegrationTest {
             .andExpect(jsonPath("$.name").value("Test User"));
     }
 }
-```
 
-### Unit Tests
-
-```java
+// Unit tests
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    
+
     @Mock
     private UserRepository userRepository;
-    
+
     @Mock
     private PasswordEncoder passwordEncoder;
-    
+
     @InjectMocks
     private UserService userService;
-    
+
     @Test
     void shouldCreateUser() {
         CreateUserRequest request = new CreateUserRequest(
@@ -444,25 +409,58 @@ class UserServiceTest {
             "password123",
             "Test User"
         );
-        
+
         User savedUser = new User();
         savedUser.setId(1L);
         savedUser.setEmail(request.email());
         savedUser.setName(request.name());
-        
+
         when(passwordEncoder.encode(anyString())).thenReturn("encoded");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        
+
         UserDTO result = userService.create(request);
-        
+
         assertThat(result.email()).isEqualTo("test@example.com");
         verify(userRepository).save(any(User.class));
     }
 }
 ```
 
+## Performance Optimization
+
+**Rule:** Apply database indexes. Use connection pooling. Implement caching for frequently accessed data.
+
+```java
+// Caching configuration
+@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    @Bean
+    public CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager("users", "posts");
+    }
+}
+
+// Service with caching
+@Service
+public class UserService {
+
+    @Cacheable(value = "users", key = "#id")
+    @Transactional(readOnly = true)
+    public Optional<UserDTO> findById(Long id) {
+        return userRepository.findById(id).map(this::toDTO);
+    }
+
+    @CacheEvict(value = "users", key = "#id")
+    public void delete(Long id) {
+        userRepository.deleteById(id);
+    }
+}
+```
+
 ## Related Resources
 
-- See `languages/java/coding-standards.md` for Java patterns
-- See `languages/java/testing.md` for testing strategies
-- See `base/architecture-principles.md` for architecture patterns
+- `languages/java/coding-standards.md` - Java patterns
+- `languages/java/testing.md` - Testing strategies
+- `base/architecture-principles.md` - Architecture patterns
