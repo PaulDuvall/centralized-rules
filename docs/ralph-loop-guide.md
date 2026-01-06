@@ -65,5 +65,5 @@ caffeinate -i claude /ralph-loop \
 
 ## References
 
-- [Ralph Wiggum Plugin](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-loop)
+- [Ralph Wiggum Plugin](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum)
 - [caffeinate - macOS man page](https://ss64.com/mac/caffeinate.html)
