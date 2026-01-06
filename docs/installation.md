@@ -1,341 +1,101 @@
-# Installation Guide
-
-This guide covers detailed installation instructions for all supported AI tools.
+# Installation
 
 ## Prerequisites
 
-- Git installed
-- Bash shell (macOS, Linux, or WSL on Windows)
-- One of the supported AI tools:
-  - Claude Code
-  - Cursor
-  - GitHub Copilot
-  - Continue.dev
-  - Windsurf
-  - Sourcegraph Cody
-  - Google Gemini/Codegemma
+- Git
+- Bash shell (macOS, Linux, WSL)
+- Claude Code, Cursor, GitHub Copilot, Continue.dev, Windsurf, Cody, or Gemini
 
-## Installation Methods
+## Global Installation (Recommended)
 
-Choose the installation method that best fits your workflow:
-
-### Method 1: Claude Skill (Recommended for Claude Users)
-
-**Automatic, hook-based rule loading** - No manual syncing required!
-
-#### Step 1: Run the Installation Script
+Install once, apply to all projects:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/skill/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
 ```
 
-This script will:
-- Clone the repository to `~/centralized-rules`
-- Install and build the Claude Skill
-- Show you how to configure Claude
+Adds hook to Claude Code global settings. Every project gets automatic rule loading.
 
-#### Step 2: Configure Claude
+## Local Installation
 
-Add to your Claude configuration (`~/.config/claude/claude_desktop_config.json`):
-
-```json
-{
-  "skills": [
-    {
-      "name": "centralized-rules",
-      "path": "~/centralized-rules/skill"
-    }
-  ]
-}
-```
-
-#### Step 3: Restart Claude
-
-Restart Claude Code for the skill to take effect.
-
-#### How It Works
-
-- Automatically detects your project context (language, framework, cloud provider)
-- Intelligently loads only 3-5 relevant rules per request
-- No context window bloat - uses progressive disclosure
-- Always fetches latest rules from GitHub
-- Zero manual sync required
-
-**[Full Skill Documentation →](../skill/README.md)**
-
----
-
-### Method 2: Sync Script (All AI Tools)
-
-**Traditional sync-based approach** - Works with any AI tool.
-
-#### Step 1: Download the Sync Script
+Install to specific project:
 
 ```bash
-# Navigate to your project directory
 cd /path/to/your/project
-
-# Download the sync script
-curl -fsSL https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/sync-ai-rules.sh \
-    -o sync-ai-rules.sh
-
-# Make it executable
-chmod +x sync-ai-rules.sh
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
 ```
 
-#### Step 2: Run the Sync Script
+Creates `.claude/` directory structure with hooks and cached rules.
+
+## Verification
+
+Check installation:
 
 ```bash
-# Auto-detect and sync for all AI tools
-./sync-ai-rules.sh
-
-# Or sync for specific tool
-./sync-ai-rules.sh --tool claude
-./sync-ai-rules.sh --tool cursor
-./sync-ai-rules.sh --tool copilot
+ls -la .claude/hooks/activate-rules.sh
+ls -la ~/.claude/cache/centralized-rules/
 ```
 
-#### Step 3: Verify Generated Files
-
-The script generates tool-specific files:
-
-**Claude Code (Hierarchical - Recommended):**
-- `.claude/AGENTS.md` - Entry point with discovery instructions
-- `.claude/rules/` - Organized rule directory (on-demand loading)
-- `.claude/rules/index.json` - Machine-readable rule index
-
-**Cursor:**
-- `.cursorrules` - Monolithic format
-
-**GitHub Copilot:**
-- `.github/copilot-instructions.md` - Monolithic format
-
-Your AI assistant will automatically use these rules!
-
----
+Start Claude Code - rules load automatically on first prompt.
 
 ## Auto-Detection
 
-The sync script automatically detects your project and loads only relevant rules.
+Hook automatically detects project context and loads relevant rules.
 
-### Languages Detected
+**Languages:** Detected via `pyproject.toml`, `package.json`, `go.mod`, `pom.xml`, `Cargo.toml`
 
-| Language   | Detection Files                          |
-|------------|------------------------------------------|
-| Python     | `pyproject.toml`, `setup.py`, `requirements.txt` |
-| TypeScript | `package.json` with `"typescript"`       |
-| JavaScript | `package.json` without TypeScript        |
-| Go         | `go.mod`                                 |
-| Java       | `pom.xml`, `build.gradle`                |
-| Ruby       | `Gemfile`                                |
-| Rust       | `Cargo.toml`                             |
+**Frameworks:** Parsed from dependency files (`package.json`, Python requirements, Java build files)
 
-### Frameworks Detected
+**Cloud Providers:** Identified via `cdk.json`, `vercel.json`, Terraform configs
 
-| Framework    | Detection Method                   |
-|--------------|------------------------------------|
-| Django       | `django` in Python dependencies    |
-| FastAPI      | `fastapi` in Python dependencies   |
-| Flask        | `flask` in Python dependencies     |
-| React        | `"react"` in package.json          |
-| Next.js      | `"next"` in package.json           |
-| Vue          | `"vue"` in package.json            |
-| Express      | `"express"` in package.json        |
-| Spring Boot  | `spring-boot` in Java build files  |
+## Customization
 
-### Cloud Providers Detected
+### Override Detection
 
-| Provider | Detection Method                        |
-|----------|-----------------------------------------|
-| AWS      | AWS CDK, CloudFormation, SAM templates  |
-| Vercel   | `vercel.json`, Vercel environment vars  |
-| Azure    | Azure-specific config files             |
-| GCP      | GCP-specific config files               |
-
----
-
-## Configuration
-
-### Custom Rules Repository
-
-Set your own rules repository URL:
-
-```bash
-export AI_RULES_REPO="https://raw.githubusercontent.com/your-org/your-rules/main"
-./sync-ai-rules.sh
-```
-
-### Manual Configuration
-
-Create `.ai/sync-config.json` to override auto-detection:
+Create `.ai/sync-config.json`:
 
 ```json
 {
-    "languages": ["python", "typescript"],
-    "frameworks": ["fastapi", "react"],
-    "exclude": ["testing-mocking"],
-    "custom_rules": [
-        "https://example.com/custom-rule.md"
-    ]
+  "languages": ["python", "typescript"],
+  "frameworks": ["fastapi", "react"],
+  "exclude": ["testing-mocking"]
 }
 ```
 
----
-
-## Automation
-
-### Pre-commit Hook
-
-Keep rules synced automatically:
+### Custom Rules Repository
 
 ```bash
-# .git/hooks/pre-commit
-#!/bin/bash
-./sync-ai-rules.sh --tool all
-git add .claude/RULES.md .cursorrules .github/copilot-instructions.md
+export AI_RULES_REPO="https://raw.githubusercontent.com/your-org/your-rules/main"
+curl -fsSL $AI_RULES_REPO/install-hooks.sh | bash -s -- --global
 ```
-
-Make it executable:
-
-```bash
-chmod +x .git/hooks/pre-commit
-```
-
-### CI/CD Validation
-
-Validate rules are current in pull requests:
-
-```yaml
-# .github/workflows/validate-rules.yml
-name: Validate AI Rules
-
-on: [pull_request]
-
-jobs:
-  check-rules:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Sync rules
-        run: ./sync-ai-rules.sh
-      - name: Check for changes
-        run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "AI rules are out of date. Run ./sync-ai-rules.sh"
-            exit 1
-          fi
-```
-
----
 
 ## Troubleshooting
 
-### Rules Not Loading
-
-1. **Check file existence:**
-   ```bash
-   ls -la .claude/RULES.md .cursorrules .github/copilot-instructions.md
-   ```
-
-2. **Re-run sync script:**
-   ```bash
-   ./sync-ai-rules.sh --tool all
-   ```
-
-3. **Verify detection:**
-   ```bash
-   ./sync-ai-rules.sh --dry-run
-   ```
-
-### Wrong Rules Loaded
-
-1. **Check detection logic:**
-   ```bash
-   ./sync-ai-rules.sh --verbose
-   ```
-
-2. **Override with config:**
-   Create `.ai/sync-config.json` with explicit settings
-
-### Sync Script Fails
-
-1. **Check network connectivity:**
-   ```bash
-   curl -I https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main/README.md
-   ```
-
-2. **Check permissions:**
-   ```bash
-   chmod +x sync-ai-rules.sh
-   ```
-
-3. **Check bash version:**
-   ```bash
-   bash --version
-   ```
-
----
-
-## Updating Rules
-
-### Manual Update
-
+**Rules not loading:**
 ```bash
-./sync-ai-rules.sh
+ls -la .claude/hooks/activate-rules.sh
+chmod +x .claude/hooks/activate-rules.sh
 ```
 
-### Automatic Update (Pre-commit Hook)
+**Wrong rules detected:**
+Create `.ai/sync-config.json` with explicit language/framework settings.
 
-See [Automation](#automation) section above.
-
-### Check for Updates
-
-The sync script always downloads the latest rules from GitHub. To see what changed:
-
+**Network issues:**
 ```bash
-git diff .claude/RULES.md
-git diff .cursorrules
+curl -I https://raw.githubusercontent.com/paulduvall/centralized-rules/main/README.md
 ```
 
----
+## Uninstall
 
-## Uninstallation
-
-### Remove Generated Files
+Remove global hooks:
 
 ```bash
-rm -rf .claude/RULES.md .claude/rules/ .cursorrules .github/copilot-instructions.md
+rm -rf ~/.claude/hooks/activate-rules.sh
+rm -rf ~/.claude/cache/centralized-rules/
 ```
 
-### Remove Sync Script
+Remove local installation:
 
 ```bash
-rm sync-ai-rules.sh
+rm -rf .claude/
 ```
-
-### Remove Claude Skill
-
-```bash
-# Remove from Claude config
-nano ~/.config/claude/claude_desktop_config.json
-
-# Remove repository
-rm -rf ~/centralized-rules
-```
-
----
-
-## Next Steps
-
-- [Usage Examples](../examples/USAGE_EXAMPLES.md) - See real-world examples
-- [Architecture Overview](../ARCHITECTURE.md) - Understand how it works
-- [Implementation Guide](../IMPLEMENTATION_GUIDE.md) - Plan your rollout
-- [Contributing](https://github.com/PaulDuvall/centralized-rules/issues) - Contribute improvements
-
----
-
-## Support
-
-- **Issues:** [GitHub Issues](https://github.com/PaulDuvall/centralized-rules/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/PaulDuvall/centralized-rules/issues)
-- **Documentation:** See the docs directory in the repository
