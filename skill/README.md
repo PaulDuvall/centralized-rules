@@ -239,7 +239,7 @@ The classifier uses a two-phase approach for accuracy:
 "Operating agreement terms" → LEGAL_BUSINESS
 ```
 
-See [`docs/classification-system.md`](../docs/classification-system.md) for architecture details.
+See [`docs/architecture/classification-system.md`](../docs/architecture/classification-system.md) for architecture details.
 
 ### Progressive Disclosure Benefits
 
