@@ -46,6 +46,7 @@ Python + FastAPI project measurements:
 
 - [Installation Guide](installation.md) - Setup instructions
 - [Hook System](hook-system.md) - Automatic rule loading and quality gates
+- [Ralph Loop Guide](ralph-loop-guide.md) - Iterative task completion with caffeinate
 - [Classification System](architecture/classification-system.md) - Prompt classification architecture
 - [Bash Code Quality](architecture/BASH_BRITTLE_AREAS.md) - Engineering analysis
 
