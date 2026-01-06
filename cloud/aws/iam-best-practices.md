@@ -2,222 +2,114 @@
 
 > **When to apply:** All AWS infrastructure and application development
 
-Comprehensive guide to AWS Identity and Access Management (IAM) best practices, including policy as code, Cedar policy language, Open Policy Agent (OPA), and IAM testing strategies.
-
-## Table of Contents
-
-- [IAM Fundamentals](#iam-fundamentals)
-- [Policy as Code](#policy-as-code)
-- [Cedar Policy Language](#cedar-policy-language)
-- [Open Policy Agent (OPA)](#open-policy-agent-opa)
-- [Policy Testing](#policy-testing)
-- [IAM Roles and Assume Role](#iam-roles-and-assume-role)
-- [Service Control Policies](#service-control-policies)
-- [Permission Boundaries](#permission-boundaries)
-- [IAM Best Practices](#iam-best-practices)
-
----
+Comprehensive IAM guidance including policy as code, Cedar policy language, Open Policy Agent (OPA), policy testing, roles, SCPs, and permission boundaries.
 
 ## IAM Fundamentals
 
 ### Identity Types
 
-**Users:**
-- Represents individual people or applications
-- **Avoid:** Long-lived access keys
-- **Prefer:** Temporary credentials via roles
-
-**Groups:**
-- Collections of users
-- Attach policies to groups, not individual users
-- Simplifies permission management
-
-**Roles:**
-- Assumed by users, applications, or services
-- Temporary credentials
-- **Best Practice:** Use roles for everything
-
-**Service Roles:**
-- Assigned to AWS services (EC2, Lambda, ECS)
-- Enable services to make AWS API calls
+- **Users:** Individual people/applications - avoid long-lived access keys
+- **Groups:** Collections of users - attach policies to groups, not users
+- **Roles:** Temporary credentials assumed by users/applications/services - **preferred for everything**
+- **Service Roles:** AWS services (EC2, Lambda, ECS) - enable AWS API calls
 
 ### Policy Types
 
-**Identity-Based Policies:**
+**Identity-Based (attached to users/groups/roles):**
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:PutObject"],
-      "Resource": "arn:aws:s3:::my-bucket/*"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["s3:GetObject", "s3:PutObject"],
+    "Resource": "arn:aws:s3:::my-bucket/*"
+  }]
 }
 ```
 
-**Resource-Based Policies:**
+**Resource-Based (attached to resources):**
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:role/MyRole"},
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::my-bucket/*"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"AWS": "arn:aws:iam::123456789012:role/MyRole"},
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::my-bucket/*"
+  }]
 }
 ```
 
-**Trust Policies (Assume Role):**
+**Trust Policy (who can assume role):**
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {"Service": "lambda.amazonaws.com"},
-      "Action": "sts:AssumeRole"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "lambda.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }]
 }
 ```
-
----
 
 ## Policy as Code
 
-### Why Policy as Code?
+### Rules
 
-**Benefits:**
-- Version control for policies
-- Code review process
-- Automated testing
-- Consistent policy application
-- Audit trail of changes
-- Reusable policy templates
+1. **Version control policies** - git with code review
+2. **Automate testing** - validate before deployment
+3. **Use reusable templates** - Terraform modules, CloudFormation macros
+4. **Audit trail** - track all policy changes
+5. **Validate syntax** - lint policies (Parliament, IAM Policy Simulator)
 
-### Terraform IAM Policies
+### Terraform Implementation
 
-**policy.tf:**
 ```hcl
-# Data source for policy document
+# Policy document as code
 data "aws_iam_policy_document" "app_s3_access" {
   statement {
-    sid = "AllowS3ReadWrite"
+    sid    = "AllowS3ReadWrite"
     effect = "Allow"
-
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject"
-    ]
-
-    resources = [
-      "${aws_s3_bucket.app_bucket.arn}/*"
-    ]
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${aws_s3_bucket.app_bucket.arn}/*"]
   }
 
   statement {
-    sid = "AllowS3ListBucket"
-    effect = "Allow"
-
-    actions = ["s3:ListBucket"]
-
+    sid       = "AllowS3ListBucket"
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
     resources = [aws_s3_bucket.app_bucket.arn]
   }
 }
 
-# Create policy from document
 resource "aws_iam_policy" "app_s3_policy" {
-  name        = "app-s3-access-policy"
-  description = "Allow application to read/write to S3 bucket"
-  policy      = data.aws_iam_policy_document.app_s3_access.json
+  name   = "app-s3-access-policy"
+  policy = data.aws_iam_policy_document.app_s3_access.json
 }
 
-# Attach to role
 resource "aws_iam_role_policy_attachment" "app_s3_attach" {
   role       = aws_iam_role.app_role.name
   policy_arn = aws_iam_policy.app_s3_policy.arn
 }
 ```
 
-### CloudFormation IAM Policies
-
-```yaml
-Resources:
-  AppS3Policy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: AppS3AccessPolicy
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowS3ReadWrite
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:PutObject
-              - s3:DeleteObject
-            Resource: !Sub '${AppBucket.Arn}/*'
-          - Sid: AllowS3ListBucket
-            Effect: Allow
-            Action: s3:ListBucket
-            Resource: !GetAtt AppBucket.Arn
-      Roles:
-        - !Ref AppRole
-
-  AppRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-```
-
-### Policy Templates with Variables
-
-**Terraform Modules:**
+**Reusable Module:**
 ```hcl
 # modules/s3-access-policy/main.tf
-variable "bucket_arn" {
-  description = "ARN of S3 bucket"
-  type        = string
-}
-
-variable "policy_name" {
-  description = "Name of IAM policy"
-  type        = string
-}
-
-variable "allow_delete" {
-  description = "Allow delete operations"
-  type        = bool
-  default     = false
-}
+variable "bucket_arn" { type = string }
+variable "policy_name" { type = string }
+variable "allow_delete" { type = bool; default = false }
 
 locals {
-  actions = var.allow_delete ? [
-    "s3:GetObject",
-    "s3:PutObject",
-    "s3:DeleteObject"
-  ] : [
-    "s3:GetObject",
-    "s3:PutObject"
-  ]
+  actions = var.allow_delete ?
+    ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"] :
+    ["s3:GetObject", "s3:PutObject"]
 }
 
 data "aws_iam_policy_document" "this" {
   statement {
-    effect = "Allow"
-    actions = local.actions
+    effect    = "Allow"
+    actions   = local.actions
     resources = ["${var.bucket_arn}/*"]
   }
 }
@@ -227,64 +119,36 @@ resource "aws_iam_policy" "this" {
   policy = data.aws_iam_policy_document.this.json
 }
 
-output "policy_arn" {
-  value = aws_iam_policy.this.arn
-}
-
-# Usage
-module "app_s3_policy" {
-  source = "./modules/s3-access-policy"
-
-  bucket_arn   = aws_s3_bucket.app_bucket.arn
-  policy_name  = "app-s3-policy"
-  allow_delete = false
-}
+output "policy_arn" { value = aws_iam_policy.this.arn }
 ```
-
----
 
 ## Cedar Policy Language
 
-### What is Cedar?
+### Overview
 
-Cedar is AWS's open-source policy language designed for fine-grained authorization. It's used in Amazon Verified Permissions and AWS Verified Access.
+Cedar is AWS's open-source policy language for fine-grained authorization (Amazon Verified Permissions, AWS Verified Access).
 
 **Key Features:**
 - Human-readable syntax
-- Strongly typed
-- Formal verification
+- Strongly typed with formal verification
 - Separation of policy from code
 - Supports RBAC and ABAC
 
-### Cedar Policy Syntax
+### Basic Cedar Syntax
 
-**Basic Policy:**
 ```cedar
-// Allow admins to perform any action
-permit(
-  principal in Group::"Admins",
-  action,
-  resource
-);
+// Allow admins any action
+permit(principal in Group::"Admins", action, resource);
 
 // Allow users to read their own data
-permit(
-  principal,
-  action == Action::"read",
-  resource
-) when {
-  principal == resource.owner
-};
+permit(principal, action == Action::"read", resource)
+when { principal == resource.owner };
 
-// Deny delete operations on production resources
-forbid(
-  principal,
-  action == Action::"delete",
-  resource in Tag::"production"
-);
+// Deny delete on production
+forbid(principal, action == Action::"delete", resource in Tag::"production");
 ```
 
-### Cedar with AWS Verified Permissions
+### Cedar with Schema
 
 **Schema Definition:**
 ```json
@@ -310,11 +174,7 @@ forbid(
         }
       }
     },
-    "actions": {
-      "read": {},
-      "write": {},
-      "delete": {}
-    }
+    "actions": {"read": {}, "write": {}, "delete": {}}
   }
 }
 ```
@@ -322,57 +182,21 @@ forbid(
 **Cedar Policies:**
 ```cedar
 // Department-based access
-permit(
-  principal,
-  action in [Action::"read", Action::"write"],
-  resource
-) when {
-  principal.department == resource.department
-};
+permit(principal, action in [Action::"read", Action::"write"], resource)
+when { principal.department == resource.department };
 
 // Role-based access
-permit(
-  principal,
-  action == Action::"delete",
-  resource
-) when {
-  principal.role == "manager"
-};
+permit(principal, action == Action::"delete", resource)
+when { principal.role == "manager" };
 
-// Attribute-based access control
-forbid(
-  principal,
-  action,
-  resource
-) when {
-  resource.confidential == true &&
-  principal.role != "admin"
-};
+// ABAC - deny confidential to non-admins
+forbid(principal, action, resource)
+when { resource.confidential == true && principal.role != "admin" };
 ```
 
-### Using Cedar in Applications
+### Cedar in Python
 
-**Python with Cedar:**
 ```python
-from cedar_policy_validator import validate_policy
-
-# Define policy
-policy = """
-permit(
-  principal == User::"alice",
-  action == Action::"read",
-  resource in Folder::"shared"
-);
-"""
-
-# Validate policy against schema
-result = validate_policy(policy, schema)
-if result.is_valid:
-    print("Policy is valid")
-else:
-    print(f"Policy errors: {result.errors}")
-
-# Evaluate authorization request
 from cedar_policy import Evaluator
 
 evaluator = Evaluator(policies, schema)
@@ -384,138 +208,72 @@ request = {
     "context": {}
 }
 
-decision = evaluator.is_authorized(request)
-# Returns: ALLOW, DENY, or ERROR
+decision = evaluator.is_authorized(request)  # ALLOW, DENY, or ERROR
 ```
-
----
 
 ## Open Policy Agent (OPA)
 
-### What is OPA?
+### Overview
 
-Open Policy Agent is a general-purpose policy engine that works with AWS IAM and other systems.
+General-purpose policy engine for IAM validation, enforcement, and application authorization.
 
 **Use Cases:**
 - Validate IAM policies before deployment
-- Enforce organizational policy standards
-- Authorization decisions in applications
+- Enforce organizational standards
+- Application authorization decisions
 - Kubernetes admission control
 
-### OPA Policy Language (Rego)
+### Rego Policy Language
 
-**Basic Rego Policy:**
-```rego
-package aws.iam
-
-# Deny policies that allow FullAccess
-deny[msg] {
-  policy := input.policy
-  statement := policy.Statement[_]
-  statement.Effect == "Allow"
-  statement.Action == "*"
-
-  msg := "Policy grants full access (*), which violates least privilege"
-}
-
-# Deny policies without resource restrictions
-deny[msg] {
-  policy := input.policy
-  statement := policy.Statement[_]
-  statement.Effect == "Allow"
-  statement.Resource == "*"
-
-  msg := sprintf("Statement allows access to all resources: %v", [statement])
-}
-
-# Require MFA for admin actions
-deny[msg] {
-  policy := input.policy
-  statement := policy.Statement[_]
-  is_admin_action(statement.Action)
-  not has_mfa_condition(statement)
-
-  msg := "Admin actions must require MFA"
-}
-
-is_admin_action(action) {
-  admin_actions := ["iam:*", "ec2:*", "s3:Delete*"]
-  action == admin_actions[_]
-}
-
-has_mfa_condition(statement) {
-  statement.Condition["Bool"]["aws:MultiFactorAuthPresent"] == "true"
-}
-```
-
-### IAM Policy Validation with OPA
-
-**policy_validation.rego:**
+**IAM Validation Rules:**
 ```rego
 package iam.validation
 
 import future.keywords
 
-# Rule: Policies must not use wildcard (*) for resources
+# Deny wildcard resources
 deny_wildcard_resources contains msg if {
   some statement in input.Statement
   statement.Resource == "*"
   msg := sprintf("Statement uses wildcard resource: %v", [statement.Sid])
 }
 
-# Rule: S3 policies must enforce encryption
+# Require encryption for S3 writes
 deny_unencrypted_s3 contains msg if {
   some statement in input.Statement
   is_s3_write_action(statement.Action)
   not requires_encryption(statement)
-
   msg := "S3 write operations must require encryption"
 }
 
-is_s3_write_action(action) if {
-  startswith(action, "s3:Put")
-}
-
-is_s3_write_action(actions) if {
-  some action in actions
-  startswith(action, "s3:Put")
-}
+is_s3_write_action(action) if { startswith(action, "s3:Put") }
 
 requires_encryption(statement) if {
   statement.Condition["StringEquals"]["s3:x-amz-server-side-encryption"]
 }
 
-# Rule: Enforce tagging requirements
+# Deny missing required tags
 deny_missing_tags contains msg if {
   not input.Tags
   msg := "Policy must have required tags"
 }
-
-deny_missing_required_tag[tag] {
-  required_tags := ["Environment", "Owner", "CostCenter"]
-  tag := required_tags[_]
-  not input.Tags[tag]
-}
 ```
 
-**Testing Policies with OPA:**
+### OPA in CI/CD
+
 ```bash
 # Install OPA
 brew install opa
 
-# Test policy against input
-opa eval -i policy.json -d policy_validation.rego \
-  "data.iam.validation.deny_wildcard_resources"
+# Test policy
+opa eval -i policy.json -d validation.rego "data.iam.validation.deny"
 
 # Run OPA server
-opa run --server policy_validation.rego
+opa run --server validation.rego
 
 # Query via API
-curl -X POST http://localhost:8181/v1/data/iam/validation/deny_wildcard_resources \
-  -d @policy.json
+curl -X POST http://localhost:8181/v1/data/iam/validation/deny -d @policy.json
 ```
-
-### OPA in CI/CD Pipeline
 
 **GitHub Actions:**
 ```yaml
@@ -532,37 +290,32 @@ jobs:
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
-          chmod +x opa
-          sudo mv opa /usr/local/bin/
+          chmod +x opa && sudo mv opa /usr/local/bin/
 
-      - name: Validate IAM Policies
+      - name: Validate Policies
         run: |
           for policy_file in policies/*.json; do
-            echo "Validating $policy_file"
-            opa eval -i "$policy_file" -d opa/iam_validation.rego \
-              "data.iam.validation.deny" --format pretty
+            violations=$(opa eval -i "$policy_file" -d opa/validation.rego \
+              "data.iam.validation.deny" --format raw)
+            if [ "$violations" != "[]" ]; then
+              echo "Policy violations in $policy_file: $violations"
+              exit 1
+            fi
           done
-
-      - name: Check for policy violations
-        run: |
-          violations=$(opa eval -i policies/app_policy.json \
-            -d opa/iam_validation.rego \
-            "data.iam.validation.deny" --format raw)
-
-          if [ "$violations" != "[]" ]; then
-            echo "Policy violations found:"
-            echo "$violations"
-            exit 1
-          fi
 ```
-
----
 
 ## Policy Testing
 
-### Unit Testing IAM Policies
+### Rules
 
-**Python with moto:**
+1. **Unit test policies** with moto (Python) or localstack
+2. **Use IAM Policy Simulator** for real-world validation
+3. **Lint policies** with Parliament before deployment
+4. **Test least privilege** - verify denials work
+5. **Automate tests** in CI/CD pipeline
+
+### Unit Testing with moto
+
 ```python
 import boto3
 import pytest
@@ -571,27 +324,22 @@ from moto import mock_iam, mock_sts
 @mock_iam
 @mock_sts
 def test_policy_allows_s3_read():
-    """Test that policy allows S3 read operations"""
     iam = boto3.client('iam', region_name='us-east-1')
 
-    # Create policy
-    policy_document = {
+    policy_doc = {
         "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": ["s3:GetObject"],
-                "Resource": "arn:aws:s3:::my-bucket/*"
-            }
-        ]
+        "Statement": [{
+            "Effect": "Allow",
+            "Action": ["s3:GetObject"],
+            "Resource": "arn:aws:s3:::my-bucket/*"
+        }]
     }
 
     policy = iam.create_policy(
         PolicyName='TestS3ReadPolicy',
-        PolicyDocument=json.dumps(policy_document)
+        PolicyDocument=json.dumps(policy_doc)
     )
 
-    # Create role and attach policy
     trust_policy = {
         "Version": "2012-10-17",
         "Statement": [{
@@ -611,7 +359,7 @@ def test_policy_allows_s3_read():
         PolicyArn=policy['Policy']['Arn']
     )
 
-    # Simulate policy evaluation
+    # Verify role can be assumed
     sts = boto3.client('sts', region_name='us-east-1')
     response = sts.assume_role(
         RoleArn=role['Role']['Arn'],
@@ -619,57 +367,16 @@ def test_policy_allows_s3_read():
     )
 
     assert response['Credentials']
-
-@mock_iam
-def test_policy_denies_delete_operations():
-    """Test that policy correctly denies delete operations"""
-    iam = boto3.client('iam', region_name='us-east-1')
-
-    policy_document = {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": ["s3:GetObject", "s3:PutObject"],
-                "Resource": "*"
-            },
-            {
-                "Effect": "Deny",
-                "Action": ["s3:DeleteObject"],
-                "Resource": "*"
-            }
-        ]
-    }
-
-    # Validate policy structure
-    response = iam.create_policy(
-        PolicyName='TestNoDeletePolicy',
-        PolicyDocument=json.dumps(policy_document)
-    )
-
-    # Check policy has both allow and deny statements
-    policy_version = iam.get_policy_version(
-        PolicyArn=response['Policy']['Arn'],
-        VersionId='v1'
-    )
-
-    statements = json.loads(
-        policy_version['PolicyVersion']['Document']
-    )['Statement']
-
-    assert len(statements) == 2
-    assert any(s['Effect'] == 'Deny' for s in statements)
 ```
 
-### AWS IAM Policy Simulator
+### IAM Policy Simulator
 
 ```python
 import boto3
 
 iam = boto3.client('iam')
 
-def test_policy_with_simulator(policy_arn, action, resource):
-    """Test policy using AWS IAM Policy Simulator"""
+def test_policy(policy_arn, action, resource):
     response = iam.simulate_principal_policy(
         PolicySourceArn=policy_arn,
         ActionNames=[action],
@@ -677,7 +384,6 @@ def test_policy_with_simulator(policy_arn, action, resource):
     )
 
     result = response['EvaluationResults'][0]
-
     return {
         'action': result['EvalActionName'],
         'decision': result['EvalDecision'],  # allowed, explicitDeny, implicitDeny
@@ -685,7 +391,7 @@ def test_policy_with_simulator(policy_arn, action, resource):
     }
 
 # Usage
-result = test_policy_with_simulator(
+result = test_policy(
     policy_arn='arn:aws:iam::123456789012:policy/MyPolicy',
     action='s3:GetObject',
     resource='arn:aws:s3:::my-bucket/file.txt'
@@ -694,34 +400,27 @@ result = test_policy_with_simulator(
 assert result['decision'] == 'allowed'
 ```
 
-### Parliament - IAM Policy Linter
+### Parliament Linter
 
 ```bash
-# Install Parliament
+# Install
 pip install parliament
 
-# Lint IAM policy
+# Lint policy
 parliament --file policy.json
-
-# Example output:
-# MEDIUM - Statement allows "*" action
-# LOW - Statement is missing a Sid
 ```
 
-**Python Usage:**
 ```python
 from parliament import analyze_policy_string
 
-policy = """
-{
+policy = """{
   "Version": "2012-10-17",
   "Statement": [{
     "Effect": "Allow",
     "Action": "*",
     "Resource": "*"
   }]
-}
-"""
+}"""
 
 findings = analyze_policy_string(policy)
 
@@ -730,32 +429,26 @@ for finding in findings:
     print(f"  {finding.description}")
 ```
 
----
-
 ## IAM Roles and Assume Role
 
 ### Cross-Account Access
 
-**Trust Policy (Account A):**
+**Trust Policy (Account A - allows Account B):**
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [{
     "Effect": "Allow",
-    "Principal": {
-      "AWS": "arn:aws:iam::111111111111:root"
-    },
+    "Principal": {"AWS": "arn:aws:iam::111111111111:root"},
     "Action": "sts:AssumeRole",
     "Condition": {
-      "StringEquals": {
-        "sts:ExternalId": "unique-external-id-12345"
-      }
+      "StringEquals": {"sts:ExternalId": "unique-external-id-12345"}
     }
   }]
 }
 ```
 
-**Assuming Role (Account B):**
+**Assume Role (Account B):**
 ```python
 import boto3
 
@@ -768,7 +461,6 @@ assumed_role = sts.assume_role(
     DurationSeconds=3600
 )
 
-# Use temporary credentials
 credentials = assumed_role['Credentials']
 s3 = boto3.client(
     's3',
@@ -778,7 +470,7 @@ s3 = boto3.client(
 )
 ```
 
-### Session Tags and ABAC
+### Session Tags (ABAC)
 
 ```python
 # Assume role with session tags
@@ -791,7 +483,7 @@ assumed_role = sts.assume_role(
     ]
 )
 
-# Policy using session tags (ABAC)
+# Policy using session tags
 policy = {
     "Version": "2012-10-17",
     "Statement": [{
@@ -808,9 +500,7 @@ policy = {
 }
 ```
 
----
-
-## Service Control Policies
+## Service Control Policies (SCPs)
 
 ### Organization-Wide Guardrails
 
@@ -824,11 +514,7 @@ policy = {
     "Resource": "*",
     "Condition": {
       "StringNotEquals": {
-        "aws:RequestedRegion": [
-          "us-east-1",
-          "us-west-2",
-          "eu-west-1"
-        ]
+        "aws:RequestedRegion": ["us-east-1", "us-west-2", "eu-west-1"]
       }
     }
   }]
@@ -845,15 +531,11 @@ policy = {
     "Action": "s3:PutObject",
     "Resource": "*",
     "Condition": {
-      "StringNotEquals": {
-        "s3:x-amz-server-side-encryption": "AES256"
-      }
+      "StringNotEquals": {"s3:x-amz-server-side-encryption": "AES256"}
     }
   }]
 }
 ```
-
----
 
 ## Permission Boundaries
 
@@ -865,27 +547,19 @@ policy = {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:*",
-        "dynamodb:*",
-        "sqs:*"
-      ],
+      "Action": ["s3:*", "dynamodb:*", "sqs:*"],
       "Resource": "*"
     },
     {
       "Effect": "Deny",
-      "Action": [
-        "iam:*",
-        "organizations:*",
-        "account:*"
-      ],
+      "Action": ["iam:*", "organizations:*", "account:*"],
       "Resource": "*"
     }
   ]
 }
 ```
 
-**Apply Permission Boundary:**
+**Apply Boundary:**
 ```bash
 aws iam create-role \
   --role-name DeveloperRole \
@@ -893,55 +567,31 @@ aws iam create-role \
   --permissions-boundary arn:aws:iam::123456789012:policy/DeveloperBoundary
 ```
 
----
-
-## IAM Best Practices
+## IAM Best Practices Summary
 
 ### ✅ Do This
 
-1. **Use Roles, Not Users**
-   - IAM roles for EC2, Lambda, ECS, Fargate
-   - Temporary credentials via STS
-
-2. **Principle of Least Privilege**
-   - Grant minimum permissions needed
-   - Use conditions to restrict further
-
-3. **Enable MFA**
-   - Require MFA for privileged operations
-   - MFA delete for S3 buckets
-
-4. **Rotate Credentials**
-   - Rotate access keys every 90 days
-   - Use temporary credentials when possible
-
-5. **Use Policy Conditions**
-   - IP restrictions
-   - Time-based access
-   - MFA requirements
-   - Tag-based access
-
-6. **Monitor and Audit**
-   - CloudTrail for API logging
-   - Access Analyzer for external access
-   - IAM Access Analyzer for unused permissions
+1. **Use Roles, Not Users** - IAM roles for EC2, Lambda, ECS with temporary credentials
+2. **Least Privilege** - grant minimum permissions with conditions
+3. **Enable MFA** - require for privileged operations
+4. **Rotate Credentials** - every 90 days; prefer temporary credentials
+5. **Use Policy Conditions** - IP, time, MFA, tag-based restrictions
+6. **Monitor and Audit** - CloudTrail, Access Analyzer, IAM Access Analyzer
 
 ### ❌ Avoid This
 
-1. **Never Hardcode Credentials**
-2. **Never Use Root Account**
-3. **Never Grant \* Permissions**
-4. **Never Share Access Keys**
-5. **Never Commit Policies to Public Repos Without Review**
-
----
+1. Never hardcode credentials
+2. Never use root account for daily operations
+3. Never grant `*` permissions
+4. Never share access keys
+5. Never commit policies to public repos without review
 
 ## Related Resources
 
+- AWS IAM Documentation: https://docs.aws.amazon.com/iam/
+- Cedar Policy Language: https://www.cedarpolicy.com/
+- Open Policy Agent: https://www.openpolicyagent.org/
+- Parliament (IAM Linter): https://github.com/duo-labs/parliament
+- IAM Policy Simulator: https://policysim.aws.amazon.com/
 - See `cloud/aws/security-best-practices.md` for broader AWS security
 - See `cloud/aws/well-architected.md` for ML security patterns
-- **AWS IAM Documentation:** https://docs.aws.amazon.com/iam/
-- **Cedar Policy Language:** https://www.cedarpolicy.com/
-- **Open Policy Agent:** https://www.openpolicyagent.org/
-- **Parliament (IAM Linter):** https://github.com/duo-labs/parliament
-- **IAM Policy Simulator:** https://policysim.aws.amazon.com/
