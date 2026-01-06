@@ -50,12 +50,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Remove symlinked markdown files to avoid duplicate checking
         run: |
           # Remove markdown file symlinks in docs/ to prevent double-checking with wrong paths
           find docs/ -type l -name "*.md" -delete
-        uses: actions/checkout@v4
 
       - name: Check markdown links
         uses: gaurav-nelson/github-action-markdown-link-check@v1
