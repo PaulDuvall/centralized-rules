@@ -941,5 +941,5 @@ The architecture currently supports and encourages:
 
 ## References
 
-- [README.md](./README.md) - Usage and quick start
-- [USAGE_EXAMPLES.md](./examples/USAGE_EXAMPLES.md) - Detailed examples
+- [README.md](README.md) - Usage and quick start
+- [USAGE_EXAMPLES.md](examples/USAGE_EXAMPLES.md) - Detailed examples
