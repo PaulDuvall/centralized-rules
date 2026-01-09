@@ -12,29 +12,26 @@ Progressive disclosure framework for AI coding tools. Loads only relevant develo
 
 ## Quick Start
 
-**Global installation (recommended - applies to all projects):**
+**Installation (one command, idempotent):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
 ```
 
-**Local installation (current project only):**
+This installs globally (all projects). Safe to run multiple times - it updates in place.
+
+**For project-specific installation:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --local
 ```
 
-**Idempotent installation (auto-removes conflicts):**
+**Idempotent behavior:**
+- Already installed? → Updates it in place
+- Not installed? → Installs fresh
+- Running it again? → Safely updates to latest version
 
-```bash
-# Global with auto-conflict resolution
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --force
-
-# Local with auto-conflict resolution
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --local --force
-```
-
-⚠️ **Important:** Choose either local OR global installation, not both. Installing both will cause the hook to run twice (duplicate banners). The installer will detect and warn about duplicate installations. Use `--force` to automatically remove conflicting installations.
+No prompts, no conflicts, just works.
 
 ### What You'll See
 
