@@ -12,15 +12,7 @@ Progressive disclosure framework for AI coding tools. Loads only relevant develo
 
 ## Quick Start
 
-**Global installation (recommended):**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
-```
-
-Applies to all projects using Claude Code.
-
-**Local installation:**
+**Local installation (recommended):**
 
 ```bash
 cd your-project
@@ -28,6 +20,16 @@ curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/i
 ```
 
 Applies to current project only.
+
+**Global installation:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+```
+
+Applies to all projects using Claude Code.
+
+⚠️ **Important:** Choose either local OR global installation, not both. Installing both will cause the hook to run twice (duplicate banners). The installer will detect and warn about duplicate installations.
 
 ### What You'll See
 
@@ -112,6 +114,30 @@ Python + FastAPI project measurements:
 | **Average** | **2.25 files** | **74.4%** |
 
 ## Troubleshooting
+
+**Duplicate banner appearing (hook runs twice):**
+
+You've installed both globally AND locally. Remove one installation:
+
+```bash
+# Option 1: Remove global hook (keep local)
+jq 'del(.hooks.UserPromptSubmit[] | select(.hooks[]?.command | contains("activate-rules.sh")))' \
+   ~/.claude/settings.json > ~/.claude/settings.json.tmp && \
+   mv ~/.claude/settings.json.tmp ~/.claude/settings.json
+
+# Option 2: Remove local hook (keep global)
+jq 'del(.hooks.UserPromptSubmit[] | select(.hooks[]?.command | contains("activate-rules.sh")))' \
+   .claude/settings.json > .claude/settings.json.tmp && \
+   mv .claude/settings.json.tmp .claude/settings.json
+```
+
+Without `jq`:
+```bash
+# Manually edit the settings file and remove the UserPromptSubmit hook
+vim ~/.claude/settings.json  # For global
+# OR
+vim .claude/settings.json    # For local
+```
 
 **Hook not appearing:**
 ```bash

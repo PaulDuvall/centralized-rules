@@ -58,6 +58,115 @@ detect_environment() {
     fi
 }
 
+# Remove hook from global settings
+remove_global_hook() {
+    local settings_file="$HOME/.claude/settings.json"
+
+    if [[ ! -f "$settings_file" ]]; then
+        return 0
+    fi
+
+    info "Removing global hook from $settings_file"
+
+    if command -v jq >/dev/null 2>&1; then
+        # Use jq to remove the UserPromptSubmit hook
+        local temp_file
+        temp_file=$(mktemp)
+        jq 'del(.hooks.UserPromptSubmit[] | select(.hooks[]?.command | contains("activate-rules.sh")))' \
+            "$settings_file" > "$temp_file"
+        mv "$temp_file" "$settings_file"
+        success "Removed global hook"
+    else
+        warning "jq not found - please manually remove the hook from $settings_file"
+        echo "Look for the UserPromptSubmit hook with activate-rules.sh"
+    fi
+}
+
+# Remove hook from local settings
+remove_local_hook() {
+    local settings_file=".claude/settings.json"
+
+    if [[ ! -f "$settings_file" ]]; then
+        return 0
+    fi
+
+    info "Removing local hook from $settings_file"
+
+    if command -v jq >/dev/null 2>&1; then
+        # Use jq to remove the UserPromptSubmit hook
+        local temp_file
+        temp_file=$(mktemp)
+        jq 'del(.hooks.UserPromptSubmit[] | select(.hooks[]?.command | contains("activate-rules.sh")))' \
+            "$settings_file" > "$temp_file"
+        mv "$temp_file" "$settings_file"
+        success "Removed local hook"
+    else
+        warning "jq not found - please manually remove the hook from $settings_file"
+        echo "Look for the UserPromptSubmit hook with activate-rules.sh"
+    fi
+}
+
+# Detect existing installations and warn about duplicates
+detect_existing_installation() {
+    local has_global=false
+    local has_local=false
+
+    # Check for global installation
+    if [[ -f "$HOME/.claude/settings.json" ]] && grep -q "activate-rules.sh" "$HOME/.claude/settings.json" 2>/dev/null; then
+        has_global=true
+    fi
+
+    # Check for local installation
+    if [[ -f ".claude/settings.json" ]] && grep -q "activate-rules.sh" ".claude/settings.json" 2>/dev/null; then
+        has_local=true
+    fi
+
+    # Warn about duplicate installation scenarios
+    if [[ "$has_global" == "true" ]] && [[ "$INSTALL_MODE" == "local" ]]; then
+        echo ""
+        warning "⚠️  DUPLICATE INSTALLATION DETECTED"
+        warning "Global installation already exists in $HOME/.claude/settings.json"
+        warning "Installing locally will cause the hook to run TWICE (duplicate banners)"
+        echo ""
+        echo "Options:"
+        echo "  1. Keep global only (recommended if you want it for all projects)"
+        echo "  2. Remove global and install locally (recommended for single project)"
+        echo ""
+        read -p "Remove global installation? [y/N]: " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            remove_global_hook
+            echo ""
+        else
+            warning "Skipping local installation to avoid duplicates"
+            echo "To install locally, first remove the global hook from $HOME/.claude/settings.json"
+            exit 0
+        fi
+    fi
+
+    if [[ "$has_local" == "true" ]] && [[ "$INSTALL_MODE" == "global" ]]; then
+        echo ""
+        warning "⚠️  DUPLICATE INSTALLATION DETECTED"
+        warning "Local installation already exists in .claude/settings.json"
+        warning "Installing globally will cause the hook to run TWICE (duplicate banners)"
+        echo ""
+        echo "Options:"
+        echo "  1. Keep local only (recommended for single project)"
+        echo "  2. Remove local and install globally (recommended for all projects)"
+        echo ""
+        read -p "Remove local installation? [y/N]: " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            remove_local_hook
+            echo ""
+        else
+            warning "Skipping global installation to avoid duplicates"
+            echo "To install globally, first remove the local hook from .claude/settings.json"
+            exit 0
+        fi
+    fi
+}
+
 # Find the centralized-rules repository
 find_rules_repo() {
     local path
@@ -348,6 +457,7 @@ main() {
 
     detect_environment
     find_rules_repo
+    detect_existing_installation
 
     # Extract tips from rule files
     echo ""
