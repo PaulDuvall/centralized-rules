@@ -3,20 +3,21 @@
 # Centralized Rules - Automated Hook Installation
 #
 # This script automatically installs and configures the UserPromptSubmit hook
-# for Claude Code CLI. It handles all setup automatically with zero manual steps.
+# for Claude Code CLI. Idempotent - safe to run multiple times.
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --force
 #
-# Or locally:
-#   cd centralized-rules
-#   ./install-hooks.sh [--global|--local] [--force]
+# Behavior:
+#   - If you already have an installation → updates it in place (idempotent)
+#   - If it's a new installation → installs globally by default
 #
 # Options:
-#   --global  Install for all projects (default)
-#   --local   Install for current project only
-#   --force   Automatically remove conflicting installations (idempotent)
+#   --local   Install for current project only (instead of globally)
+#
+# Notes:
+#   - Running the same command twice safely updates the existing installation
+#   - Use --local for project-specific rules, omit for all projects
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
@@ -35,24 +36,16 @@ error() { echo -e "${RED}✗${NC} $*"; }
 
 # Detect installation mode
 INSTALL_MODE="global"  # Default to global installation
-FORCE_MODE="false"     # Default to interactive mode
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --global)
-            INSTALL_MODE="global"
-            shift
-            ;;
         --local)
             INSTALL_MODE="local"
             shift
             ;;
-        --force)
-            FORCE_MODE="true"
-            shift
-            ;;
         *)
+            # Ignore unknown arguments for forward compatibility
             shift
             ;;
     esac
@@ -129,7 +122,7 @@ remove_local_hook() {
     fi
 }
 
-# Detect existing installations and warn about duplicates
+# Detect existing installations and handle mode selection
 detect_existing_installation() {
     local has_global=false
     local has_local=false
@@ -144,65 +137,44 @@ detect_existing_installation() {
         has_local=true
     fi
 
-    # Warn about duplicate installation scenarios
-    if [[ "$has_global" == "true" ]] && [[ "$INSTALL_MODE" == "local" ]]; then
-        echo ""
-        warning "⚠️  DUPLICATE INSTALLATION DETECTED"
-        warning "Global installation already exists in $HOME/.claude/settings.json"
-        warning "Installing locally will cause the hook to run TWICE (duplicate banners)"
-        echo ""
-
-        if [[ "$FORCE_MODE" == "true" ]]; then
-            info "Force mode: automatically removing global installation"
-            remove_global_hook
-            echo ""
-        else
-            echo "Options:"
-            echo "  1. Keep global only (recommended if you want it for all projects)"
-            echo "  2. Remove global and install locally (recommended for single project)"
-            echo ""
-            read -p "Remove global installation? [y/N]: " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                remove_global_hook
-                echo ""
-            else
-                warning "Skipping local installation to avoid duplicates"
-                echo "To install locally, first remove the global hook from $HOME/.claude/settings.json"
-                echo "Or run with --force to automatically remove conflicts"
-                exit 0
-            fi
-        fi
+    # Simple idempotent behavior: update existing installation in place
+    if [[ "$has_global" == "true" ]] && [[ "$has_local" == "false" ]]; then
+        info "Existing global installation detected - updating in place"
+        INSTALL_MODE="global"
+        return 0
     fi
 
-    if [[ "$has_local" == "true" ]] && [[ "$INSTALL_MODE" == "global" ]]; then
-        echo ""
-        warning "⚠️  DUPLICATE INSTALLATION DETECTED"
-        warning "Local installation already exists in .claude/settings.json"
-        warning "Installing globally will cause the hook to run TWICE (duplicate banners)"
-        echo ""
+    if [[ "$has_local" == "true" ]] && [[ "$has_global" == "false" ]]; then
+        info "Existing local installation detected - updating in place"
+        INSTALL_MODE="local"
+        return 0
+    fi
 
-        if [[ "$FORCE_MODE" == "true" ]]; then
-            info "Force mode: automatically removing local installation"
-            remove_local_hook
-            echo ""
-        else
-            echo "Options:"
-            echo "  1. Keep local only (recommended for single project)"
-            echo "  2. Remove local and install globally (recommended for all projects)"
-            echo ""
-            read -p "Remove local installation? [y/N]: " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                remove_local_hook
-                echo ""
-            else
-                warning "Skipping global installation to avoid duplicates"
-                echo "To install globally, first remove the local hook from .claude/settings.json"
-                echo "Or run with --force to automatically remove conflicts"
-                exit 0
-            fi
-        fi
+    # Both exist - this is a problem
+    if [[ "$has_global" == "true" ]] && [[ "$has_local" == "true" ]]; then
+        echo ""
+        error "⚠️  DUPLICATE INSTALLATION DETECTED"
+        warning "Both global AND local installations exist"
+        warning "The hook will run TWICE (duplicate banners)"
+        echo ""
+        echo "Fix this by running ONE of these commands:"
+        echo ""
+        echo "  # Keep global only (recommended for all projects):"
+        echo "  rm .claude/settings.json"
+        echo "  curl -fsSL ... | bash"
+        echo ""
+        echo "  # Keep local only (for this project):"
+        echo "  rm ~/.claude/settings.json"
+        echo "  curl -fsSL ... | bash -s -- --local"
+        echo ""
+        exit 1
+    fi
+
+    # No existing installation - use specified mode (global is default)
+    if [[ "$INSTALL_MODE" == "global" ]]; then
+        info "New global installation (applies to all projects)"
+    else
+        info "New local installation (applies to this project only)"
     fi
 }
 
