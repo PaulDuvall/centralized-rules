@@ -12,24 +12,29 @@ Progressive disclosure framework for AI coding tools. Loads only relevant develo
 
 ## Quick Start
 
-**Local installation (recommended):**
+**Global installation (recommended - applies to all projects):**
 
 ```bash
-cd your-project
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
 ```
 
-Applies to current project only.
-
-**Global installation:**
+**Local installation (current project only):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --local
 ```
 
-Applies to all projects using Claude Code.
+**Idempotent installation (auto-removes conflicts):**
 
-⚠️ **Important:** Choose either local OR global installation, not both. Installing both will cause the hook to run twice (duplicate banners). The installer will detect and warn about duplicate installations.
+```bash
+# Global with auto-conflict resolution
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --force
+
+# Local with auto-conflict resolution
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --local --force
+```
+
+⚠️ **Important:** Choose either local OR global installation, not both. Installing both will cause the hook to run twice (duplicate banners). The installer will detect and warn about duplicate installations. Use `--force` to automatically remove conflicting installations.
 
 ### What You'll See
 

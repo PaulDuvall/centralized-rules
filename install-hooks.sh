@@ -7,10 +7,16 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --force
 #
 # Or locally:
 #   cd centralized-rules
-#   ./install-hooks.sh [--global|--local]
+#   ./install-hooks.sh [--global|--local] [--force]
+#
+# Options:
+#   --global  Install for all projects (default)
+#   --local   Install for current project only
+#   --force   Automatically remove conflicting installations (idempotent)
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
@@ -28,12 +34,29 @@ warning() { echo -e "${YELLOW}⚠${NC} $*"; }
 error() { echo -e "${RED}✗${NC} $*"; }
 
 # Detect installation mode
-INSTALL_MODE="local"  # Default to local project installation
-if [[ "${1:-}" == "--global" ]]; then
-    INSTALL_MODE="global"
-elif [[ "${1:-}" == "--local" ]]; then
-    INSTALL_MODE="local"
-fi
+INSTALL_MODE="global"  # Default to global installation
+FORCE_MODE="false"     # Default to interactive mode
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --global)
+            INSTALL_MODE="global"
+            shift
+            ;;
+        --local)
+            INSTALL_MODE="local"
+            shift
+            ;;
+        --force)
+            FORCE_MODE="true"
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 # Detect environment
 detect_environment() {
@@ -128,19 +151,27 @@ detect_existing_installation() {
         warning "Global installation already exists in $HOME/.claude/settings.json"
         warning "Installing locally will cause the hook to run TWICE (duplicate banners)"
         echo ""
-        echo "Options:"
-        echo "  1. Keep global only (recommended if you want it for all projects)"
-        echo "  2. Remove global and install locally (recommended for single project)"
-        echo ""
-        read -p "Remove global installation? [y/N]: " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+        if [[ "$FORCE_MODE" == "true" ]]; then
+            info "Force mode: automatically removing global installation"
             remove_global_hook
             echo ""
         else
-            warning "Skipping local installation to avoid duplicates"
-            echo "To install locally, first remove the global hook from $HOME/.claude/settings.json"
-            exit 0
+            echo "Options:"
+            echo "  1. Keep global only (recommended if you want it for all projects)"
+            echo "  2. Remove global and install locally (recommended for single project)"
+            echo ""
+            read -p "Remove global installation? [y/N]: " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                remove_global_hook
+                echo ""
+            else
+                warning "Skipping local installation to avoid duplicates"
+                echo "To install locally, first remove the global hook from $HOME/.claude/settings.json"
+                echo "Or run with --force to automatically remove conflicts"
+                exit 0
+            fi
         fi
     fi
 
@@ -150,19 +181,27 @@ detect_existing_installation() {
         warning "Local installation already exists in .claude/settings.json"
         warning "Installing globally will cause the hook to run TWICE (duplicate banners)"
         echo ""
-        echo "Options:"
-        echo "  1. Keep local only (recommended for single project)"
-        echo "  2. Remove local and install globally (recommended for all projects)"
-        echo ""
-        read -p "Remove local installation? [y/N]: " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+        if [[ "$FORCE_MODE" == "true" ]]; then
+            info "Force mode: automatically removing local installation"
             remove_local_hook
             echo ""
         else
-            warning "Skipping global installation to avoid duplicates"
-            echo "To install globally, first remove the local hook from .claude/settings.json"
-            exit 0
+            echo "Options:"
+            echo "  1. Keep local only (recommended for single project)"
+            echo "  2. Remove local and install globally (recommended for all projects)"
+            echo ""
+            read -p "Remove local installation? [y/N]: " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                remove_local_hook
+                echo ""
+            else
+                warning "Skipping global installation to avoid duplicates"
+                echo "To install globally, first remove the local hook from .claude/settings.json"
+                echo "Or run with --force to automatically remove conflicts"
+                exit 0
+            fi
         fi
     fi
 }
