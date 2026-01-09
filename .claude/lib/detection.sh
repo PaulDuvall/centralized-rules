@@ -192,7 +192,44 @@ dir_exists() {
     [[ -d "$1" ]]
 }
 
+# Check if language-specific definitive files exist
+# Args: language name (e.g., "rust", "python", "javascript")
+# Returns: 0 if definitive files exist, 1 otherwise
+has_definitive_files() {
+    local lang="$1"
+
+    case "$lang" in
+        rust)
+            [[ -f "Cargo.toml" ]]
+            ;;
+        python)
+            [[ -f "pyproject.toml" ]] || [[ -f "setup.py" ]] || [[ -f "requirements.txt" ]]
+            ;;
+        javascript|js)
+            [[ -f "package.json" ]]
+            ;;
+        typescript|ts)
+            [[ -f "package.json" ]]
+            ;;
+        go)
+            [[ -f "go.mod" ]]
+            ;;
+        java)
+            [[ -f "pom.xml" ]] || [[ -f "build.gradle" ]] || [[ -f "build.gradle.kts" ]]
+            ;;
+        csharp|cs)
+            compgen -G "*.csproj" > /dev/null 2>&1 || compgen -G "*.sln" > /dev/null 2>&1
+            ;;
+        ruby)
+            [[ -f "Gemfile" ]]
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 # Export functions for subshells
 export -f detect_language detect_frameworks detect_cloud_providers
 export -f detect_tools detect_ai_tools
-export -f file_contains any_file_exists dir_exists
+export -f file_contains any_file_exists dir_exists has_definitive_files
