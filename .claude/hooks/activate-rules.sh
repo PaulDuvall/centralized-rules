@@ -106,6 +106,25 @@ escape_regex() {
     printf '%s' "$input" | sed 's/[.*+?\[\](){}^$|\\]/\\&/g'
 }
 
+# Add word boundaries to short keywords (<=4 chars) to prevent substring matches
+# Args: keyword string (already escaped)
+# Returns: keyword with word boundaries if short, otherwise unchanged
+add_word_boundaries() {
+    local keyword="$1"
+
+    # Count actual characters (excluding escape sequences)
+    # Remove backslashes used for escaping to get true length
+    local unescaped="${keyword//\\/}"
+    local length=${#unescaped}
+
+    # Add word boundaries for short keywords (4 chars or less)
+    if [[ $length -le 4 ]]; then
+        printf '\\b%s\\b' "$keyword"
+    else
+        printf '%s' "$keyword"
+    fi
+}
+
 # Check if prompt is asking ABOUT a topic rather than working WITH it
 # Returns 0 if it's a meta-question (should filter), 1 if it's actionable work
 is_meta_question() {
@@ -189,7 +208,7 @@ match_keywords() {
 
             # Get keywords for this category and escape special characters
             local keywords
-            keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
+            keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.base.${category}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do add_word_boundaries "$(escape_regex "$kw")"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
             # Get slash commands for this category
             local slash_cmds
@@ -223,7 +242,7 @@ match_keywords() {
 
             # Get keywords for this language
             local lang_keywords
-            lang_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
+            lang_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do add_word_boundaries "$(escape_regex "$kw")"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
             # Get rules for this language
             local lang_rules
@@ -237,15 +256,20 @@ match_keywords() {
             if [[ -n "$lang_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${lang_keywords})"; then
                 # Filter out meta-questions (asking ABOUT the language, not using it)
                 if ! is_meta_question "${prompt_lower}" "${lang}"; then
-                    while IFS= read -r rule; do
-                        [[ -n "$rule" ]] && matched_rules+=("$rule")
-                    done <<< "$lang_rules"
-
-                    # Add testing rules if testing keywords also matched
-                    if echo "${prompt_lower}" | grep -qE '(test|pytest|jest|mocha|unittest|spec|tdd|coverage|mock)'; then
+                    # Require BOTH keyword match AND definitive files to prevent false positives
+                    if has_definitive_files "${lang}"; then
                         while IFS= read -r rule; do
                             [[ -n "$rule" ]] && matched_rules+=("$rule")
-                        done <<< "$lang_testing_rules"
+                        done <<< "$lang_rules"
+
+                        # Add testing rules if testing keywords also matched
+                        if echo "${prompt_lower}" | grep -qE '(test|pytest|jest|mocha|unittest|spec|tdd|coverage|mock)'; then
+                            while IFS= read -r rule; do
+                                [[ -n "$rule" ]] && matched_rules+=("$rule")
+                            done <<< "$lang_testing_rules"
+                        fi
+                    else
+                        log_debug "Skipping language rules for '${lang}': keyword matched but no definitive files found"
                     fi
                 fi
             fi
@@ -258,7 +282,7 @@ match_keywords() {
                 [[ -z "$framework" ]] && continue
 
                 local framework_keywords
-                framework_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
+                framework_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do add_word_boundaries "$(escape_regex "$kw")"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
                 local framework_rules
                 framework_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.languages.${lang}.frameworks.${framework}.rules[]?" 2>/dev/null)
@@ -282,7 +306,7 @@ match_keywords() {
             [[ -z "$provider" ]] && continue
 
             local provider_keywords
-            provider_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do escape_regex "$kw"; echo "|"; done | tr -d '\n' | sed 's/|$//')
+            provider_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do add_word_boundaries "$(escape_regex "$kw")"; echo "|"; done | tr -d '\n' | sed 's/|$//')
 
             local provider_rules
             provider_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.cloud.${provider}.rules[]?" 2>/dev/null)
@@ -330,18 +354,53 @@ match_keywords() {
             matched_rules+=("base/refactoring-patterns")
         fi
 
-        # Language-specific rules
-        if echo "${prompt_lower}" | grep -qE '(python|\.py|pip|pyproject|django|flask|fastapi)'; then
-            matched_rules+=("languages/python")
-            if echo "${prompt_lower}" | grep -qE '(test|pytest|unittest|spec|tdd|coverage|mock)'; then
-                matched_rules+=("languages/python/testing")
+        # Language-specific rules (require BOTH keyword match AND definitive files)
+        if echo "${prompt_lower}" | grep -qE '(\bpython\b|\.py\b|pip|pyproject|django|flask|fastapi)'; then
+            if has_definitive_files "python"; then
+                matched_rules+=("languages/python")
+                if echo "${prompt_lower}" | grep -qE '(test|pytest|unittest|spec|tdd|coverage|mock)'; then
+                    matched_rules+=("languages/python/testing")
+                fi
+            else
+                log_debug "Skipping Python rules: keyword matched but no definitive files found"
             fi
         fi
 
-        if echo "${prompt_lower}" | grep -qE '(typescript|javascript|\.ts|\.js|npm|node)'; then
-            matched_rules+=("languages/typescript")
-            if echo "${prompt_lower}" | grep -qE '(test|jest|vitest|spec|tdd|coverage|mock)'; then
-                matched_rules+=("languages/typescript/testing")
+        if echo "${prompt_lower}" | grep -qE '(typescript|javascript|\.ts\b|\.js\b|npm|node)'; then
+            if has_definitive_files "javascript"; then
+                matched_rules+=("languages/typescript")
+                if echo "${prompt_lower}" | grep -qE '(test|jest|vitest|spec|tdd|coverage|mock)'; then
+                    matched_rules+=("languages/typescript/testing")
+                fi
+            else
+                log_debug "Skipping JavaScript/TypeScript rules: keyword matched but no definitive files found"
+            fi
+        fi
+
+        # Rust detection
+        if echo "${prompt_lower}" | grep -qE '\brust\b'; then
+            if has_definitive_files "rust"; then
+                matched_rules+=("languages/rust")
+            else
+                log_debug "Skipping Rust rules: keyword matched but no definitive files found"
+            fi
+        fi
+
+        # Go detection
+        if echo "${prompt_lower}" | grep -qE '\bgo\b'; then
+            if has_definitive_files "go"; then
+                matched_rules+=("languages/go")
+            else
+                log_debug "Skipping Go rules: keyword matched but no definitive files found"
+            fi
+        fi
+
+        # Java detection
+        if echo "${prompt_lower}" | grep -qE '\bjava\b'; then
+            if has_definitive_files "java"; then
+                matched_rules+=("languages/java")
+            else
+                log_debug "Skipping Java rules: keyword matched but no definitive files found"
             fi
         fi
 
