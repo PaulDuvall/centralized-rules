@@ -153,6 +153,39 @@ extract_keywords() {
     echo "$keywords_json"
 }
 
+# Create definitive files for language testing
+create_language_files() {
+    local category="$1"
+    local test_dir="$2"
+
+    case "$category" in
+        languages/python)
+            touch "$test_dir/requirements.txt"
+            ;;
+        languages/javascript)
+            touch "$test_dir/package.json"
+            ;;
+        languages/typescript)
+            touch "$test_dir/package.json"
+            ;;
+        languages/go)
+            touch "$test_dir/go.mod"
+            ;;
+        languages/rust)
+            touch "$test_dir/Cargo.toml"
+            ;;
+        languages/java)
+            touch "$test_dir/pom.xml"
+            ;;
+        languages/ruby)
+            touch "$test_dir/Gemfile"
+            ;;
+        languages/bash)
+            touch "$test_dir/script.sh"
+            ;;
+    esac
+}
+
 # Test a single keyword
 test_keyword() {
     local keyword="$1"
@@ -165,9 +198,25 @@ test_keyword() {
     local test_prompt="Test with keyword: $keyword"
     local test_input="{\"prompt\":\"$test_prompt\"}"
 
+    # For language categories, create a temp directory with definitive files
+    local test_dir=""
+    local original_dir=""
+    if [[ "$category_name" == languages/* ]]; then
+        test_dir=$(mktemp -d)
+        original_dir=$(pwd)
+        create_language_files "$category_name" "$test_dir"
+        cd "$test_dir"
+    fi
+
     # Run the hook script and capture output
     local hook_output
     hook_output=$(echo "$test_input" | "$HOOK_SCRIPT" 2>&1 || true)
+
+    # Clean up temp directory if created
+    if [[ -n "$test_dir" ]]; then
+        cd "$original_dir"
+        rm -rf "$test_dir"
+    fi
 
     # Extract matched rules from JSON output (hook returns JSON with systemMessage)
     local matched_rules

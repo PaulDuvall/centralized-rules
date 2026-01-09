@@ -14,8 +14,12 @@ add_word_boundaries() {
     local unescaped="${keyword//\\/}"
     local length=${#unescaped}
 
+    # Don't add word boundaries to file extensions (start with dot)
+    # or special patterns that contain non-word characters
+    if [[ "$unescaped" == .* ]] || [[ "$unescaped" == */* ]] || [[ "$unescaped" == *#* ]]; then
+        printf '%s' "$keyword"
     # Add word boundaries for short keywords (4 chars or less)
-    if [[ $length -le 4 ]]; then
+    elif [[ $length -le 4 ]]; then
         printf '\\b%s\\b' "$keyword"
     else
         printf '%s' "$keyword"

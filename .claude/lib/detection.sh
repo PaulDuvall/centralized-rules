@@ -223,6 +223,10 @@ has_definitive_files() {
         ruby)
             [[ -f "Gemfile" ]]
             ;;
+        bash|shell)
+            # Check for bash/shell scripts
+            compgen -G "*.sh" > /dev/null 2>&1 || compgen -G "*.bash" > /dev/null 2>&1
+            ;;
         *)
             return 1
             ;;
