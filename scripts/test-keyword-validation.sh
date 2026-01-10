@@ -209,8 +209,10 @@ test_keyword() {
     fi
 
     # Run the hook script and capture output
+    # IMPORTANT: Export CLAUDE_PROJECT_DIR so the hook can find skill-rules.json
+    # when running from temp directories (otherwise it falls back to hardcoded patterns)
     local hook_output
-    hook_output=$(echo "$test_input" | "$HOOK_SCRIPT" 2>&1 || true)
+    hook_output=$(export CLAUDE_PROJECT_DIR="${REPO_ROOT}"; echo "$test_input" | "$HOOK_SCRIPT" 2>&1 || true)
 
     # Clean up temp directory if created
     if [[ -n "$test_dir" ]]; then
