@@ -62,7 +62,8 @@ test_language_detection() {
     cd "$TEST_DIR"
 
     # Set VERBOSE to see debug messages about skipped languages
-    if ! output=$(echo "$input_json" | VERBOSE=true "$HOOK_SCRIPT" 2>&1); then
+    # Set CLAUDE_PROJECT_DIR to PROJECT_ROOT so the hook finds skill-rules.json
+    if ! output=$(echo "$input_json" | VERBOSE=true CLAUDE_PROJECT_DIR="$PROJECT_ROOT" "$HOOK_SCRIPT" 2>&1); then
         echo -e "${RED}✗ FAILED: Hook execution failed${NC}"
         echo "Output: $output"
         TESTS_FAILED=$((TESTS_FAILED + 1))

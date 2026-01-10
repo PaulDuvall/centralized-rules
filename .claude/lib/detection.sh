@@ -233,7 +233,73 @@ has_definitive_files() {
     esac
 }
 
+# Check if framework-specific definitive files exist
+# Prevents false positives from generic keywords (e.g., "model", "view", "template")
+# Args: framework name (e.g., "django", "react", "fastapi")
+# Returns: 0 if definitive files exist, 1 otherwise
+has_definitive_framework_files() {
+    local framework="$1"
+
+    case "$framework" in
+        # Python frameworks
+        django)
+            # Django projects have manage.py or settings.py with Django imports
+            [[ -f "manage.py" ]] || \
+            [[ -f "settings.py" ]] || \
+            [[ -d "*/settings" ]] || \
+            (grep -rql "INSTALLED_APPS" . --include="*.py" 2>/dev/null)
+            ;;
+        fastapi)
+            # FastAPI projects have FastAPI in requirements or pyproject
+            (grep -qi "fastapi" requirements.txt pyproject.toml 2>/dev/null)
+            ;;
+        flask)
+            # Flask projects have Flask in requirements or app factory pattern
+            (grep -qi "flask" requirements.txt pyproject.toml 2>/dev/null)
+            ;;
+        # JavaScript/TypeScript frameworks
+        react)
+            # React projects have react in package.json
+            [[ -f "package.json" ]] && grep -q '"react"' package.json 2>/dev/null
+            ;;
+        nextjs|next)
+            # Next.js projects have next in package.json or next.config.js
+            [[ -f "next.config.js" ]] || [[ -f "next.config.mjs" ]] || \
+            ([[ -f "package.json" ]] && grep -q '"next"' package.json 2>/dev/null)
+            ;;
+        vue)
+            # Vue projects have vue in package.json
+            [[ -f "package.json" ]] && grep -q '"vue"' package.json 2>/dev/null
+            ;;
+        express)
+            # Express projects have express in package.json
+            [[ -f "package.json" ]] && grep -q '"express"' package.json 2>/dev/null
+            ;;
+        nestjs)
+            # NestJS projects have @nestjs in package.json
+            [[ -f "package.json" ]] && grep -q '"@nestjs' package.json 2>/dev/null
+            ;;
+        # Go frameworks
+        gin)
+            [[ -f "go.mod" ]] && grep -q "gin-gonic/gin" go.mod 2>/dev/null
+            ;;
+        fiber)
+            [[ -f "go.mod" ]] && grep -q "gofiber/fiber" go.mod 2>/dev/null
+            ;;
+        # Java frameworks
+        springboot|spring)
+            (grep -q "spring-boot" pom.xml build.gradle build.gradle.kts 2>/dev/null)
+            ;;
+        *)
+            # Unknown framework - don't require file validation (allow keyword match)
+            # This ensures new frameworks in skill-rules.json work without code changes
+            return 0
+            ;;
+    esac
+}
+
 # Export functions for subshells
 export -f detect_language detect_frameworks detect_cloud_providers
 export -f detect_tools detect_ai_tools
 export -f file_contains any_file_exists dir_exists has_definitive_files
+export -f has_definitive_framework_files

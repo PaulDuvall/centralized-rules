@@ -41,7 +41,7 @@ test_quality_gates_present() {
     local output
     if output=$(cd "$PROJECT_ROOT" && echo "$input_json" | "$HOOK_SCRIPT" 2>&1); then
         # Check if quality gates appear in output
-        if echo "$output" | grep -q "PRE-COMMIT QUALITY GATES DETECTED"; then
+        if echo "$output" | grep -q "PRE-COMMIT:"; then
             echo -e "${GREEN}✓ PASSED - Quality gates triggered${NC}"
             TESTS_PASSED=$((TESTS_PASSED + 1))
             return 0
@@ -76,7 +76,7 @@ test_quality_gates_absent() {
     local output
     if output=$(cd "$PROJECT_ROOT" && echo "$input_json" | "$HOOK_SCRIPT" 2>&1); then
         # Check if quality gates are absent
-        if ! echo "$output" | grep -q "PRE-COMMIT QUALITY GATES DETECTED"; then
+        if ! echo "$output" | grep -q "PRE-COMMIT:"; then
             echo -e "${GREEN}✓ PASSED - No quality gates (expected)${NC}"
             TESTS_PASSED=$((TESTS_PASSED + 1))
             return 0
