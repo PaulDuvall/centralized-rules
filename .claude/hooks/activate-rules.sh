@@ -103,7 +103,22 @@ detect_project_context() {
 escape_regex() {
     local input="$1"
     # Escape all special regex characters: . * + ? [ ] ( ) { } ^ $ | \
-    printf '%s' "$input" | sed 's/[.*+?\[\](){}^$|\\]/\\&/g'
+    # Use multiple sed substitutions for portability (complex character classes
+    # with brackets don't work correctly on all sed implementations)
+    printf '%s' "$input" | sed -e 's/\\/\\\\/g' \
+                               -e 's/\./\\./g' \
+                               -e 's/\*/\\*/g' \
+                               -e 's/+/\\+/g' \
+                               -e 's/?/\\?/g' \
+                               -e 's/\[/\\[/g' \
+                               -e 's/\]/\\]/g' \
+                               -e 's/(/\\(/g' \
+                               -e 's/)/\\)/g' \
+                               -e 's/{/\\{/g' \
+                               -e 's/}/\\}/g' \
+                               -e 's/\^/\\^/g' \
+                               -e 's/\$/\\$/g' \
+                               -e 's/|/\\|/g'
 }
 
 # Add word boundaries to short keywords (<=4 chars) to prevent substring matches
@@ -294,9 +309,15 @@ match_keywords() {
                 if [[ -n "$framework_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${framework_keywords})"; then
                     # Filter out meta-questions (asking ABOUT the framework, not using it)
                     if ! is_meta_question "${prompt_lower}" "${framework}"; then
-                        while IFS= read -r rule; do
-                            [[ -n "$rule" ]] && matched_rules+=("$rule")
-                        done <<< "$framework_rules"
+                        # Require BOTH keyword match AND definitive framework files to prevent false positives
+                        # from generic keywords like "model", "view", "template"
+                        if has_definitive_framework_files "${framework}"; then
+                            while IFS= read -r rule; do
+                                [[ -n "$rule" ]] && matched_rules+=("$rule")
+                            done <<< "$framework_rules"
+                        else
+                            log_debug "Skipping framework rules for '${framework}': keyword matched but no definitive files found"
+                        fi
                     fi
                 fi
             done <<< "$frameworks"

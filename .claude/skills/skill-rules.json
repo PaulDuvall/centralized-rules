@@ -86,7 +86,7 @@
         "tip": "Security isn't optional - validate all inputs"
       },
       "git": {
-        "keywords": ["commit", "pr", "pullrequest", "merge", "branch", "git", "rebase", "cherry-pick", "push", "tag", "tagging", "release", "version", "semver", "semantic versioning"],
+        "keywords": ["commit", "pr", "pull request", "pullrequest", "merge", "branch", "git", "rebase", "cherry-pick", "push", "tag", "tagging", "release", "version", "semver", "semantic versioning"],
         "slashCommands": ["/xgit", "/git", "/xcommit", "/commit", "/push"],
         "rules": ["base/git-workflow", "base/git-tagging"],
         "description": "Detects git operations including commits, pushes, tagging, and versioning",
@@ -177,6 +177,8 @@
       },
       "javascript": {
         "keywords": ["javascript", ".js", "node", "npm", "yarn", "eslint"],
+        "rules": ["languages/typescript"],
+        "testing_rules": ["languages/typescript/testing"],
         "tip": "Use modern JS - const over var, async over callbacks"
       },
       "go": {
