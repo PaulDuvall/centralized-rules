@@ -1,0 +1,37 @@
+name: Article Claims Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/articles/**'
+      - 'tests/test-article-claims.sh'
+      - 'lib/**'
+      - 'install-hooks.sh'
+      - 'sync-ai-rules.sh'
+      - '.claude/skills/skill-rules.json'
+  pull_request:
+    paths:
+      - 'docs/articles/**'
+      - 'tests/test-article-claims.sh'
+      - 'lib/**'
+      - 'install-hooks.sh'
+      - 'sync-ai-rules.sh'
+      - '.claude/skills/skill-rules.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-article-claims:
+    name: Verify Article Claims
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run article claims tests
+        run: |
+          chmod +x tests/test-article-claims.sh
+          ./tests/test-article-claims.sh
