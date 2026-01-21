@@ -1,0 +1,17 @@
+{
+    "_comment": "Example configuration for local rule overrides",
+    "_docs": "See docs/overrides.md for full documentation",
+
+    "merge_strategy": "extend",
+
+    "overrides": {
+        "base/security.md": "replace",
+        "base/git-workflow.md": "prepend",
+        "base/testing-*": "extend"
+    },
+
+    "exclude": [
+        "base/chaos-engineering.md",
+        "base/ai-model-lifecycle.md"
+    ]
+}

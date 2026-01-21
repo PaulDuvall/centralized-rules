@@ -155,6 +155,48 @@ Include keywords in prompt: "Write a Python function **with tests**"
 
 ## Customization
 
+### Local Rule Overrides
+
+Customize rules for your project without forking:
+
+```bash
+# Create override directory
+mkdir -p .claude/rules-local/base
+
+# Add project-specific security requirements
+cat > .claude/rules-local/base/security.md << 'EOF'
+# Additional Security Requirements
+- All API endpoints require authentication
+- Rate limiting on public routes
+EOF
+
+# Sync with overrides applied
+./sync-ai-rules.sh --tool claude
+```
+
+Configure merge behavior in `.claude/rules-config.local.json`:
+
+```json
+{
+    "merge_strategy": "extend",
+    "overrides": {
+        "base/security.md": "replace"
+    },
+    "exclude": ["base/chaos-engineering.md"]
+}
+```
+
+**Merge strategies:**
+- `extend` (default): Append local after central
+- `replace`: Local completely replaces central
+- `prepend`: Local appears before central
+
+Preview changes without applying: `./sync-ai-rules.sh --dry-run`
+
+See [Local Override Documentation](docs/overrides.md) for full reference.
+
+### Keyword Detection
+
 Edit `.claude/skills/skill-rules.json` to add keywords:
 
 ```json
@@ -190,6 +232,7 @@ git add .claude/
 
 - [Installation Guide](docs/installation.md) - Setup instructions
 - [Hook System](docs/hook-system.md) - Automatic rule loading and quality gates
+- [Local Overrides](docs/overrides.md) - Project-level rule customization
 - [Classification System](docs/architecture/classification-system.md) - Prompt classification
 - [Bash Code Quality](docs/architecture/BASH_BRITTLE_AREAS.md) - Engineering analysis
 
