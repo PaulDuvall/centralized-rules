@@ -5,6 +5,28 @@ All notable changes to centralized-rules will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+---
+
+## [0.1.0] - 2026-01-21
+
+First versioned release with GitHub Releases infrastructure.
+
+### Added
+- GitHub Actions release workflow (`.github/workflows/release.yml`)
+- Release documentation (`RELEASING.md`)
+- Version badge in README
+- `--edge` flag for install-hooks.sh (install from main branch)
+- `--version` flag for install-hooks.sh (install specific version)
+- Automatic latest release detection via GitHub API
+
+### Changed
+- install-hooks.sh now fetches from GitHub releases by default
+- Falls back to main branch if no releases exist
+
+---
+
 ## [1.3.1] - 2025-12-21
 
 ### Fixed

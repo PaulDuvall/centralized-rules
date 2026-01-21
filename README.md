@@ -1,5 +1,8 @@
 # Centralized AI Development Rules
 
+[![Latest Release](https://img.shields.io/github/v/release/paulduvall/centralized-rules?label=latest)](https://github.com/paulduvall/centralized-rules/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Progressive disclosure framework for AI coding tools. Loads only relevant development rules based on project context and task type.
 
 ## Features
@@ -32,6 +35,16 @@ curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/i
 - Running it again? → Safely updates to latest version
 
 No prompts, no conflicts, just works.
+
+**Advanced options:**
+
+```bash
+# Install specific version
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --version v0.1.0
+
+# Install from main branch (developers/testing)
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --edge
+```
 
 ### What You'll See
 
@@ -155,6 +168,48 @@ Include keywords in prompt: "Write a Python function **with tests**"
 
 ## Customization
 
+### Local Rule Overrides
+
+Customize rules for your project without forking:
+
+```bash
+# Create override directory
+mkdir -p .claude/rules-local/base
+
+# Add project-specific security requirements
+cat > .claude/rules-local/base/security.md << 'EOF'
+# Additional Security Requirements
+- All API endpoints require authentication
+- Rate limiting on public routes
+EOF
+
+# Sync with overrides applied
+./sync-ai-rules.sh --tool claude
+```
+
+Configure merge behavior in `.claude/rules-config.local.json`:
+
+```json
+{
+    "merge_strategy": "extend",
+    "overrides": {
+        "base/security.md": "replace"
+    },
+    "exclude": ["base/chaos-engineering.md"]
+}
+```
+
+**Merge strategies:**
+- `extend` (default): Append local after central
+- `replace`: Local completely replaces central
+- `prepend`: Local appears before central
+
+Preview changes without applying: `./sync-ai-rules.sh --dry-run`
+
+See [Local Override Documentation](docs/overrides.md) for full reference.
+
+### Keyword Detection
+
 Edit `.claude/skills/skill-rules.json` to add keywords:
 
 ```json
@@ -190,6 +245,7 @@ git add .claude/
 
 - [Installation Guide](docs/installation.md) - Setup instructions
 - [Hook System](docs/hook-system.md) - Automatic rule loading and quality gates
+- [Local Overrides](docs/overrides.md) - Project-level rule customization
 - [Classification System](docs/architecture/classification-system.md) - Prompt classification
 - [Bash Code Quality](docs/architecture/BASH_BRITTLE_AREAS.md) - Engineering analysis
 
