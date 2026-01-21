@@ -6,13 +6,15 @@
 # loads only the relevant rules from a centralized rules repository.
 #
 # Usage:
-#   ./sync-ai-rules.sh [--tool claude|cursor|copilot|gemini|all]
+#   ./sync-ai-rules.sh [--tool claude|cursor|copilot|gemini|all] [--dry-run] [--verbose]
 #
 # Examples:
 #   ./sync-ai-rules.sh                    # Auto-detect and sync for all tools
 #   ./sync-ai-rules.sh --tool claude      # Sync only for Claude
 #   ./sync-ai-rules.sh --tool cursor      # Sync only for Cursor
 #   ./sync-ai-rules.sh --tool gemini      # Sync only for Gemini/Codegemma
+#   ./sync-ai-rules.sh --dry-run          # Preview merges without applying
+#   ./sync-ai-rules.sh --verbose          # Show detailed override processing
 
 set -euo pipefail
 
@@ -27,7 +29,14 @@ source "${SCRIPT_DIR}/lib/logging.sh"
 # shellcheck source=lib/detection.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/detection.sh"
+# shellcheck source=lib/override.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/override.sh"
 readonly RULES_REPO_URL="${AI_RULES_REPO:-https://raw.githubusercontent.com/PaulDuvall/centralized-rules/main}"
+
+# Override processing options
+DRY_RUN=false
+VERBOSE=false
 readonly RULES_DIR=".ai-rules"
 readonly CACHE_DIR="${RULES_DIR}/.cache"
 
@@ -1173,11 +1182,76 @@ generate_tool_specific_outputs() {
     esac
 }
 
+# Apply local overrides to generated rules
+# Args: $1 = tool name
+apply_local_overrides() {
+    local tool="$1"
+
+    # Only apply to claude or all
+    if [[ "$tool" != "claude" ]] && [[ "$tool" != "all" ]]; then
+        return 0
+    fi
+
+    # Check if overrides exist
+    if [[ "$(detect_local_overrides ".claude")" != "true" ]]; then
+        [[ "$VERBOSE" == "true" ]] && log_info "No local overrides found"
+        return 0
+    fi
+
+    log_info "Processing local overrides..."
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        preview_overrides ".claude"
+    else
+        process_overrides ".claude"
+        log_success "Local overrides applied"
+    fi
+}
+
+# Preview what overrides would be applied (dry-run)
+# Args: $1 = claude directory
+preview_overrides() {
+    local claude_dir="$1"
+    local override_dir="${claude_dir}/rules-local"
+    local rules_dir="${claude_dir}/rules"
+
+    local config
+    config=$(load_override_config "$claude_dir")
+
+    log_info "[DRY-RUN] Override preview:"
+
+    # Find all local override files
+    while IFS= read -r -d '' local_file; do
+        local rel_path="${local_file#"$override_dir"/}"
+        local central_file="${rules_dir}/${rel_path}"
+
+        # Check if excluded
+        if [[ "$(should_exclude_rule "$rel_path" "$config")" == "true" ]]; then
+            echo "  SKIP (excluded): $rel_path"
+            continue
+        fi
+
+        local strategy
+        strategy=$(get_merge_strategy "$rel_path" "$config")
+
+        if [[ -f "$central_file" ]]; then
+            echo "  MERGE ($strategy): $rel_path"
+        else
+            echo "  ADD: $rel_path"
+        fi
+    done < <(find "$override_dir" -name "*.md" -type f ! -name ".*" -print0 2>/dev/null)
+
+    log_info "[DRY-RUN] No changes made"
+}
+
 # Main sync function (refactored)
 sync_rules() {
     local tool="${1:-all}"
 
     log_info "Starting AI rules synchronization..."
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_warn "Running in DRY-RUN mode - no changes will be made to overrides"
+    fi
     echo ""
 
     mkdir -p "$CACHE_DIR"
@@ -1198,6 +1272,9 @@ sync_rules() {
 
     # Generate outputs for specified tool(s)
     generate_tool_specific_outputs "$tool"
+
+    # Apply local overrides (after generating base rules)
+    apply_local_overrides "$tool"
 
     echo ""
     log_success "Synchronization complete!"
@@ -1229,11 +1306,21 @@ while [[ $# -gt 0 ]]; do
             tool="$2"
             shift 2
             ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --verbose)
+            VERBOSE=true
+            shift
+            ;;
         --help|-h)
-            echo "Usage: $0 [--tool claude|cursor|copilot|gemini|all]"
+            echo "Usage: $0 [--tool claude|cursor|copilot|gemini|all] [--dry-run] [--verbose]"
             echo ""
             echo "Options:"
             echo "  --tool TOOL    Generate rules for specific tool (auto-detected if omitted)"
+            echo "  --dry-run      Preview override merges without applying changes"
+            echo "  --verbose      Show detailed override processing information"
             echo "  --help, -h     Show this help message"
             echo ""
             echo "Supported tools: claude, cursor, copilot, gemini, all"
@@ -1244,6 +1331,10 @@ while [[ $# -gt 0 ]]; do
             echo "  - GitHub Copilot: Checks for GITHUB_COPILOT env var"
             echo "  - Gemini: Checks for GEMINI_AI env var or .gemini/ directory"
             echo "  - Defaults to 'all' if no tool detected"
+            echo ""
+            echo "Local Overrides:"
+            echo "  Place rule overrides in .claude/rules-local/ with same structure as rules/"
+            echo "  Configure merge behavior in .claude/rules-config.local.json"
             exit 0
             ;;
         *)
