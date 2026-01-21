@@ -2,290 +2,294 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/ANTI_PATTERNS/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/ARCHITECTURE/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/IMPLEMENTATION_GUIDE/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/PRACTICE_CROSSREFERENCE/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/SUCCESS_METRICS/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/hook-system/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/installation/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
+    </url>
+    <url>
+         <loc>https://paulduvall.github.io/centralized-rules/overrides/</loc>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/ralph-loop-guide/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/architecture/BASH_BRITTLE_AREAS/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/architecture/classification-system/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/12-factor-app/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/ai-assisted-development/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/ai-ethics-governance/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/ai-model-lifecycle/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/architecture-principles/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/chaos-engineering/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/cicd-comprehensive/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/code-quality/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/configuration-management/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/development-workflow/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/git-tagging/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/git-workflow/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/knowledge-management/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/lean-development/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/metrics-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/operations-automation/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/parallel-development/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/project-maturity-levels/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/refactoring-patterns/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/security-principles/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/specification-driven-development/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/testing-atdd/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/testing-philosophy/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/base/tool-design/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/aws/iam-best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/aws/security-best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/aws/well-architected/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/vercel/cost-optimization/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/vercel/deployment-best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/vercel/environment-configuration/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/vercel/performance-optimization/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/vercel/reliability-observability/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/cloud/vercel/security-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/examples/USAGE_EXAMPLES/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/frameworks/django/best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/frameworks/express/best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/frameworks/fastapi/best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/frameworks/react/best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/frameworks/springboot/best-practices/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/bash/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/bash/sourceable-scripts/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/bash/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/csharp/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/csharp/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/css/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/go/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/go/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/html/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/java/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/java/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/python/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/python/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/rust/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/rust/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/typescript/coding-standards/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/languages/typescript/testing/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/skill/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/skill/CHANGELOG/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/skill/MIGRATION_GUIDE/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/skill/docs/ERROR_HANDLING/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
     <url>
          <loc>https://paulduvall.github.io/centralized-rules/skill/docs/LOGGING/</loc>
-         <lastmod>2026-01-09</lastmod>
+         <lastmod>2026-01-21</lastmod>
     </url>
 </urlset>
