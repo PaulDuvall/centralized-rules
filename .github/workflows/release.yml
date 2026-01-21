@@ -1,0 +1,158 @@
+# Release workflow for centralized-rules
+# Triggers on version tags (v*) and creates GitHub releases with assets
+#
+# Usage: git tag -a v0.1.0 -m "Release v0.1.0" && git push origin v0.1.0
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  # Run all tests before creating release
+  test:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq shellcheck
+
+      - name: Run shellcheck on scripts
+        run: |
+          shellcheck install-hooks.sh || true
+          shellcheck sync-ai-rules.sh || true
+          shellcheck .claude/hooks/activate-rules.sh || true
+
+      - name: Run test suite
+        run: |
+          chmod +x tests/*.sh
+          ./tests/test-override.sh
+          ./tests/test-override-e2e.sh
+
+      - name: Validate install script syntax
+        run: bash -n install-hooks.sh
+
+  # Build release assets
+  build:
+    name: Build Release Assets
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building release assets for $VERSION"
+
+      - name: Create release tarball
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+
+          # Create a clean directory for the release
+          mkdir -p release-staging
+
+          # Copy essential files for the release
+          cp -r base release-staging/
+          cp -r languages release-staging/
+          cp -r frameworks release-staging/
+          cp -r cloud release-staging/
+          cp -r lib release-staging/
+          cp -r .claude release-staging/
+          cp install-hooks.sh release-staging/
+          cp sync-ai-rules.sh release-staging/
+          cp README.md release-staging/
+          cp LICENSE release-staging/
+          cp CHANGELOG.md release-staging/
+
+          # Create tarball
+          tar -czvf "centralized-rules-${VERSION}.tar.gz" -C release-staging .
+
+          # Copy standalone installer
+          cp install-hooks.sh "install-hooks-${VERSION}.sh"
+
+      - name: Generate checksums
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          sha256sum "centralized-rules-${VERSION}.tar.gz" > checksums.txt
+          sha256sum "install-hooks-${VERSION}.sh" >> checksums.txt
+          cat checksums.txt
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: |
+            centralized-rules-*.tar.gz
+            install-hooks-*.sh
+            checksums.txt
+
+  # Create GitHub release
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION=${{ needs.build.outputs.version }}
+          # Remove 'v' prefix for changelog lookup
+          VERSION_NUM=${VERSION#v}
+
+          # Extract the changelog section for this version
+          # Looks for ## [version] and captures until next ## or end
+          CHANGELOG=$(awk -v ver="$VERSION_NUM" '
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "\\[" ver "\\]") found=1
+            }
+            found {print}
+          ' CHANGELOG.md)
+
+          # If no changelog found, use default message
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="Release $VERSION"
+          fi
+
+          # Write to file for multiline support
+          echo "$CHANGELOG" > release_notes.md
+          echo "Release notes:"
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.build.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(needs.build.outputs.version, '-') }}
+          files: |
+            centralized-rules-*.tar.gz
+            install-hooks-*.sh
+            checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

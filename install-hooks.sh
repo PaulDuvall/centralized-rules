@@ -6,18 +6,22 @@
 # for Claude Code CLI. Idempotent - safe to run multiple times.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh | bash
 #
 # Behavior:
+#   - Downloads from latest GitHub release (stable)
 #   - If you already have an installation → updates it in place (idempotent)
 #   - If it's a new installation → installs globally by default
 #
 # Options:
 #   --local   Install for current project only (instead of globally)
+#   --edge    Install from main branch (developers/testing)
+#   --version VERSION  Install specific version (e.g., v0.1.0)
 #
 # Notes:
 #   - Running the same command twice safely updates the existing installation
 #   - Use --local for project-specific rules, omit for all projects
+#   - Falls back to main branch if no releases exist
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
@@ -34,8 +38,12 @@ success() { echo -e "${GREEN}✓${NC} $*"; }
 warning() { echo -e "${YELLOW}⚠${NC} $*"; }
 error() { echo -e "${RED}✗${NC} $*"; }
 
-# Detect installation mode
+# Configuration
 INSTALL_MODE="global"  # Default to global installation
+USE_EDGE="false"       # Default to release version
+SPECIFIC_VERSION=""    # Empty means use latest release
+GITHUB_REPO="paulduvall/centralized-rules"
+GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -43,6 +51,14 @@ while [[ $# -gt 0 ]]; do
         --local)
             INSTALL_MODE="local"
             shift
+            ;;
+        --edge)
+            USE_EDGE="true"
+            shift
+            ;;
+        --version)
+            SPECIFIC_VERSION="$2"
+            shift 2
             ;;
         *)
             # Ignore unknown arguments for forward compatibility
@@ -72,6 +88,63 @@ detect_environment() {
     else
         warning "Could not detect Claude installation type (assuming CLI)"
     fi
+}
+
+# Determine which version to install
+# Sets INSTALL_VERSION global variable
+determine_version() {
+    # If --edge flag, use main branch
+    if [[ "$USE_EDGE" == "true" ]]; then
+        INSTALL_VERSION="edge"
+        warning "Using edge version (main branch) - may be unstable"
+        return 0
+    fi
+
+    # If specific version requested, use that
+    if [[ -n "$SPECIFIC_VERSION" ]]; then
+        INSTALL_VERSION="$SPECIFIC_VERSION"
+        info "Using specified version: $INSTALL_VERSION"
+        return 0
+    fi
+
+    # Try to fetch latest release from GitHub API
+    info "Checking for latest release..."
+
+    local release_info
+    if command -v curl >/dev/null 2>&1; then
+        release_info=$(curl -sfL "$GITHUB_API" 2>/dev/null) || release_info=""
+    elif command -v wget >/dev/null 2>&1; then
+        release_info=$(wget -qO- "$GITHUB_API" 2>/dev/null) || release_info=""
+    else
+        warning "Neither curl nor wget available - using main branch"
+        INSTALL_VERSION="edge"
+        return 0
+    fi
+
+    # Parse version from response
+    if [[ -n "$release_info" ]] && command -v jq >/dev/null 2>&1; then
+        local tag_name
+        tag_name=$(echo "$release_info" | jq -r '.tag_name // empty')
+        if [[ -n "$tag_name" ]]; then
+            INSTALL_VERSION="$tag_name"
+            success "Latest release: $INSTALL_VERSION"
+            return 0
+        fi
+    elif [[ -n "$release_info" ]]; then
+        # Fallback: parse tag_name without jq
+        local tag_name
+        tag_name=$(echo "$release_info" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        if [[ -n "$tag_name" ]]; then
+            INSTALL_VERSION="$tag_name"
+            success "Latest release: $INSTALL_VERSION"
+            return 0
+        fi
+    fi
+
+    # No releases found - fall back to main with warning
+    warning "No releases found - using main branch"
+    warning "Note: Install from releases for stable versions"
+    INSTALL_VERSION="edge"
 }
 
 # Remove hook from global settings
@@ -467,6 +540,7 @@ main() {
     echo ""
 
     detect_environment
+    determine_version
     find_rules_repo
     detect_existing_installation
 
@@ -498,6 +572,7 @@ main() {
         echo "═══════════════════════════════════════════════════════"
         echo ""
         echo "📦 Repository: ${REPO_URL:-paulduvall/centralized-rules}"
+        echo "🏷️  Version: ${INSTALL_VERSION:-unknown}"
         echo "📌 Commit: ${COMMIT_ID:-unknown}"
         echo "🔗 Verify: https://github.com/paulduvall/centralized-rules/commit/${COMMIT_ID:-main}"
         echo ""

@@ -1,5 +1,8 @@
 # Centralized AI Development Rules
 
+[![Latest Release](https://img.shields.io/github/v/release/paulduvall/centralized-rules?label=latest)](https://github.com/paulduvall/centralized-rules/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Progressive disclosure framework for AI coding tools. Loads only relevant development rules based on project context and task type.
 
 ## Features
@@ -32,6 +35,16 @@ curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/i
 - Running it again? → Safely updates to latest version
 
 No prompts, no conflicts, just works.
+
+**Advanced options:**
+
+```bash
+# Install specific version
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --version v0.1.0
+
+# Install from main branch (developers/testing)
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --edge
+```
 
 ### What You'll See
 
