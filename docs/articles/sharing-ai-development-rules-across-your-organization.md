@@ -232,7 +232,7 @@ The repository is open source under MIT license:
 
 Star it, try it, and let me know what rules your team needs.
 
-For enterprise teams looking to implement AI development standards at scale, I offer hands-on workshops through [Redacted Ventures](https://redacted.ventures). We'll help you set up centralized rules, train your team on AI-native development patterns, and measure the impact on code quality and velocity.
+For enterprise teams looking to implement AI development standards at scale, I offer hands-on workshops through [Redacted Ventures](https://redactedventures.com). We'll help you set up centralized rules, train your team on AI-native development patterns, and measure the impact on code quality and velocity.
 
 ---
 

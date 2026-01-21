@@ -42,8 +42,8 @@
       "pattern": "^https://agentskills\\.io"
     },
     {
-      "$comment": "Redacted Ventures times out for automated checkers. Last verified: 2026-01-21",
-      "pattern": "^https://redacted\\.ventures"
+      "$comment": "Redacted Ventures - may time out for automated checkers. Last verified: 2026-01-21",
+      "pattern": "^https://redactedventures\\.com"
     }
   ],
   "replacementPatterns": [],
