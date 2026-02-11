@@ -335,14 +335,36 @@ find_rules_repo() {
     # Resolve commit ID from the tag via GitHub API
     REPO_URL="https://github.com/${GITHUB_REPO}"
     if [[ "$INSTALL_VERSION" != "edge" ]]; then
-        local tag_sha=""
+        local ref_info=""
         local api_url="https://api.github.com/repos/${GITHUB_REPO}/git/ref/tags/${INSTALL_VERSION}"
         if command -v curl >/dev/null 2>&1; then
-            tag_sha=$(curl -sfL "$api_url" 2>/dev/null | grep -o '"sha"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([a-f0-9]*\)".*/\1/')
+            ref_info=$(curl -sfL "$api_url" 2>/dev/null)
         elif command -v wget >/dev/null 2>&1; then
-            tag_sha=$(wget -qO- "$api_url" 2>/dev/null | grep -o '"sha"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([a-f0-9]*\)".*/\1/')
+            ref_info=$(wget -qO- "$api_url" 2>/dev/null)
         fi
-        COMMIT_ID="${tag_sha:0:7}"
+
+        local obj_sha=""
+        local obj_type=""
+        if [[ -n "$ref_info" ]]; then
+            obj_sha=$(echo "$ref_info" | grep -o '"sha"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([a-f0-9]*\)".*/\1/')
+            obj_type=$(echo "$ref_info" | grep -o '"type"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([a-z]*\)".*/\1/')
+        fi
+
+        # Annotated tags point to a tag object, not the commit directly
+        if [[ "$obj_type" == "tag" ]] && [[ -n "$obj_sha" ]]; then
+            local tag_info=""
+            local tag_url="https://api.github.com/repos/${GITHUB_REPO}/git/tags/${obj_sha}"
+            if command -v curl >/dev/null 2>&1; then
+                tag_info=$(curl -sfL "$tag_url" 2>/dev/null)
+            elif command -v wget >/dev/null 2>&1; then
+                tag_info=$(wget -qO- "$tag_url" 2>/dev/null)
+            fi
+            if [[ -n "$tag_info" ]]; then
+                obj_sha=$(echo "$tag_info" | grep -o '"sha"[[:space:]]*:[[:space:]]*"[^"]*"' | tail -1 | sed 's/.*"\([a-f0-9]*\)".*/\1/')
+            fi
+        fi
+
+        COMMIT_ID="${obj_sha:0:7}"
         [[ -z "$COMMIT_ID" ]] && COMMIT_ID="${INSTALL_VERSION}"
     else
         COMMIT_ID="edge"
