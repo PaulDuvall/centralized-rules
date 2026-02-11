@@ -25,6 +25,15 @@
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
+# Cleanup temporary files on exit
+CLEANUP_DIR=""
+cleanup() {
+    if [[ -n "$CLEANUP_DIR" ]] && [[ -d "$CLEANUP_DIR" ]]; then
+        rm -rf "$CLEANUP_DIR"
+    fi
+}
+trap cleanup EXIT
+
 # Colors for output
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
@@ -251,50 +260,82 @@ detect_existing_installation() {
     fi
 }
 
-# Find the centralized-rules repository
-find_rules_repo() {
-    local path
+# Download a file from a URL to a destination path
+# Args: url, destination
+download_file() {
+    local url="$1"
+    local dest="$2"
 
-    # If we're already in the centralized-rules repo
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "$url" -o "$dest"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q "$url" -O "$dest"
+    else
+        error "Neither curl nor wget available"
+        return 1
+    fi
+}
+
+# Find the centralized-rules repository (local or download from release)
+find_rules_repo() {
+    # Fast path: if we're already in the centralized-rules repo, use it
     if [[ -f ".claude/hooks/activate-rules.sh" ]]; then
         RULES_REPO_PATH="$(pwd)"
-        success "Using current directory: $RULES_REPO_PATH"
+        success "Using local repository: $RULES_REPO_PATH"
 
-        # Get commit ID and remote URL
         if git rev-parse --git-dir > /dev/null 2>&1; then
             COMMIT_ID=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
             REPO_URL=$(git config --get remote.origin.url 2>/dev/null || echo "unknown")
-            success "Commit: $COMMIT_ID"
-            success "Repository: $REPO_URL"
         fi
         return 0
     fi
 
-    # Common locations
-    for path in \
-        "$HOME/Code/centralized-rules" \
-        "$HOME/centralized-rules" \
-        "$HOME/src/centralized-rules" \
-        "$HOME/projects/centralized-rules"; do
-        if [[ -d "$path/.claude/hooks" ]]; then
-            RULES_REPO_PATH="$path"
-            success "Found centralized-rules at: $RULES_REPO_PATH"
+    # Download from GitHub release
+    info "Downloading centralized-rules ${INSTALL_VERSION}..."
 
-            # Get commit ID and remote URL
-            if [[ -d "$path/.git" ]]; then
-                COMMIT_ID=$(cd "$path" && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-                REPO_URL=$(cd "$path" && git config --get remote.origin.url 2>/dev/null || echo "unknown")
-                success "Commit: $COMMIT_ID"
-                success "Repository: $REPO_URL"
-            fi
-            return 0
+    CLEANUP_DIR=$(mktemp -d)
+    local tarball="${CLEANUP_DIR}/centralized-rules.tar.gz"
+    local extract_dir="${CLEANUP_DIR}/extracted"
+    mkdir -p "$extract_dir"
+
+    local download_url
+    if [[ "$INSTALL_VERSION" == "edge" ]]; then
+        download_url="https://github.com/${GITHUB_REPO}/archive/refs/heads/main.tar.gz"
+    else
+        download_url="https://github.com/${GITHUB_REPO}/releases/download/${INSTALL_VERSION}/centralized-rules-${INSTALL_VERSION}.tar.gz"
+    fi
+
+    if ! download_file "$download_url" "$tarball"; then
+        error "Failed to download ${INSTALL_VERSION} from GitHub"
+        error "URL: $download_url"
+        error "Check that the version exists: https://github.com/${GITHUB_REPO}/releases"
+        exit 1
+    fi
+
+    # Extract tarball
+    tar -xzf "$tarball" -C "$extract_dir"
+
+    # Handle different archive structures:
+    # - Release tarballs extract to ./  (files at root)
+    # - GitHub archive tarballs extract to centralized-rules-main/
+    if [[ -f "${extract_dir}/.claude/hooks/activate-rules.sh" ]]; then
+        RULES_REPO_PATH="$extract_dir"
+    else
+        # GitHub archive: find the single extracted directory
+        local nested_dir
+        nested_dir=$(find "$extract_dir" -maxdepth 1 -mindepth 1 -type d | head -1)
+        if [[ -n "$nested_dir" ]] && [[ -f "${nested_dir}/.claude/hooks/activate-rules.sh" ]]; then
+            RULES_REPO_PATH="$nested_dir"
+        else
+            error "Downloaded archive does not contain expected files"
+            exit 1
         fi
-    done
+    fi
 
-    error "Could not find centralized-rules repository"
-    error "Please run this script from the centralized-rules directory"
-    error "Or install it first: git clone https://github.com/paulduvall/centralized-rules"
-    exit 1
+    # Set commit ID from the tag
+    COMMIT_ID="${INSTALL_VERSION}"
+    REPO_URL="https://github.com/${GITHUB_REPO}"
+    success "Downloaded ${INSTALL_VERSION}"
 }
 
 # Install hooks for local project

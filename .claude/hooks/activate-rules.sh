@@ -28,37 +28,6 @@ source "${CLAUDE_DIR}/lib/detection.sh"
 # Configuration
 readonly VERBOSE=${VERBOSE:-false}
 
-# Token usage display configuration
-# Security: Validate SHOW_TOKEN_USAGE is one of the allowed values
-SHOW_TOKEN_USAGE_RAW="${SHOW_TOKEN_USAGE:-true}"
-if [[ ! "$SHOW_TOKEN_USAGE_RAW" =~ ^(true|false|auto)$ ]]; then
-    log_warn "Invalid SHOW_TOKEN_USAGE value: $SHOW_TOKEN_USAGE_RAW (using 'true')"
-    SHOW_TOKEN_USAGE_RAW="true"
-fi
-readonly SHOW_TOKEN_USAGE="$SHOW_TOKEN_USAGE_RAW"
-
-# Security: Validate TOKEN_WARNING_THRESHOLD is a positive integer
-TOKEN_WARNING_THRESHOLD_RAW="${TOKEN_WARNING_THRESHOLD:-4000}"
-if ! [[ "$TOKEN_WARNING_THRESHOLD_RAW" =~ ^[0-9]+$ ]] || [[ "$TOKEN_WARNING_THRESHOLD_RAW" -lt 1 ]]; then
-    log_warn "Invalid TOKEN_WARNING_THRESHOLD: $TOKEN_WARNING_THRESHOLD_RAW (using 4000)"
-    TOKEN_WARNING_THRESHOLD_RAW=4000
-fi
-readonly TOKEN_WARNING_THRESHOLD="$TOKEN_WARNING_THRESHOLD_RAW"
-
-# Security: Validate TOKEN_CONTEXT_BUDGET is a positive integer
-TOKEN_CONTEXT_BUDGET_RAW="${TOKEN_CONTEXT_BUDGET:-200000}"
-if ! [[ "$TOKEN_CONTEXT_BUDGET_RAW" =~ ^[0-9]+$ ]] || [[ "$TOKEN_CONTEXT_BUDGET_RAW" -lt 1000 ]]; then
-    log_warn "Invalid TOKEN_CONTEXT_BUDGET: $TOKEN_CONTEXT_BUDGET_RAW (using 200000)"
-    TOKEN_CONTEXT_BUDGET_RAW=200000
-fi
-readonly TOKEN_CONTEXT_BUDGET="$TOKEN_CONTEXT_BUDGET_RAW"
-
-# Token estimation constants (shared across all token calculation functions)
-# Simplicity: Centralized constants eliminate duplication and ensure consistency
-readonly TOKEN_BANNER_BASE=500           # Banner display overhead
-readonly TOKEN_METADATA=850              # skill-rules.json (~3400 chars ÷ 4)
-readonly TOKEN_RULES_EXPECTED=3000       # ~60% of default maxTokens (5000)
-
 # Custom debug logging (extends lib/logging.sh)
 log_debug() {
     if [[ "${VERBOSE}" == "true" ]]; then
@@ -473,238 +442,8 @@ is_git_operation() {
     return 1
 }
 
-# Calculate actual token cost by reading matched rule files
-# Args: Space-separated list of rule paths (e.g., "base/security-principles base/code-quality")
-# Returns: Estimated total tokens (integer)
-# Security: Validates file paths, handles missing files gracefully
-calculate_token_cost() {
-    # shellcheck disable=SC2178,SC2128  # matched_rules is a string, not an array
-    local matched_rules="$1"
-    local rules_tokens=0
-
-    # Calculate actual size of matched rule files
-    # shellcheck disable=SC2128  # matched_rules is a string, not an array
-    if [[ -n "$matched_rules" ]]; then
-        # Convert newline-separated to space-separated for iteration
-        local rules_list
-        rules_list=$(echo "$matched_rules" | tr '\n' ' ')
-
-        for rule_path in $rules_list; do
-            # Security: Validate rule path contains only safe characters
-            if ! [[ "$rule_path" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
-                log_debug "Skipping invalid rule path: $rule_path"
-                continue
-            fi
-
-            # Construct full path to rule file
-            local rule_file="${rule_path}.md"
-
-            # Try to find the rule file (could be in current dir or absolute path)
-            local found_file=""
-            if [[ -f "$rule_file" ]]; then
-                # Direct file match (e.g., base/security-principles.md)
-                found_file="$rule_file"
-            elif [[ -f "./${rule_file}" ]]; then
-                found_file="./${rule_file}"
-            else
-                # Look for common subdirectory patterns (languages/LANG/*, frameworks/FRAMEWORK/*)
-                if [[ -d "$rule_path" ]]; then
-                    # Prioritize primary files: coding-standards.md, best-practices.md
-                    if [[ -f "$rule_path/coding-standards.md" ]]; then
-                        found_file="$rule_path/coding-standards.md"
-                    elif [[ -f "$rule_path/best-practices.md" ]]; then
-                        found_file="$rule_path/best-practices.md"
-                    else
-                        # Fallback: find first .md file
-                        while IFS= read -r subfile; do
-                            [[ -f "$subfile" ]] && found_file="$subfile" && break
-                        done < <(find "$rule_path" -maxdepth 1 -name "*.md" 2>/dev/null)
-                    fi
-                fi
-            fi
-
-            # Count characters and estimate tokens (÷4)
-            if [[ -n "$found_file" ]]; then
-                local char_count
-                char_count=$(wc -c < "$found_file" 2>/dev/null || echo "0")
-                local file_tokens=$((char_count / 4))
-                rules_tokens=$((rules_tokens + file_tokens))
-                log_debug "Rule $rule_path: $char_count chars → ~$file_tokens tokens"
-            else
-                log_debug "Rule file not found: $rule_file"
-            fi
-        done
-    fi
-
-    # If no rules were found/calculated, use the expected estimate as fallback
-    if [[ $rules_tokens -eq 0 ]]; then
-        rules_tokens=$TOKEN_RULES_EXPECTED
-        log_debug "No rule files found, using fallback estimate: $rules_tokens"
-    fi
-
-    # Security: Simple integer addition using validated readonly constants
-    local total=$((TOKEN_BANNER_BASE + TOKEN_METADATA + rules_tokens))
-    echo "$total"
-}
-
-# Generate verbose token breakdown for detailed analysis
-# Args: Matched rules (newline-separated)
-# Returns: Multi-line breakdown of token costs (empty if disabled/conditions not met)
-# Security: Uses validated readonly constants, guards against division by zero
-generate_verbose_token_breakdown() {
-    local matched_rules="$1"
-
-    # Only show if verbose mode is enabled and token display is not disabled
-    [[ "$VERBOSE" != "true" ]] && return
-    [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
-
-    # Security: Prevent division by zero (same validation as calculate_token_cost_display)
-    if [[ "$TOKEN_CONTEXT_BUDGET" -lt 1 ]]; then
-        log_debug "Invalid TOKEN_CONTEXT_BUDGET: $TOKEN_CONTEXT_BUDGET (skipping breakdown)"
-        return
-    fi
-
-    # Calculate actual token cost based on matched rules
-    local -r total=$(calculate_token_cost "$matched_rules")
-    local rules_tokens=$((total - TOKEN_BANNER_BASE - TOKEN_METADATA))
-    local percent=$((total * 100 / TOKEN_CONTEXT_BUDGET))
-
-    # Output verbose breakdown
-    cat <<EOF
-───────────────────────────────────────────────────────
-📊 TOKEN USAGE BREAKDOWN (Verbose Mode)
-   Banner overhead:    ~${TOKEN_BANNER_BASE} tokens
-   Metadata (JSON):    ~${TOKEN_METADATA} tokens
-   Rule content:       ~${rules_tokens} tokens
-   ─────────────────────────────────────
-   Total estimated:    ~${total} tokens (~${percent}% of ${TOKEN_CONTEXT_BUDGET})
-
-   Note: Estimates based on ~4 chars per token formula
-EOF
-}
-
-# Format token cost for inline display with security-conscious output
-# Args: Matched rules (newline-separated)
-# Returns: Formatted string for banner display (e.g., " | 📊 Rules: ~4.2K tokens (~2.1%)")
-# Security: Input validation, integer-only math, no command injection risks
-# shellcheck disable=SC2317  # Function defined for future use in token display feature
-calculate_token_cost_display() {
-    local matched_rules="$1"
-
-    # Constants for display logic
-    # Simplicity: Named thresholds make behavior explicit
-    local -r AUTO_MODE_THRESHOLD_PERCENT=2    # Show in auto mode if >2%
-    local -r KILOBYTE_THRESHOLD=1000          # Display as K if >=1000 tokens
-
-    # Check if disabled
-    [[ "$SHOW_TOKEN_USAGE" == "false" ]] && return
-
-    # Get token estimate based on actual matched rules (safe: function output is integer)
-    local total_tokens
-    total_tokens=$(calculate_token_cost "$matched_rules")
-
-    # Security: Validate total_tokens is a positive integer (prevent injection)
-    if ! [[ "$total_tokens" =~ ^[0-9]+$ ]] || [[ "$total_tokens" -lt 0 ]]; then
-        log_debug "Invalid token count: $total_tokens (skipping display)"
-        return
-    fi
-
-    # Security: Prevent division by zero (defensive programming)
-    if [[ "$TOKEN_CONTEXT_BUDGET" -lt 1 ]]; then
-        log_debug "Invalid TOKEN_CONTEXT_BUDGET: $TOKEN_CONTEXT_BUDGET (skipping display)"
-        return
-    fi
-
-    # Calculate percentage (safe: all inputs are validated integers)
-    local percent=$((total_tokens * 100 / TOKEN_CONTEXT_BUDGET))
-
-    # Auto mode: only show if exceeds threshold
-    # Simplicity: Clear threshold comparison
-    if [[ "$SHOW_TOKEN_USAGE" == "auto" ]] && [[ $percent -le $AUTO_MODE_THRESHOLD_PERCENT ]]; then
-        return
-    fi
-
-    # Format display value
-    # Simplicity: Integer math only, no floating point complexity
-    local display
-    if [[ $total_tokens -ge $KILOBYTE_THRESHOLD ]]; then
-        local thousands=$((total_tokens / 1000))
-        local hundreds=$(((total_tokens % 1000) / 100))
-        display="${thousands}.${hundreds}K"
-    else
-        display="$total_tokens"
-    fi
-
-    # Select warning indicator based on threshold
-    # Simplicity: Clear conditional, explicit indicators
-    local indicator="📊"
-    if [[ $total_tokens -ge $TOKEN_WARNING_THRESHOLD ]]; then
-        indicator="⚠️"
-    fi
-
-    # Security: Safe string construction (no eval, no command substitution)
-    # Format: " | 📊 Rules: ~4.3K tokens (~2%)"
-    echo " | ${indicator} Rules: ~${display} tokens (~${percent}%)"
-}
-
-# Test function: Verify token calculation correctness
-# Returns: 0 if tests pass, 1 if tests fail
-# Testing: Can be invoked with RUN_TESTS=true environment variable
-# Security: Uses subshells to avoid modifying readonly variables
-test_token_calculations() {
-    local failures=0
-
-    # Test 1: calculate_token_cost with empty rules uses fallback
-    local expected=$((TOKEN_BANNER_BASE + TOKEN_METADATA + TOKEN_RULES_EXPECTED))
-    local actual
-    actual=$(calculate_token_cost "")
-    if [[ "$actual" != "$expected" ]]; then
-        echo "FAIL: calculate_token_cost with empty rules returned $actual, expected $expected" >&2
-        ((failures++))
-    else
-        echo "PASS: calculate_token_cost with empty rules uses fallback ($actual)" >&2
-    fi
-
-    # Test 2: Token cost is positive integer
-    if ! [[ "$actual" =~ ^[0-9]+$ ]] || [[ "$actual" -lt 1 ]]; then
-        echo "FAIL: calculate_token_cost returned non-positive integer: $actual" >&2
-        ((failures++))
-    else
-        echo "PASS: calculate_token_cost returns positive integer" >&2
-    fi
-
-    # Test 3: Token constants are readonly and positive
-    if [[ $TOKEN_BANNER_BASE -gt 0 ]] && [[ $TOKEN_METADATA -gt 0 ]] && [[ $TOKEN_RULES_EXPECTED -gt 0 ]]; then
-        echo "PASS: Token constants are positive" >&2
-    else
-        echo "FAIL: Token constants must be positive" >&2
-        ((failures++))
-    fi
-
-    # Test 4: calculate_token_cost with actual rule file (if available)
-    if [[ -f "base/code-quality.md" ]]; then
-        local with_rule
-        with_rule=$(calculate_token_cost "base/code-quality")
-        local min_expected=$((TOKEN_BANNER_BASE + TOKEN_METADATA))
-        # Should be at least banner+metadata (rule file must have some content)
-        if [[ "$with_rule" -gt "$min_expected" ]]; then
-            echo "PASS: calculate_token_cost with actual rule returns valid value ($with_rule > $min_expected)" >&2
-        else
-            echo "FAIL: calculate_token_cost with rule returned unexpected value: $with_rule (expected > $min_expected)" >&2
-            ((failures++))
-        fi
-    fi
-
-    if [[ $failures -eq 0 ]]; then
-        echo "✓ All token calculation tests passed" >&2
-        return 0
-    else
-        echo "✗ $failures test(s) failed" >&2
-        return 1
-    fi
-}
-
 # Select context-based tip from skill-rules.json
+# shellcheck disable=SC2178,SC2128  # matched_rules is a string, not an array
 select_contextual_tip() {
     local matched_rules="$1"
 
@@ -812,15 +551,11 @@ generate_activation_instruction() {
     local contextual_tip
     contextual_tip=$(select_contextual_tip "${matched_rules}")
 
-    # Get token usage display (may be empty if disabled or below threshold)
-    local token_display
-    token_display=$(calculate_token_cost_display "${matched_rules}")
-
     # Build the activation instruction
     # Security: Quote all variable interpolations to prevent word splitting
     cat <<EOF
 ${SEPARATOR}
-🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}${token_display}
+🎯 Centralized Rules Active | Source: ${repo_name}@${installed_commit}
 EOF
 
     # Add condensed pre-commit quality gates if this is a git operation
@@ -828,9 +563,6 @@ EOF
     if is_git_operation "${prompt_lower}"; then
         echo "${PRE_COMMIT_MSG}"
     fi
-
-    # Add verbose token breakdown if enabled (after pre-commit gates)
-    generate_verbose_token_breakdown "${matched_rules}"
 
     # Format rules list (comma-separated, no separate Languages/Frameworks display)
     if [[ -n "${matched_rules}" ]]; then
@@ -924,12 +656,6 @@ EOF
     log_debug "Activation instruction generated successfully"
     exit 0
 }
-
-# Run tests if requested (for development/CI)
-if [[ "${RUN_TESTS:-false}" == "true" ]]; then
-    test_token_calculations
-    exit $?
-fi
 
 # Run main function
 main "$@"
