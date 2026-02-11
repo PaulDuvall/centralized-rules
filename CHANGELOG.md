@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.1] - 2026-02-11
+
+### Fixed
+- Restored `__CENTRALIZED_RULES_COMMIT__` placeholder in activate-rules.sh that was accidentally replaced with a hardcoded commit SHA, causing all installations to display a stale commit ID
+
+---
+
 ## [0.1.0] - 2026-01-21
 
 First versioned release with GitHub Releases infrastructure.
