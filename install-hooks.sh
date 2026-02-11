@@ -332,10 +332,22 @@ find_rules_repo() {
         fi
     fi
 
-    # Set commit ID from the tag
-    COMMIT_ID="${INSTALL_VERSION}"
+    # Resolve commit ID from the tag via GitHub API
     REPO_URL="https://github.com/${GITHUB_REPO}"
-    success "Downloaded ${INSTALL_VERSION}"
+    if [[ "$INSTALL_VERSION" != "edge" ]]; then
+        local tag_sha=""
+        local api_url="https://api.github.com/repos/${GITHUB_REPO}/git/ref/tags/${INSTALL_VERSION}"
+        if command -v curl >/dev/null 2>&1; then
+            tag_sha=$(curl -sfL "$api_url" 2>/dev/null | grep -o '"sha"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([a-f0-9]*\)".*/\1/')
+        elif command -v wget >/dev/null 2>&1; then
+            tag_sha=$(wget -qO- "$api_url" 2>/dev/null | grep -o '"sha"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([a-f0-9]*\)".*/\1/')
+        fi
+        COMMIT_ID="${tag_sha:0:7}"
+        [[ -z "$COMMIT_ID" ]] && COMMIT_ID="${INSTALL_VERSION}"
+    else
+        COMMIT_ID="edge"
+    fi
+    success "Downloaded ${INSTALL_VERSION} (${COMMIT_ID})"
 }
 
 # Install hooks for local project
