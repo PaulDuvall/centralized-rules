@@ -278,8 +278,8 @@ download_file() {
 
 # Find the centralized-rules repository (local or download from release)
 find_rules_repo() {
-    # Fast path: if we're already in the centralized-rules repo, use it
-    if [[ -f ".claude/hooks/activate-rules.sh" ]]; then
+    # Fast path: use local repo only in edge mode (developer use case)
+    if [[ "$INSTALL_VERSION" == "edge" ]] && [[ -f ".claude/hooks/activate-rules.sh" ]]; then
         RULES_REPO_PATH="$(pwd)"
         success "Using local repository: $RULES_REPO_PATH"
 
