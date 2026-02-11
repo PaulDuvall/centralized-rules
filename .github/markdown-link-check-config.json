@@ -44,6 +44,10 @@
     {
       "$comment": "Redacted Ventures - may time out for automated checkers. Last verified: 2026-01-21",
       "pattern": "^https://redactedventures\\.com"
+    },
+    {
+      "$comment": "SourceForge returns 403 for automated checkers - checked separately in flaky job. Last verified: 2026-02-11",
+      "pattern": "^https://.*\\.sourceforge\\.io"
     }
   ],
   "replacementPatterns": [],
