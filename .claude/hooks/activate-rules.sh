@@ -503,7 +503,7 @@ generate_activation_instruction() {
     prompt_lower=$(echo "${prompt}" | tr '[:upper:]' '[:lower:]')
 
     # Commit hash embedded at installation time (replaced by install script)
-    local installed_commit="16c0aa5"
+    local installed_commit="__CENTRALIZED_RULES_COMMIT__"
 
     # If placeholder wasn't replaced (e.g., in CI/dev), try to get commit from git
     # Note: Using a pattern that won't be replaced by sed during installation
