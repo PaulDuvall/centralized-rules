@@ -52,7 +52,7 @@ Hook displays concise banner showing detected rules:
 
 ```
 ═══════════════════════════════════════════════════════
-🎯 Centralized Rules Active | Source: paulduvall/centralized-rules@16c0aa5 | 📊 Rules: ~2.0K tokens (~1%)
+🎯 Centralized Rules Active | Source: paulduvall/centralized-rules@16c0aa5
 🔍 Rules: base/code-quality
 💡 Follow standards • Write tests • Ensure security • Refactor
 ═══════════════════════════════════════════════════════
@@ -62,7 +62,7 @@ For git operations, pre-commit quality gates trigger:
 
 ```
 ═══════════════════════════════════════════════════════
-🎯 Centralized Rules Active | Source: paulduvall/centralized-rules@16c0aa5 | ⚠️ Rules: ~5.1K tokens (~2%)
+🎯 Centralized Rules Active | Source: paulduvall/centralized-rules@16c0aa5
 ⚠️ PRE-COMMIT: Tests → Security → Quality → Refactor
 🔍 Rules: base/git-tagging, base/git-workflow
 💡 Small commits, clear messages - your future self will thank you
@@ -91,7 +91,7 @@ Hook script runs on every prompt:
 
 1. **Detect context** - Scans project for language markers (`package.json`, `pyproject.toml`, `go.mod`)
 2. **Match keywords** - Analyzes prompt for task-specific terms (test, security, refactor)
-3. **Display banner** - Shows which rules apply (~500-5000 tokens overhead)
+3. **Display banner** - Shows which rules apply
 4. **Claude applies** - Follows detected coding standards
 
 ## Architecture
