@@ -40,6 +40,10 @@
     {
       "$comment": "AgentSkills.io has redirect loop for automated checkers - checked separately in flaky job. Last verified: 2025-12-28",
       "pattern": "^https://agentskills\\.io"
+    },
+    {
+      "$comment": "SourceForge returns 403 for automated checkers - checked separately in flaky job. Last verified: 2026-02-11",
+      "pattern": "^https://.*\\.sourceforge\\.io"
     }
   ],
   "replacementPatterns": [],
