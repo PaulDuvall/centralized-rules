@@ -72,6 +72,8 @@ jobs:
           cp -r languages release-staging/
           cp -r frameworks release-staging/
           cp -r cloud release-staging/
+          cp -r testing release-staging/
+          cp -r tools release-staging/
           cp -r lib release-staging/
           cp -r .claude release-staging/
           cp install-hooks.sh release-staging/

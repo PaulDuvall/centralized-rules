@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-02-12
+
 ### Added
 - `--commit SHA` flag for install-hooks.sh to pin installation to a specific Git commit
+- Playwright E2E testing best practices rule (`testing/playwright/best-practices`)
+- Testing category support in hook keyword matching and tip selection
+- Common Playwright misspellings (playright, playwrite, playwight) to keyword detection
+
+### Fixed
+- Hook script now iterates over `testing` category in skill-rules.json (previously only base, languages, cloud)
 
 ---
 
