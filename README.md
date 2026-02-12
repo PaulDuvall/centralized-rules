@@ -42,6 +42,9 @@ No prompts, no conflicts, just works.
 # Install specific version
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --version v0.1.0
 
+# Pin to specific commit SHA
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --commit abc1234
+
 # Install from main branch (developers/testing)
 curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --edge
 ```

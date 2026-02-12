@@ -16,6 +16,7 @@
 # Options:
 #   --local   Install for current project only (instead of globally)
 #   --edge    Install from main branch (developers/testing)
+#   --commit SHA       Install specific commit (e.g., abc1234 or full 40-char SHA)
 #   --version VERSION  Install specific version (e.g., v0.1.0)
 #
 # Notes:
@@ -51,6 +52,7 @@ error() { echo -e "${RED}✗${NC} $*"; }
 INSTALL_MODE="global"  # Default to global installation
 USE_EDGE="false"       # Default to release version
 SPECIFIC_VERSION=""    # Empty means use latest release
+SPECIFIC_COMMIT=""     # Empty means no specific commit pinned
 GITHUB_REPO="paulduvall/centralized-rules"
 GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
 
@@ -69,12 +71,35 @@ while [[ $# -gt 0 ]]; do
             SPECIFIC_VERSION="$2"
             shift 2
             ;;
+        --commit)
+            SPECIFIC_COMMIT="$2"
+            shift 2
+            ;;
         *)
             # Ignore unknown arguments for forward compatibility
             shift
             ;;
     esac
 done
+
+# Validate --commit flag
+if [[ -n "$SPECIFIC_COMMIT" ]]; then
+    # Check mutual exclusivity with --edge
+    if [[ "$USE_EDGE" == "true" ]]; then
+        error "Cannot use --commit with --edge (pick one)"
+        exit 1
+    fi
+    # Check mutual exclusivity with --version
+    if [[ -n "$SPECIFIC_VERSION" ]]; then
+        error "Cannot use --commit with --version (pick one)"
+        exit 1
+    fi
+    # Validate SHA format: 7-40 hex characters
+    if ! [[ "$SPECIFIC_COMMIT" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+        error "Invalid commit SHA: '$SPECIFIC_COMMIT' (expected 7-40 hex characters)"
+        exit 1
+    fi
+fi
 
 # Detect environment
 detect_environment() {
@@ -102,6 +127,13 @@ detect_environment() {
 # Determine which version to install
 # Sets INSTALL_VERSION global variable
 determine_version() {
+    # If --commit flag, use specific commit
+    if [[ -n "$SPECIFIC_COMMIT" ]]; then
+        INSTALL_VERSION="commit"
+        info "Using pinned commit: ${SPECIFIC_COMMIT}"
+        return 0
+    fi
+
     # If --edge flag, use main branch
     if [[ "$USE_EDGE" == "true" ]]; then
         INSTALL_VERSION="edge"
@@ -299,7 +331,9 @@ find_rules_repo() {
     mkdir -p "$extract_dir"
 
     local download_url
-    if [[ "$INSTALL_VERSION" == "edge" ]]; then
+    if [[ "$INSTALL_VERSION" == "commit" ]]; then
+        download_url="https://github.com/${GITHUB_REPO}/archive/${SPECIFIC_COMMIT}.tar.gz"
+    elif [[ "$INSTALL_VERSION" == "edge" ]]; then
         download_url="https://github.com/${GITHUB_REPO}/archive/refs/heads/main.tar.gz"
     else
         download_url="https://github.com/${GITHUB_REPO}/releases/download/${INSTALL_VERSION}/centralized-rules-${INSTALL_VERSION}.tar.gz"
@@ -308,7 +342,11 @@ find_rules_repo() {
     if ! download_file "$download_url" "$tarball"; then
         error "Failed to download ${INSTALL_VERSION} from GitHub"
         error "URL: $download_url"
-        error "Check that the version exists: https://github.com/${GITHUB_REPO}/releases"
+        if [[ "$INSTALL_VERSION" == "commit" ]]; then
+            error "Check that the commit exists: https://github.com/${GITHUB_REPO}/commits"
+        else
+            error "Check that the version exists: https://github.com/${GITHUB_REPO}/releases"
+        fi
         exit 1
     fi
 
@@ -334,7 +372,9 @@ find_rules_repo() {
 
     # Resolve commit ID from the tag via GitHub API
     REPO_URL="https://github.com/${GITHUB_REPO}"
-    if [[ "$INSTALL_VERSION" != "edge" ]]; then
+    if [[ "$INSTALL_VERSION" == "commit" ]]; then
+        COMMIT_ID="${SPECIFIC_COMMIT:0:7}"
+    elif [[ "$INSTALL_VERSION" != "edge" ]]; then
         local ref_info=""
         local api_url="https://api.github.com/repos/${GITHUB_REPO}/git/ref/tags/${INSTALL_VERSION}"
         if command -v curl >/dev/null 2>&1; then
@@ -647,8 +687,13 @@ main() {
         echo "═══════════════════════════════════════════════════════"
         echo ""
         echo "📦 Repository: ${REPO_URL:-paulduvall/centralized-rules}"
-        echo "🏷️  Version: ${INSTALL_VERSION:-unknown}"
-        echo "📌 Commit: ${COMMIT_ID:-unknown}"
+        if [[ "$INSTALL_VERSION" == "commit" ]]; then
+            echo "🏷️  Version: commit (pinned)"
+            echo "📌 Commit: ${SPECIFIC_COMMIT}"
+        else
+            echo "🏷️  Version: ${INSTALL_VERSION:-unknown}"
+            echo "📌 Commit: ${COMMIT_ID:-unknown}"
+        fi
         echo "🔗 Verify: https://github.com/paulduvall/centralized-rules/commit/${COMMIT_ID:-main}"
         echo ""
         echo "═══════════════════════════════════════════════════════"
