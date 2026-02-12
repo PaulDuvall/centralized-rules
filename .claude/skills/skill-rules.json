@@ -206,6 +206,13 @@
         "tip": "Quote your variables - prevent word splitting and globbing"
       }
     },
+    "testing": {
+      "playwright": {
+        "keywords": ["playwright", "e2e", "end-to-end test", "browser test", "page object", "@playwright/test", "spec.ts"],
+        "rules": ["testing/playwright/best-practices"],
+        "tip": "Use locators over selectors - resilient tests survive refactors"
+      }
+    },
     "cloud": {
       "aws": {
         "keywords": ["aws", "lambda", "s3", "dynamodb", "cloudformation", "terraform", "cdk", "ec2", "ecs", "fargate", "apigateway"],
