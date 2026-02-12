@@ -1,3 +1,27 @@
 
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads
+
+# Exclude from release archives (git archive)
+.beads/             export-ignore
+.github/            export-ignore
+.gitattributes      export-ignore
+.gitignore          export-ignore
+.kiro/              export-ignore
+docs/               export-ignore
+examples/           export-ignore
+mkdocs.yml          export-ignore
+requirements-docs.txt export-ignore
+resources/          export-ignore
+scripts/            export-ignore
+skill/              export-ignore
+tests/              export-ignore
+ANTI_PATTERNS.md    export-ignore
+ARCHITECTURE.md     export-ignore
+IMPLEMENTATION_GUIDE.md export-ignore
+PRACTICE_CROSSREFERENCE.md export-ignore
+RELEASING.md        export-ignore
+SUCCESS_METRICS.md  export-ignore
+agent-skills-tasks.md export-ignore
+ralph-installation-complete.md export-ignore
+ralph-migration-summary.md export-ignore
