@@ -292,6 +292,26 @@ match_keywords() {
             done <<< "$frameworks"
         done <<< "$languages"
 
+        # Extract testing category keywords and rules
+        local testing_categories
+        testing_categories=$(echo "$SKILL_RULES_JSON" | jq -r '.keywordMappings.testing | keys[]' 2>/dev/null)
+
+        while IFS= read -r test_cat; do
+            [[ -z "$test_cat" ]] && continue
+
+            local test_keywords
+            test_keywords=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.testing.${test_cat}.keywords[]?" 2>/dev/null | while IFS= read -r kw; do add_word_boundaries "$(escape_regex "$kw")"; echo "|"; done | tr -d '\n' | sed 's/|$//')
+
+            local test_rules
+            test_rules=$(echo "$SKILL_RULES_JSON" | jq -r ".keywordMappings.testing.${test_cat}.rules[]?" 2>/dev/null)
+
+            if [[ -n "$test_keywords" ]] && echo "${prompt_lower}" | grep -qE "(${test_keywords})"; then
+                while IFS= read -r rule; do
+                    [[ -n "$rule" ]] && matched_rules+=("$rule")
+                done <<< "$test_rules"
+            fi
+        done <<< "$testing_categories"
+
         # Extract cloud provider keywords and rules
         local cloud_providers
         cloud_providers=$(echo "$SKILL_RULES_JSON" | jq -r '.keywordMappings.cloud | keys[]' 2>/dev/null)
@@ -472,6 +492,10 @@ select_contextual_tip() {
 
         # Check framework categories
         tip=$(jq -r ".keywordMappings.languages | to_entries[] | .value.frameworks | to_entries[]? | select(.value.rules[]? == \"$rule\") | .value.tip // empty" "$json_file" 2>/dev/null | head -1)
+        [[ -n "$tip" ]] && echo "$tip" && return
+
+        # Check testing categories
+        tip=$(jq -r ".keywordMappings.testing | to_entries[] | select(.value.rules[]? == \"$rule\") | .value.tip // empty" "$json_file" 2>/dev/null | head -1)
         [[ -n "$tip" ]] && echo "$tip" && return
 
         # Check cloud categories
