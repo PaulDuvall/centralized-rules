@@ -208,7 +208,7 @@
     },
     "testing": {
       "playwright": {
-        "keywords": ["playwright", "e2e", "end-to-end test", "browser test", "page object", "@playwright/test", "spec.ts"],
+        "keywords": ["playwright", "playright", "playwrite", "playwight", "e2e", "end-to-end test", "browser test", "page object", "@playwright/test", "spec.ts"],
         "rules": ["testing/playwright/best-practices"],
         "tip": "Use locators over selectors - resilient tests survive refactors"
       }
