@@ -64,26 +64,11 @@ jobs:
         run: |
           VERSION=${{ steps.version.outputs.version }}
 
-          # Create a clean directory for the release
-          mkdir -p release-staging
-
-          # Copy essential files for the release
-          cp -r base release-staging/
-          cp -r languages release-staging/
-          cp -r frameworks release-staging/
-          cp -r cloud release-staging/
-          cp -r testing release-staging/
-          cp -r tools release-staging/
-          cp -r lib release-staging/
-          cp -r .claude release-staging/
-          cp install-hooks.sh release-staging/
-          cp sync-ai-rules.sh release-staging/
-          cp README.md release-staging/
-          cp LICENSE release-staging/
-          cp CHANGELOG.md release-staging/
-
-          # Create tarball
-          tar -czvf "centralized-rules-${VERSION}.tar.gz" -C release-staging .
+          # Use git archive with .gitattributes export-ignore rules
+          # New rule directories are automatically included without
+          # updating this workflow — just add export-ignore for dev-only files
+          git archive --format=tar.gz --prefix=./ HEAD \
+            -o "centralized-rules-${VERSION}.tar.gz"
 
           # Copy standalone installer
           cp install-hooks.sh "install-hooks-${VERSION}.sh"
