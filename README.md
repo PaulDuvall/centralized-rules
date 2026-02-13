@@ -260,7 +260,7 @@ git add .claude/
 
 **Cloud:** AWS, Vercel
 
-**AI Tools:** Claude Code, Cursor, GitHub Copilot, Continue.dev, Windsurf, Cody, Gemini
+**AI Tools:** Claude Code, Cursor, GitHub Copilot, Gemini
 
 ## Contributing
 
