@@ -11,7 +11,7 @@ on:
         description: 'Node.js version to use'
         required: false
         type: string
-        default: '18'
+        default: '22'
       run-coverage:
         description: 'Run coverage report'
         required: false
