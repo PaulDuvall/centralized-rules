@@ -10,9 +10,9 @@ import { resetCache } from '../../../src/cache/rules-cache';
 // Mock Octokit
 vi.mock('@octokit/rest', () => {
   return {
-    Octokit: vi.fn().mockImplementation(() => ({
-      repos: {
-        getContent: vi.fn().mockImplementation(({ path }) => {
+    Octokit: class MockOctokit {
+      repos = {
+        getContent: vi.fn().mockImplementation(({ path }: { path: string }) => {
           const mockContent = `# ${path}\n\nThis is a test rule.`;
           const base64Content = Buffer.from(mockContent).toString('base64');
 
@@ -23,8 +23,8 @@ vi.mock('@octokit/rest', () => {
             },
           });
         }),
-      },
-    })),
+      };
+    },
   };
 });
 

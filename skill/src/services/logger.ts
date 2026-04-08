@@ -182,7 +182,7 @@ export class Logger {
         if (error instanceof Error) {
           parts.push(`error="${error.message}"`);
         } else {
-          parts.push(`error=${String(error)}`);
+          parts.push(`error=${JSON.stringify(error)}`);
         }
       }
 
