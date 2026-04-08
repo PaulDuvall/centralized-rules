@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-04-08
+
+### Fixed
+- Replaced all `curl | bash` install patterns with download-then-run (`curl -o` && `bash`) to prevent partial script execution on interrupted downloads
+- Added SHA256 checksum verification for release tarballs in install-hooks.sh
+
+---
+
 ## [0.2.0] - 2026-02-12
 
 ### Added
