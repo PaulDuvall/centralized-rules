@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Replaced all `curl | bash` install patterns with download-then-run (`curl -o` && `bash`) to prevent partial script execution on interrupted downloads
 - Added SHA256 checksum verification for release tarballs in install-hooks.sh
+- Upgraded `@typescript-eslint/*` v6 → v8 (fixes minimatch ReDoS CVEs)
+- Upgraded `vitest` v1 → v4 (fixes rollup path traversal, vite path traversal CVEs)
+- Upgraded `flatted` to 3.4.2 (fixes prototype pollution CVE)
+- Upgraded `picomatch` to 2.3.2 (fixes method injection CVE)
 
 ---
 
