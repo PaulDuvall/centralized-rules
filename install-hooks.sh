@@ -6,7 +6,7 @@
 # for Claude Code CLI. Idempotent - safe to run multiple times.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
 #
 # Behavior:
 #   - Downloads from latest GitHub release (stable)
@@ -275,11 +275,11 @@ detect_existing_installation() {
         echo ""
         echo "  # Keep global only (recommended for all projects):"
         echo "  rm .claude/settings.json"
-        echo "  curl -fsSL ... | bash"
+        echo "  bash install-hooks.sh"
         echo ""
         echo "  # Keep local only (for this project):"
         echo "  rm ~/.claude/settings.json"
-        echo "  curl -fsSL ... | bash -s -- --local"
+        echo "  bash install-hooks.sh --local"
         echo ""
         exit 1
     fi
@@ -348,6 +348,43 @@ find_rules_repo() {
             error "Check that the version exists: https://github.com/${GITHUB_REPO}/releases"
         fi
         exit 1
+    fi
+
+    # Verify SHA256 checksum for release versions
+    if [[ "$INSTALL_VERSION" != "edge" ]] && [[ "$INSTALL_VERSION" != "commit" ]]; then
+        local checksums_file="${CLEANUP_DIR}/checksums.txt"
+        local checksums_url="https://github.com/${GITHUB_REPO}/releases/download/${INSTALL_VERSION}/checksums.txt"
+
+        if download_file "$checksums_url" "$checksums_file" 2>/dev/null; then
+            local expected_checksum
+            expected_checksum=$(grep "centralized-rules-${INSTALL_VERSION}.tar.gz" "$checksums_file" | awk '{print $1}')
+
+            if [[ -n "$expected_checksum" ]]; then
+                local actual_checksum
+                if command -v sha256sum >/dev/null 2>&1; then
+                    actual_checksum=$(sha256sum "$tarball" | awk '{print $1}')
+                elif command -v shasum >/dev/null 2>&1; then
+                    actual_checksum=$(shasum -a 256 "$tarball" | awk '{print $1}')
+                fi
+
+                if [[ -n "$actual_checksum" ]]; then
+                    if [[ "$actual_checksum" != "$expected_checksum" ]]; then
+                        error "Checksum verification FAILED"
+                        error "Expected: $expected_checksum"
+                        error "Actual:   $actual_checksum"
+                        error "The downloaded file may have been tampered with."
+                        exit 1
+                    fi
+                    success "SHA256 checksum verified"
+                else
+                    warning "No SHA256 tool available - skipping checksum verification"
+                fi
+            else
+                warning "No checksum found for tarball - skipping verification"
+            fi
+        else
+            warning "Could not download checksums.txt - skipping verification"
+        fi
     fi
 
     # Extract tarball

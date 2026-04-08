@@ -103,10 +103,10 @@ Installation is one command, and it's idempotent (safe to run multiple times):
 
 ```bash
 # Global installation (all projects)
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
 
-# Project-specific installation
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --local
+# Or project-specific installation
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --local
 ```
 
 That's it. The installer:
@@ -188,7 +188,7 @@ For enterprise-wide rollout, fork the repository and point installations to your
 
 ```bash
 export RULES_REPO="https://raw.githubusercontent.com/your-org/centralized-rules/main"
-curl -fsSL $RULES_REPO/install-hooks.sh | bash -s -- --global
+curl -fsSL $RULES_REPO/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global
 ```
 
 ## Versioning
@@ -201,21 +201,21 @@ By default, installations pull from the latest stable GitHub release:
 
 ```bash
 # Install latest stable release (default)
-curl -fsSL https://github.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh | bash
+curl -fsSL https://github.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
 ```
 
 Pin to a specific version for reproducible builds:
 
 ```bash
 # Install specific version
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --version v0.1.0
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --version v0.1.0
 ```
 
 For developers testing new features before release:
 
 ```bash
 # Install from main branch (bleeding edge)
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --edge
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --edge
 ```
 
 ### Version Strategy

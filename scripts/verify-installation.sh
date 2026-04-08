@@ -64,7 +64,7 @@ if [[ -f "$GLOBAL_HOOK_SCRIPT" ]]; then
     fi
 else
     print_fail "Global hook script not found"
-    print_info "Run: curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global"
+    print_info "Run: curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global"
 fi
 
 if [[ -f "$GLOBAL_SETTINGS" ]]; then
@@ -254,7 +254,7 @@ else
     echo -e "${RED}✗ Critical installation issues detected${NC}"
     echo ""
     echo "Common fixes:"
-    echo "  1. Re-run installation: curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global"
+    echo "  1. Re-run installation: curl -fsSL ...install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global"
     echo "  2. Check file permissions: chmod +x ~/.claude/hooks/activate-rules.sh"
     echo "  3. Restart Claude Code"
     exit 1

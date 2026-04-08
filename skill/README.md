@@ -20,7 +20,7 @@ A Claude skill that intelligently detects your project's language, framework, an
 ### Quick Install (Recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/skill/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/skill/install.sh -o install.sh && bash install.sh
 ```
 
 This will:

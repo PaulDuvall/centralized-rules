@@ -15,7 +15,7 @@ Progressive disclosure framework for AI coding tools. Loads only relevant develo
 Install globally:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global
 ```
 
 Start coding - rules load automatically.

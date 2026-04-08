@@ -72,7 +72,7 @@ git push origin v0.2.0
    - `checksums.txt`
 4. Test installation from release:
    ```bash
-   curl -fsSL https://github.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh | bash
+   curl -fsSL https://github.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
    ```
 
 ## Hotfix Process
@@ -147,8 +147,8 @@ Ensure users are installing from releases:
 
 ```bash
 # Correct (from releases)
-curl -fsSL https://github.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh | bash
+curl -fsSL https://github.com/paulduvall/centralized-rules/releases/latest/download/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
 
 # For bleeding edge (developers only)
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --edge
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --edge
 ```

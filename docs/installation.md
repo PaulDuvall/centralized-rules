@@ -11,8 +11,10 @@
 Install once, apply to all projects:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --global
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global
 ```
+
+The script is downloaded to disk before execution (not piped to bash). The installer verifies SHA256 checksums for release tarballs automatically.
 
 Adds hook to Claude Code global settings. Every project gets automatic rule loading.
 
@@ -22,7 +24,7 @@ Install to specific project:
 
 ```bash
 cd /path/to/your/project
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
 ```
 
 Creates `.claude/` directory structure with hooks and cached rules.
@@ -66,7 +68,7 @@ Create `.ai/sync-config.json`:
 
 ```bash
 export AI_RULES_REPO="https://raw.githubusercontent.com/your-org/your-rules/main"
-curl -fsSL $AI_RULES_REPO/install-hooks.sh | bash -s -- --global
+curl -fsSL $AI_RULES_REPO/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global
 ```
 
 ## Troubleshooting

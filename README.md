@@ -18,15 +18,17 @@ Progressive disclosure framework for AI coding tools. Loads only relevant develo
 **Installation (one command, idempotent):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh
 ```
 
-This installs globally (all projects). Safe to run multiple times - it updates in place.
+This installs globally (all projects). Safe to run multiple times - it updates in place. The installer verifies SHA256 checksums on downloaded release tarballs.
+
+> **Security note:** The script is downloaded to disk before execution — not piped directly to bash. You can inspect `install-hooks.sh` before running it.
 
 **For project-specific installation:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --local
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --local
 ```
 
 **Idempotent behavior:**
@@ -40,13 +42,13 @@ No prompts, no conflicts, just works.
 
 ```bash
 # Install specific version
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --version v0.1.0
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --version v0.1.0
 
 # Pin to specific commit SHA
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --commit abc1234
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --commit abc1234
 
 # Install from main branch (developers/testing)
-curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh | bash -s -- --edge
+curl -fsSL https://raw.githubusercontent.com/paulduvall/centralized-rules/main/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --edge
 ```
 
 ### What You'll See
@@ -235,7 +237,7 @@ Changes take effect immediately.
 **Fork repository:**
 ```bash
 export RULES_REPO="https://raw.githubusercontent.com/your-org/centralized-rules/main"
-curl -fsSL $RULES_REPO/install-hooks.sh | bash -s -- --global
+curl -fsSL $RULES_REPO/install-hooks.sh -o install-hooks.sh && bash install-hooks.sh --global
 ```
 
 **Commit to projects:**
