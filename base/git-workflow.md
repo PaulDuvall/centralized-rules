@@ -78,11 +78,11 @@ git commit -m "fix stuff"
 ## Development Workflow
 
 ```
-1. Start task
+1. Pull latest `main`
 2. Write code (small increment)
 3. Run tests
 4. Tests pass? → Commit
-5. Push to remote
+5. Push to `main`
 6. Repeat 2-5 until task complete
 ```
 
@@ -98,23 +98,29 @@ git commit -m "fix stuff"
 
 ## Branch Strategy
 
-### Main Branches
-- `main` - Production-ready code
-- `develop` - Integration branch (optional)
+**Default: trunk-based. Commit and push directly to `main`.** Do not create a
+feature branch or open a PR unless one is explicitly requested, the change
+genuinely needs isolation (long-running or risky work), or the repo's branch
+protection requires a PR.
 
-### Feature Branches
-- Create from `main` or `develop`
-- Name format: `feature/description` or `fix/description`
-- Keep short-lived (1-3 days max)
-- Delete after merging
+### Main Branch
+- `main` - the trunk; production-ready, and the default target for commits and pushes
+
+### Feature Branches (only when needed)
+Use a short-lived branch only when the change needs isolation or a PR is required:
+- Create from `main`; name `feature/description` or `fix/description`
+- Keep short-lived (1-3 days max); delete after merging
 
 ```bash
-git checkout main
+# Default flow — straight to main
 git pull origin main
-git checkout -b feature/dynamic-categories
 # ... work and commit frequently ...
-git push origin feature/dynamic-categories
-# Create PR when ready
+git push origin main
+
+# Only when isolation or a PR is required
+git checkout -b feature/dynamic-categories
+# ... work and commit ...
+git push origin feature/dynamic-categories   # then open a PR
 ```
 
 ## Pre-Push Checklist
@@ -130,7 +136,7 @@ git push origin feature/dynamic-categories
 
 ### During Task Execution
 
-1. **Start task** → Create feature branch (if needed)
+1. **Start task** → Pull latest `main` (work on `main` by default)
 2. **Write code** → Commit small increments
 3. **Write tests** → Commit tests separately
 4. **Fix issues** → Commit fixes
