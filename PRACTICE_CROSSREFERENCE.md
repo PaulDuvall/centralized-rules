@@ -49,6 +49,14 @@ This document provides bidirectional mapping between best practices and their im
   - `base/12-factor-app.md` - Cloud-native architecture
   - All framework best practices - Framework-specific architecture
 
+#### Agent-Testable Architecture
+- **Practice:** Walking skeleton, CI-enforced domain import ban, dual HTTP/CLI front doors, CLI as agent test harness
+- **Files:**
+  - `base/agent-testable-architecture.md` - The four rules and their verification
+  - `base/architecture-principles.md` - Tracer bullets and hexagonal architecture
+  - `base/tool-design.md` - CLI ergonomics the harness builds on
+  - `base/cicd-comprehensive.md` - Pipeline the walking skeleton runs through
+
 #### 12-Factor App
 - **Practice:** Cloud-native application design, config, backing services
 - **Files:**
@@ -192,6 +200,13 @@ This document provides bidirectional mapping between best practices and their im
 - Clean Architecture
 - Microservices patterns
 - Event-driven architecture
+
+#### `base/agent-testable-architecture.md`
+- Walking skeleton (deploy on day 1)
+- Domain imports no I/O (CI-enforced)
+- Dual front doors (HTTP + CLI)
+- CLI as agent test harness
+- Agent-discovered edge cases traced to acceptance tests
 
 #### `base/12-factor-app.md`
 - Codebase (one codebase, many deploys)

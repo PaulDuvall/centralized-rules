@@ -131,6 +131,7 @@ load_base_rules() {
         "base/architecture-principles.md"
         "base/12-factor-app.md"
         "base/specification-driven-development.md"
+        "base/agent-testable-architecture.md"
 
         # Security & operations
         "base/security-principles.md"

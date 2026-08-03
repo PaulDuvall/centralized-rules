@@ -137,6 +137,7 @@ Language-agnostic, framework-agnostic, always applicable:
 - architecture-principles.md
 - 12-factor-app.md
 - specification-driven-development.md
+- agent-testable-architecture.md
 
 **Security & Operations:**
 - security-principles.md
@@ -270,7 +271,7 @@ See `base/project-maturity-levels.md` and maturity indicators in each base rule 
 ```
 centralized-rules/
 │
-├── base/                          # Universal rules (23 files)
+├── base/                          # Universal rules (25 files)
 │   ├── git-workflow.md
 │   ├── code-quality.md
 │   ├── testing-philosophy.md
@@ -280,7 +281,7 @@ centralized-rules/
 │   ├── project-maturity-levels.md
 │   ├── ai-assisted-development.md
 │   ├── chaos-engineering.md
-│   └── ... (14 more)
+│   └── ... (16 more)
 │
 ├── languages/                     # Language-specific rules
 │   ├── python/

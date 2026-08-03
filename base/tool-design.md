@@ -374,6 +374,11 @@ def list(resource, format, output):
 # $ mytool list users --format json | jq '.[] | select(.role=="admin")'
 ```
 
+**When the CLI is an agent's test harness,** structured output stops being a convenience
+and becomes the contract: `--json` on every command, distinct exit codes per failure
+class, no interactive prompts. See `base/agent-testable-architecture.md` Rule 4 for the
+full property table.
+
 ---
 
 ## Error Handling and User Experience
@@ -447,6 +452,7 @@ def deploy_with_progress(environment):
 - See `base/operations-automation.md` for automation best practices
 - See `base/development-workflow.md` for developer experience
 - See `base/cicd-comprehensive.md` for CI/CD tooling
+- See `base/agent-testable-architecture.md` for designing the CLI as an agent test harness
 
 ---
 

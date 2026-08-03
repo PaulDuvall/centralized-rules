@@ -114,6 +114,7 @@ nav:
       - CI/CD Comprehensive: base/cicd-comprehensive.md
       - AI-Assisted Development: base/ai-assisted-development.md
       - Architecture Principles: base/architecture-principles.md
+      - Agent-Testable Architecture: base/agent-testable-architecture.md
       - 12-Factor App: base/12-factor-app.md
       - Refactoring Patterns: base/refactoring-patterns.md
       - Configuration Management: base/configuration-management.md

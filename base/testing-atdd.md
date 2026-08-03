@@ -416,6 +416,7 @@ Scenario: Cancel with advance notice
 
 - `base/testing-philosophy.md` - Overall testing strategy
 - `base/specification-driven-development.md` - Spec-driven approach
+- `base/agent-testable-architecture.md` - Promoting agent-discovered edge cases into acceptance tests
 - `languages/python/testing.md` - pytest-bdd examples
 - `languages/typescript/testing.md` - Cucumber.js examples
 - **Cucumber:** https://cucumber.io/docs/

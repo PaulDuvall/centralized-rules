@@ -103,7 +103,7 @@ Hook script runs on every prompt:
 
 ```
 centralized-rules/
-├── base/          # 23 universal rules (all projects)
+├── base/          # 25 universal rules (all projects)
 ├── languages/     # 6+ languages (Python, TypeScript, Go, Java, C#, Rust)
 ├── frameworks/    # 12+ frameworks (React, Django, FastAPI, Spring Boot, etc.)
 └── cloud/         # Cloud providers (AWS, Vercel)

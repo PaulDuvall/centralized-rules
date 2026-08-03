@@ -137,6 +137,10 @@ class OrderService:
         self.repository = repository
 ```
 
+**Enforce the boundary in CI, not code review.** See `base/agent-testable-architecture.md`
+Rule 2 for the per-layer import table and the import-linter contract that fails the build
+when domain code imports an SDK, ORM, or HTTP client.
+
 ### Package by Feature, Not Layer
 
 ```
@@ -304,6 +308,14 @@ Goal: Build on proven foundation
 | Touch all layers | Skip layers |
 | Test end-to-end | Skip integration validation |
 
+### Tracer Bullet vs Walking Skeleton
+
+A tracer bullet proves the **architecture** works end to end. A walking skeleton proves
+the **delivery pipeline** works end to end — commit to hosted deploy, unattended. Build
+them as one slice: the tracer bullet is what the pipeline deploys on day 1. See
+`base/agent-testable-architecture.md` Rule 1 for the pipeline, hosted-environment, and
+timebox requirements.
+
 ---
 
 ## AI/ML Architecture
@@ -403,3 +415,4 @@ Use PostgreSQL as primary relational database.
 - `base/refactoring-patterns.md` - Improvement techniques
 - `base/code-quality.md` - Quality standards
 - `base/lean-development.md` - Progressive Enhancement vs Tracer Bullets
+- `base/agent-testable-architecture.md` - Walking skeleton, CI-enforced import ban, dual front doors

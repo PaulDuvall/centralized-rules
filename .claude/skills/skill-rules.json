@@ -99,9 +99,15 @@
         "tip": "Refactor ruthlessly - simple code is maintainable code"
       },
       "architecture": {
-        "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer", "tracer bullet", "tracer", "bullet", "steel thread", "walking skeleton", "end-to-end", "vertical slice"],
+        "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer", "tracer bullet", "tracer", "bullet", "steel thread", "walking skeleton", "end-to-end", "vertical slice", "hexagonal", "ports and adapters"],
         "rules": ["base/architecture-principles", "base/12-factor-app"],
         "tip": "Design for change - make it easy to evolve"
+      },
+      "agent_testability": {
+        "keywords": ["walking skeleton", "agent-testable", "agent testable", "ports and adapters", "hexagonal", "front door", "front doors", "cli harness", "agent harness", "test harness", "import linter", "import-linter", "agent-driven cli", "domain purity"],
+        "rules": ["base/agent-testable-architecture"],
+        "description": "Detects work on deploy-first skeletons, domain/adapter boundaries, and CLI surfaces agents drive",
+        "tip": "Deploy on day 1, keep I/O out of the domain, give every use case a CLI door"
       },
       "metrics": {
         "keywords": ["metric", "monitoring", "observability", "logging", "tracing", "alert", "dashboard", "prometheus", "grafana"],
