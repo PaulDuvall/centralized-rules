@@ -1,9 +1,6 @@
 
-# Use bd merge for beads JSONL files
-.beads/issues.jsonl merge=beads
-
 # Exclude from release archives (git archive)
-.beads/             export-ignore
+.tasks/             export-ignore
 .github/            export-ignore
 .gitattributes      export-ignore
 .gitignore          export-ignore

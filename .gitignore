@@ -69,3 +69,6 @@ site/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Local beads Dolt database, retained for recovery after the 2026-08-17 migration
+.beads/
