@@ -65,6 +65,6 @@ Auto-detects Claude Code via:
 
 ## Related Documentation
 
-- [Claude Code Hierarchical Rules](https://docs.anthropic.com/claude-code/rules)
+- [Claude Code Hierarchical Rules](https://code.claude.com/docs/en/memory)
 - [Progressive Disclosure Architecture](../../ARCHITECTURE.md)
 - [Performance Validation](../../ARCHITECTURE.md#performance--validation)
