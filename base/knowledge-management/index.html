@@ -71,7 +71,7 @@
 </span><span id=__span-5-2><a id=__codelineno-5-2 name=__codelineno-5-2 href=#__codelineno-5-2></a>    User[User] --&gt; System[Our Application]
 </span><span id=__span-5-3><a id=__codelineno-5-3 name=__codelineno-5-3 href=#__codelineno-5-3></a>    System --&gt; External1[External Service]
 </span></code></pre></div></p> <p><strong>Level 2 - Container:</strong> <div class="language-text highlight"><pre><span></span><code><span id=__span-6-1><a id=__codelineno-6-1 name=__codelineno-6-1 href=#__codelineno-6-1></a>graph TB
-</span><span id=__span-6-2><a id=__codelineno-6-2 name=__codelineno-6-2 href=#__codelineno-6-2></a>    subgraph &quot;Our Application&quot;
+</span><span id=__span-6-2><a id=__codelineno-6-2 name=__codelineno-6-2 href=#__codelineno-6-2></a>    subgraph "Our Application"
 </span><span id=__span-6-3><a id=__codelineno-6-3 name=__codelineno-6-3 href=#__codelineno-6-3></a>        Web[Web App&lt;br/&gt;Tech Stack]
 </span><span id=__span-6-4><a id=__codelineno-6-4 name=__codelineno-6-4 href=#__codelineno-6-4></a>        API[API&lt;br/&gt;Tech Stack]
 </span><span id=__span-6-5><a id=__codelineno-6-5 name=__codelineno-6-5 href=#__codelineno-6-5></a>        DB[(Database)]
@@ -103,14 +103,14 @@
 </span><span id=__span-10-2><a id=__codelineno-10-2 name=__codelineno-10-2 href=#__codelineno-10-2></a><span class=kn>from</span><span class=w> </span><span class=nn>dataclasses</span><span class=w> </span><span class=kn>import</span> <span class=n>dataclass</span>
 </span><span id=__span-10-3><a id=__codelineno-10-3 name=__codelineno-10-3 href=#__codelineno-10-3></a>
 </span><span id=__span-10-4><a id=__codelineno-10-4 name=__codelineno-10-4 href=#__codelineno-10-4></a><span class=k>class</span><span class=w> </span><span class=nc>PaymentProcessor</span><span class=p>(</span><span class=n>Protocol</span><span class=p>):</span>
-</span><span id=__span-10-5><a id=__codelineno-10-5 name=__codelineno-10-5 href=#__codelineno-10-5></a><span class=w>    </span><span class=sd>&quot;&quot;&quot;Payment processing interface.</span>
+</span><span id=__span-10-5><a id=__codelineno-10-5 name=__codelineno-10-5 href=#__codelineno-10-5></a><span class=w>    </span><span class=sd>"""Payment processing interface.</span>
 </span><span id=__span-10-6><a id=__codelineno-10-6 name=__codelineno-10-6 href=#__codelineno-10-6></a>
 </span><span id=__span-10-7><a id=__codelineno-10-7 name=__codelineno-10-7 href=#__codelineno-10-7></a><span class=sd>    All payment providers must implement this interface.</span>
 </span><span id=__span-10-8><a id=__codelineno-10-8 name=__codelineno-10-8 href=#__codelineno-10-8></a><span class=sd>    See: docs/billing/payment-processing.md</span>
-</span><span id=__span-10-9><a id=__codelineno-10-9 name=__codelineno-10-9 href=#__codelineno-10-9></a><span class=sd>    &quot;&quot;&quot;</span>
+</span><span id=__span-10-9><a id=__codelineno-10-9 name=__codelineno-10-9 href=#__codelineno-10-9></a><span class=sd>    """</span>
 </span><span id=__span-10-10><a id=__codelineno-10-10 name=__codelineno-10-10 href=#__codelineno-10-10></a>
 </span><span id=__span-10-11><a id=__codelineno-10-11 name=__codelineno-10-11 href=#__codelineno-10-11></a>    <span class=k>def</span><span class=w> </span><span class=nf>charge</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>amount</span><span class=p>:</span> <span class=n>Money</span><span class=p>,</span> <span class=n>source</span><span class=p>:</span> <span class=n>PaymentSource</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>PaymentResult</span><span class=p>:</span>
-</span><span id=__span-10-12><a id=__codelineno-10-12 name=__codelineno-10-12 href=#__codelineno-10-12></a><span class=w>        </span><span class=sd>&quot;&quot;&quot;Charge a payment source.</span>
+</span><span id=__span-10-12><a id=__codelineno-10-12 name=__codelineno-10-12 href=#__codelineno-10-12></a><span class=w>        </span><span class=sd>"""Charge a payment source.</span>
 </span><span id=__span-10-13><a id=__codelineno-10-13 name=__codelineno-10-13 href=#__codelineno-10-13></a>
 </span><span id=__span-10-14><a id=__codelineno-10-14 name=__codelineno-10-14 href=#__codelineno-10-14></a><span class=sd>        Args:</span>
 </span><span id=__span-10-15><a id=__codelineno-10-15 name=__codelineno-10-15 href=#__codelineno-10-15></a><span class=sd>            amount: Amount to charge (must be positive)</span>
@@ -122,16 +122,16 @@
 </span><span id=__span-10-21><a id=__codelineno-10-21 name=__codelineno-10-21 href=#__codelineno-10-21></a><span class=sd>        Raises:</span>
 </span><span id=__span-10-22><a id=__codelineno-10-22 name=__codelineno-10-22 href=#__codelineno-10-22></a><span class=sd>            PaymentDeclined: If payment is declined</span>
 </span><span id=__span-10-23><a id=__codelineno-10-23 name=__codelineno-10-23 href=#__codelineno-10-23></a><span class=sd>            InvalidPaymentSource: If source is invalid</span>
-</span><span id=__span-10-24><a id=__codelineno-10-24 name=__codelineno-10-24 href=#__codelineno-10-24></a><span class=sd>        &quot;&quot;&quot;</span>
+</span><span id=__span-10-24><a id=__codelineno-10-24 name=__codelineno-10-24 href=#__codelineno-10-24></a><span class=sd>        """</span>
 </span><span id=__span-10-25><a id=__codelineno-10-25 name=__codelineno-10-25 href=#__codelineno-10-25></a>        <span class=o>...</span>
 </span><span id=__span-10-26><a id=__codelineno-10-26 name=__codelineno-10-26 href=#__codelineno-10-26></a>
 </span><span id=__span-10-27><a id=__codelineno-10-27 name=__codelineno-10-27 href=#__codelineno-10-27></a><span class=nd>@dataclass</span>
 </span><span id=__span-10-28><a id=__codelineno-10-28 name=__codelineno-10-28 href=#__codelineno-10-28></a><span class=k>class</span><span class=w> </span><span class=nc>Money</span><span class=p>:</span>
-</span><span id=__span-10-29><a id=__codelineno-10-29 name=__codelineno-10-29 href=#__codelineno-10-29></a><span class=w>    </span><span class=sd>&quot;&quot;&quot;Monetary amount with currency.</span>
+</span><span id=__span-10-29><a id=__codelineno-10-29 name=__codelineno-10-29 href=#__codelineno-10-29></a><span class=w>    </span><span class=sd>"""Monetary amount with currency.</span>
 </span><span id=__span-10-30><a id=__codelineno-10-30 name=__codelineno-10-30 href=#__codelineno-10-30></a>
 </span><span id=__span-10-31><a id=__codelineno-10-31 name=__codelineno-10-31 href=#__codelineno-10-31></a><span class=sd>    Use this instead of raw floats to avoid currency mismatch</span>
 </span><span id=__span-10-32><a id=__codelineno-10-32 name=__codelineno-10-32 href=#__codelineno-10-32></a><span class=sd>    and precision issues.</span>
-</span><span id=__span-10-33><a id=__codelineno-10-33 name=__codelineno-10-33 href=#__codelineno-10-33></a><span class=sd>    &quot;&quot;&quot;</span>
+</span><span id=__span-10-33><a id=__codelineno-10-33 name=__codelineno-10-33 href=#__codelineno-10-33></a><span class=sd>    """</span>
 </span><span id=__span-10-34><a id=__codelineno-10-34 name=__codelineno-10-34 href=#__codelineno-10-34></a>    <span class=n>amount</span><span class=p>:</span> <span class=n>Decimal</span>
 </span><span id=__span-10-35><a id=__codelineno-10-35 name=__codelineno-10-35 href=#__codelineno-10-35></a>    <span class=n>currency</span><span class=p>:</span> <span class=nb>str</span>  <span class=c1># ISO 4217 code (USD, EUR, etc.)</span>
 </span></code></pre></div></p> <h3 id=decision-log-template>Decision Log Template<a class=headerlink href=#decision-log-template title="Permanent link">&para;</a></h3> <div class="language-markdown highlight"><pre><span></span><code><span id=__span-11-1><a id=__codelineno-11-1 name=__codelineno-11-1 href=#__codelineno-11-1></a><span class=gh># Decision Log</span>
@@ -149,7 +149,7 @@
 </span><span id=__span-12-5><a id=__codelineno-12-5 name=__codelineno-12-5 href=#__codelineno-12-5></a>
 </span><span id=__span-12-6><a id=__codelineno-12-6 name=__codelineno-12-6 href=#__codelineno-12-6></a><span class=gu>## Current State</span>
 </span><span id=__span-12-7><a id=__codelineno-12-7 name=__codelineno-12-7 href=#__codelineno-12-7></a><span class=k>-</span><span class=w> </span>[Existing relevant code/files]
-</span><span id=__span-12-8><a id=__codelineno-12-8 name=__codelineno-12-8 href=#__codelineno-12-8></a><span class=k>-</span><span class=w> </span>[What doesn&#39;t exist yet]
+</span><span id=__span-12-8><a id=__codelineno-12-8 name=__codelineno-12-8 href=#__codelineno-12-8></a><span class=k>-</span><span class=w> </span>[What doesn't exist yet]
 </span><span id=__span-12-9><a id=__codelineno-12-9 name=__codelineno-12-9 href=#__codelineno-12-9></a>
 </span><span id=__span-12-10><a id=__codelineno-12-10 name=__codelineno-12-10 href=#__codelineno-12-10></a><span class=gu>## Requirements</span>
 </span><span id=__span-12-11><a id=__codelineno-12-11 name=__codelineno-12-11 href=#__codelineno-12-11></a><span class=k>-</span><span class=w> </span>[Requirement 1]
@@ -215,7 +215,7 @@
 </span><span id=__span-16-18><a id=__codelineno-16-18 name=__codelineno-16-18 href=#__codelineno-16-18></a>
 </span><span id=__span-16-19><a id=__codelineno-16-19 name=__codelineno-16-19 href=#__codelineno-16-19></a><span class=gu>## Commit</span>
 </span><span id=__span-16-20><a id=__codelineno-16-20 name=__codelineno-16-20 href=#__codelineno-16-20></a>SHA: [hash]
-</span><span id=__span-16-21><a id=__codelineno-16-21 name=__codelineno-16-21 href=#__codelineno-16-21></a>Message: &quot;[message]&quot;
+</span><span id=__span-16-21><a id=__codelineno-16-21 name=__codelineno-16-21 href=#__codelineno-16-21></a>Message: "[message]"
 </span></code></pre></div> <h3 id=knowledge-transfer-strategies>Knowledge Transfer Strategies<a class=headerlink href=#knowledge-transfer-strategies title="Permanent link">&para;</a></h3> <table> <thead> <tr> <th>Strategy</th> <th>Format</th> <th>When</th> </tr> </thead> <tbody> <tr> <td><strong>Pair Programming</strong></td> <td>Junior + AI, Senior + AI, Peer + Peer</td> <td>Active development</td> </tr> <tr> <td><strong>Code Review Comments</strong></td> <td>Explain why + context + learning resources</td> <td>All PRs</td> </tr> <tr> <td><strong>Weekly Knowledge Share</strong></td> <td>30-min TWIL (This Week I Learned)</td> <td>Every Friday</td> </tr> <tr> <td><strong>Session Notes</strong></td> <td>Structured notes after AI sessions</td> <td>End of each session</td> </tr> </tbody> </table> <h3 id=code-review-teaching-template>Code Review Teaching Template<a class=headerlink href=#code-review-teaching-template title="Permanent link">&para;</a></h3> <div class="language-markdown highlight"><pre><span></span><code><span id=__span-17-1><a id=__codelineno-17-1 name=__codelineno-17-1 href=#__codelineno-17-1></a>```diff
 </span><span id=__span-17-2><a id=__codelineno-17-2 name=__codelineno-17-2 href=#__codelineno-17-2></a><span class=k>-</span><span class=w> </span>[old code]
 </span><span id=__span-17-3><a id=__codelineno-17-3 name=__codelineno-17-3 href=#__codelineno-17-3></a>+ [new code]
