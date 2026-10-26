@@ -11,8 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `decisions` keyword category (`adr`, `adrs`, `madr`, `decision record`, `decision log`) routing to `base/knowledge-management`
 - `tests/test-keyword-routing.sh`: natural-language routing regression tests, run in the keyword validation CI job
 - ADR guidance in `base/knowledge-management.md`: when to write one, file naming, Proposed/Accepted/Rejected/Deprecated/Superseded lifecycle, superseding steps, and agent workflow rules
+- Mutation Testing section in `base/testing-philosophy.md`: score target by maturity, a mutmut 3.8.0 worked example (100% line and branch coverage, 44% mutation score), tools and CI gates for Python, TypeScript, Java, C#, Rust, and Go, changed-code CI modes, and survivor triage
 
 ### Changed
+- One mutation score target: 70%+ on changed code at production maturity. `base/testing-philosophy.md` previously said >80% and `SUCCESS_METRICS.md` said >70%
+- `SUCCESS_METRICS.md` PIT command now includes `test-compile`, as in the PIT Maven quickstart
 - `base/knowledge-management.md` holds the single ADR template. `base/architecture-principles.md` links to it instead of defining a second, shorter one
 
 ### Fixed

@@ -244,16 +244,16 @@ Flaky Rate = (Flaky tests) / (Total tests) * 100
 # JavaScript/TypeScript
 npx stryker run
 
-# Python
-mutmut run
+# Python (score in mutants/mutmut-cicd-stats.json)
+mutmut run && mutmut export-cicd-stats
 
 # Java
-mvn org.pitest:pitest-maven:mutationCoverage
+mvn test-compile org.pitest:pitest-maven:mutationCoverage
 ```
 
-**Target:** > 70%
+**Target:** 70%+ on changed code at production maturity. See `base/testing-philosophy.md` → Mutation Testing
 
-**Collection Frequency:** Weekly or bi-weekly
+**Collection Frequency:** Changed code on every PR, full run weekly
 
 **Trend:** ↗️ Should increase over time
 
