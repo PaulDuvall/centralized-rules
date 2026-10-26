@@ -360,24 +360,9 @@ class FeatureStore:
 
 ## Architectural Decision Records (ADRs)
 
-**Format:**
+Record decisions that are expensive to reverse or cross component boundaries as ADRs in `docs/architecture/adr/`.
 
-```markdown
-# ADR-001: Use PostgreSQL for Primary Database
-
-## Status
-Accepted
-
-## Context
-Need database for order management with ACID requirements.
-
-## Decision
-Use PostgreSQL as primary relational database.
-
-## Consequences
-**Positive:** Strong ACID guarantees, rich query capabilities
-**Negative:** Vertical scaling limitations, schema migration management
-```
+The single ADR template lives in `base/knowledge-management.md` → Architecture Decision Records. It also covers when to write one, file naming, and the status lifecycle (Proposed, Accepted, Rejected, Deprecated, Superseded).
 
 ---
 
@@ -403,3 +388,4 @@ Use PostgreSQL as primary relational database.
 - `base/refactoring-patterns.md` - Improvement techniques
 - `base/code-quality.md` - Quality standards
 - `base/lean-development.md` - Progressive Enhancement vs Tracer Bullets
+- `base/knowledge-management.md` - ADR template and lifecycle

@@ -21,33 +21,82 @@ Capture, organize, and transfer knowledge effectively to maximize productivity w
 
 | What | When | Format |
 |------|------|--------|
-| **Architecture Decisions** | After choosing technologies, patterns, or approaches | ADR (Status, Context, Decision, Consequences, Alternatives) |
+| **Architecture Decisions** | While choosing technologies, patterns, or approaches | ADR (see [Architecture Decision Records](#architecture-decision-records-adrs)) |
 | **Design Decisions** | When implementing patterns or solving technical problems | Design doc with examples (Bad vs Good code) |
 | **Bug Solutions** | After solving difficult bugs | Issue comment or doc with root cause |
 | **Learning** | When discovering non-obvious patterns | Short note in team wiki |
 | **Trade-offs** | During code reviews, design discussions | Decision log entry |
 
+### Architecture Decision Records (ADRs)
+
+This is the canonical ADR template. Other rule files link here instead of defining their own.
+
+**Write an ADR when the decision is:**
+- Expensive to reverse: data store, language, framework, public API shape, deployment model
+- Cross-cutting: affects more than one component, team, or service
+- A choice between real alternatives that a future reader will question
+
+Skip it for local, cheaply reversible choices. A code comment or PR description is enough.
+
+**Conventions:**
+
+| Item | Convention |
+|------|------------|
+| Location | `docs/architecture/adr/` |
+| File name | `NNNN-title-with-dashes.md`, e.g. `0007-use-postgresql-for-orders.md` |
+| Numbering | Sequential and never reused, including for Rejected ADRs |
+| Title | Short noun phrase: `ADR-0007: Use PostgreSQL for Orders` |
+| Mutability | Once Accepted, only the Status line changes. Revise a decision by superseding it |
+
+**Status lifecycle:**
+
+| Status | Meaning | Can move to |
+|--------|---------|-------------|
+| Proposed | Under review, usually in the PR that introduces it | Accepted, Rejected |
+| Accepted | In force | Deprecated, Superseded |
+| Rejected | Considered and declined. Keep the file so the question is not reopened without new context | (final) |
+| Deprecated | No longer applies and nothing replaces it | (final) |
+| Superseded by ADR-NNNN | Replaced by a newer ADR. Both files link to each other | (final) |
+
 ### ADR Template
 
 ```markdown
-# ADR-001: [Decision Title]
+# ADR-NNNN: [Decision Title]
 
 ## Status
-[Accepted|Rejected|Deprecated] - YYYY-MM-DD
+[Proposed | Accepted | Rejected | Deprecated | Superseded by ADR-NNNN] - YYYY-MM-DD
 
 ## Context
-[Problem, requirements, constraints]
+[Problem, forces, and constraints. State facts without advocating]
 
 ## Decision
-[What we decided]
+[What we will do, in active voice: "We will ..."]
 
 ## Consequences
 **Positive:** [Benefits]
-**Negative:** [Trade-offs]
+**Negative:** [Costs and trade-offs we accept]
+**Neutral:** [Other effects the team must live with]
 
 ## Alternatives Considered
-[What we rejected and why]
+| Option | Why not chosen |
+|--------|----------------|
+| [Option] | [Reason] |
+
+## Related
+- Supersedes: [ADR-NNNN, or none]
+- Links: [Issue, PR, spec, diagram]
 ```
+
+**Superseding a decision:**
+1. Write the new ADR with `Supersedes: ADR-0007` under Related.
+2. In the old ADR, change only the Status to `Superseded by ADR-0012 - YYYY-MM-DD`. Leave the body intact. It records why the old decision made sense at the time.
+
+**ADRs in review and AI workflows:**
+- Commit the ADR in the same PR as the change it governs. It is Proposed during review and Accepted in the merged version.
+- Link `docs/architecture/adr/` from `CLAUDE.md` or `.context/README.md` so agents read Accepted decisions before proposing changes.
+- When a proposed change contradicts an Accepted ADR, the agent drafts a superseding ADR for human review. It does not silently diverge from the recorded decision.
+
+**Tooling (optional):** [adr-tools](https://github.com/npryce/adr-tools) scripts the lifecycle: `adr init docs/architecture/adr`, `adr new Title`, and `adr new -s 7 Title` to supersede ADR 7. [MADR](https://adr.github.io/madr/) offers a longer template with decision drivers and per-option pros and cons. The format originates in [Nygard, 2011](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
 
 ### Design Decision Template
 

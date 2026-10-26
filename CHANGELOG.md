@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `decisions` keyword category (`adr`, `adrs`, `madr`, `decision record`, `decision log`) routing to `base/knowledge-management`
 - `tests/test-keyword-routing.sh`: natural-language routing regression tests, run in the keyword validation CI job
+- ADR guidance in `base/knowledge-management.md`: when to write one, file naming, Proposed/Accepted/Rejected/Deprecated/Superseded lifecycle, superseding steps, and agent workflow rules
+
+### Changed
+- `base/knowledge-management.md` holds the single ADR template. `base/architecture-principles.md` links to it instead of defining a second, shorter one
 
 ### Fixed
 - Prompts using "tests" or "testing" no longer miss `base/testing-philosophy`. `test` is word-bounded (4 chars or fewer), so only the bare word matched
