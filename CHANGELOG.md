@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `decisions` keyword category (`adr`, `adrs`, `madr`, `decision record`, `decision log`) routing to `base/knowledge-management`
+- `tests/test-keyword-routing.sh`: natural-language routing regression tests, run in the keyword validation CI job
+
+### Fixed
+- Prompts using "tests" or "testing" no longer miss `base/testing-philosophy`. `test` is word-bounded (4 chars or fewer), so only the bare word matched
+- Mutation and property-based testing prompts now route to `base/testing-philosophy` (`mutation score`, `mutant`, `mutmut`, `stryker`, `pitest`, `property-based`, `hypothesis`, `fast-check`, `proptest`)
+- `scripts/test-keyword-validation.sh` probe prompt began with "Test", so every `base/testing` keyword passed regardless of routing
+
 ---
 
 ## [0.2.1] - 2026-04-08
