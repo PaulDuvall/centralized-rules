@@ -194,8 +194,9 @@ test_keyword() {
 
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
 
-    # Create test prompt with the keyword
-    local test_prompt="Test with keyword: $keyword"
+    # Create test prompt with the keyword. The prefix must match no keyword
+    # itself, or every keyword in that category passes regardless of routing.
+    local test_prompt="Help me with: $keyword"
     local test_input="{\"prompt\":\"$test_prompt\"}"
 
     # For language categories, create a temp directory with definitive files

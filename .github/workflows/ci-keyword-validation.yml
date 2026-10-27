@@ -31,6 +31,11 @@ jobs:
           exit ${PIPESTATUS[0]}
         continue-on-error: true
 
+      - name: Run natural-language routing tests
+        run: |
+          chmod +x tests/test-keyword-routing.sh
+          ./tests/test-keyword-routing.sh
+
       - name: Parse test results
         if: always()
         id: parse

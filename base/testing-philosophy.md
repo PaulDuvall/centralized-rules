@@ -376,6 +376,118 @@ go tool cover -html=coverage.out
 
 ---
 
+## Mutation Testing
+
+Coverage shows which lines ran. Mutation testing shows whether the tests would notice if those lines were wrong. The tool makes small edits (mutants) to production code and reruns the tests. A test failure **kills** the mutant. A mutant that passes every test **survived**, which points to a missing or weak assertion.
+
+**Mutation score** = killed mutants / total mutants. Tools count timeouts and uncovered code differently, so compare scores from the same tool only.
+
+### Score Target
+
+| Project Stage | Mutation Testing | Gate |
+|--------------|------------------|------|
+| MVP/POC | Not needed | None |
+| Pre-Production | Optional | Report only |
+| Production | Recommended | 70%+ on changed code. The build fails below it |
+
+Do not target 100%. Some mutants are **equivalent**: they change the code but not its behavior, so no test can kill them. Example: `i < n` → `i != n` in a loop that counts up by 1 from 0, when `n` is never negative.
+
+### Coverage Is Not Enough: Worked Example
+
+```python
+def apply_discount(total: float, threshold: float = 100.0) -> float:
+    """10% off orders at or above the threshold."""
+    if total >= threshold:
+        return round(total * 0.9, 2)
+    return total
+
+def test_large_order_gets_discount():
+    assert apply_discount(200.0) == 180.0
+
+def test_small_order_pays_full_price():
+    assert apply_discount(50.0) == 50.0
+```
+
+Line and branch coverage are both 100%. mutmut 3.8.0 kills 4 of 9 mutants (44%). The survivors:
+
+| Mutant | Why It Survived |
+|--------|-----------------|
+| `total >= threshold` → `total > threshold` | No test at the boundary value |
+| `threshold = 100.0` → `threshold = 101.0` | Same gap: nothing tests exactly 100 |
+| `round(x, 2)` → `round(x, 3)`, `round(x, None)`, `round(x)` | Test inputs produce whole numbers, so rounding is never checked |
+
+Two tests kill all five, for 9 of 9:
+
+```python
+def test_discount_applies_at_exact_threshold():
+    assert apply_discount(100.0) == 90.0
+
+def test_discount_rounds_to_cents():
+    assert apply_discount(100.01) == 90.01
+```
+
+### Tools by Language
+
+| Language | Tool | Run | Fail the Build Below Threshold |
+|----------|------|-----|--------------------------------|
+| Python | mutmut | `mutmut run` | No built-in gate. `mutmut run` exits 0 even when mutants survive. Use `mutmut export-cicd-stats` (see CI example below) |
+| TypeScript/JavaScript | StrykerJS | `npx stryker run` | `"thresholds": { "high": 80, "low": 60, "break": 70 }`. The default `break` is `null`, which never fails |
+| Java | PIT | `mvn test-compile org.pitest:pitest-maven:mutationCoverage` | `<mutationThreshold>70</mutationThreshold>` |
+| C# | Stryker.NET | `dotnet stryker` | `--break-at 70` |
+| Rust | cargo-mutants | `cargo mutants` | Exits 2 when any mutant is missed. No percentage threshold |
+| Go | Gremlins (0.x, flags may change) | `gremlins unleash` | `--threshold-efficacy 70` (exit code 10) |
+
+### Run on Changed Code in CI
+
+Runtime grows with mutant count times the runtime of the tests covering each mutant. Gate PRs on changed code and run the full suite on a schedule.
+
+| Tool | Changed-Code Mode |
+|------|-------------------|
+| StrykerJS | `npx stryker run --incremental` reuses results from `reports/stryker-incremental.json` and retests only changed code and tests. Cache that file between CI runs |
+| Stryker.NET | `dotnet stryker --since:main` mutates only code changed since `main`. `--with-baseline:main` also produces a full report |
+| PIT | Set `historyInputFile` and `historyOutputFile` to a cached path. `-DwithHistory` writes to the temp directory, which ephemeral CI runners discard |
+| cargo-mutants | `cargo mutants --in-diff pr.diff` tests only mutants in changed regions |
+| mutmut | `mutmut run "pkg.module*"` limits the run to matching mutants. Delete `mutants/` first: in mutmut 3.8.0, cached results were reused after the tests changed |
+
+**GitHub Actions: Python gate at 70%**
+
+```yaml
+- run: rm -rf mutants && mutmut run
+- run: mutmut export-cicd-stats   # writes mutants/mutmut-cicd-stats.json
+- run: jq -e '.killed / .total >= 0.7' mutants/mutmut-cicd-stats.json   # exit 1 below 70%
+```
+
+**GitHub Actions: Rust, changed code only**
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0   # the base branch is needed for the diff
+- run: git diff origin/${{ github.base_ref }}...HEAD > pr.diff
+- run: cargo install --locked cargo-mutants
+- run: cargo mutants --in-diff pr.diff   # exits 2 if a changed region has a missed mutant
+```
+
+Diff-scoped runs miss two cases. A change can weaken tests for code outside the diff, and a diff that only touches tests mutates nothing. A scheduled full run (nightly or weekly) covers both and feeds the score trend.
+
+### Triage Surviving Mutants
+
+1. **Missing assertion** (most common): add or tighten a test that checks the behavior the mutant changed.
+2. **Equivalent mutant**: suppress it with a reason. Examples: `# pragma: no mutate` (mutmut), `// Stryker disable next-line EqualityOperator: <reason>` (StrykerJS).
+3. **Dead code**: if no observable behavior depends on the line, delete it instead of testing it.
+
+Do not kill mutants by asserting implementation details such as call counts or private state. That makes tests brittle without checking behavior.
+
+### When to Use Mutation Testing
+
+| Use It ✅ | Skip or Defer ❌ |
+|-----------|------------------|
+| Core domain logic: pricing, money, authorization, parsers | Generated code, DTOs, logging, glue code |
+| AI-generated tests: confirms they assert behavior, not just execute lines | Slow integration and E2E suites: runtime multiplies by mutant count |
+| Before trusting a high coverage number | Code with no unit tests yet: write those first |
+
+---
+
 ## Testing in CI/CD
 
 ### Test Strategy by Stage
@@ -417,20 +529,6 @@ jobs:
 ---
 
 ## Advanced Testing Practices
-
-### Mutation Testing
-
-Test your tests by introducing bugs and verifying tests catch them.
-
-```bash
-# Python
-pip install mutmut
-mutmut run
-
-# High mutation score (>80%) indicates strong test suite
-```
-
-**What it does:** Changes operators (`>` to `>=`), constants (0 to 1), removes statements.
 
 ### Snapshot Testing
 
@@ -667,6 +765,7 @@ func TestAdd(t *testing.T) {
 - [ ] Integration tests pass
 - [ ] E2E tests pass (if applicable)
 - [ ] No flaky tests failing intermittently
+- [ ] Mutation score on changed code is 70%+ (production maturity)
 
 ---
 
