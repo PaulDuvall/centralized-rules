@@ -12,7 +12,7 @@
 #   --num-tests N    Number of random keywords to test (default: 10)
 #   --verbose        Show detailed output for each test
 #   --all            Test ALL keywords (ignores --num-tests)
-#   --category CAT   Test only specific category (base|languages|cloud)
+#   --category CAT   Test only specific category (base|languages|frameworks|cloud)
 #
 
 set -euo pipefail
@@ -102,6 +102,29 @@ check_files() {
     fi
 }
 
+# The hook lowercases prompts before matching, so a keyword or slash command
+# containing uppercase letters can never match. Checks every mapping, including
+# categories the routing tests below do not exercise.
+check_keyword_case() {
+    local offenders
+    offenders=$(jq -r '
+        paths(type == "array") as $p
+        | select($p[-1] == "keywords" or $p[-1] == "slashCommands")
+        | getpath($p)[]
+        | select(. != ascii_downcase)
+        | "\($p | map(tostring) | join(".")): \(.)"
+    ' "$SKILL_RULES_JSON")
+
+    [[ -z "$offenders" ]] && return 0
+
+    while IFS= read -r offender; do
+        TOTAL_TESTS=$((TOTAL_TESTS + 1))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        FAILED_KEYWORDS+=("${offender##*: }")
+        log_error "Keyword is not lowercase and can never match a prompt: $offender"
+    done <<< "$offenders"
+}
+
 # Extract all keywords from skill-rules.json
 extract_keywords() {
     local category="$1"
@@ -127,6 +150,20 @@ extract_keywords() {
                 to_entries[] |
                 {
                     category: ("languages/" + .key),
+                    keywords: .value.keywords,
+                    rules: .value.rules
+                }
+            ' "$SKILL_RULES_JSON")
+            ;;
+        frameworks)
+            # Extract keywords from frameworks nested under each language
+            keywords_json=$(jq -r '
+                .keywordMappings.languages |
+                to_entries[] |
+                (.value.frameworks // {}) |
+                to_entries[] |
+                {
+                    category: ("frameworks/" + .key),
                     keywords: .value.keywords,
                     rules: .value.rules
                 }
@@ -186,6 +223,28 @@ create_language_files() {
     esac
 }
 
+# Create definitive files for framework testing
+# (must satisfy has_definitive_framework_files in .claude/lib/detection.sh)
+create_framework_files() {
+    local category="$1"
+    local test_dir="$2"
+
+    case "$category" in
+        frameworks/react)
+            echo '{"dependencies":{"react":"^19.0.0"}}' > "$test_dir/package.json"
+            ;;
+        frameworks/express)
+            echo '{"dependencies":{"express":"^5.0.0"}}' > "$test_dir/package.json"
+            ;;
+        frameworks/django)
+            touch "$test_dir/manage.py"
+            ;;
+        frameworks/fastapi)
+            echo "fastapi" > "$test_dir/requirements.txt"
+            ;;
+    esac
+}
+
 # Test a single keyword
 test_keyword() {
     local keyword="$1"
@@ -199,13 +258,14 @@ test_keyword() {
     local test_prompt="Help me with: $keyword"
     local test_input="{\"prompt\":\"$test_prompt\"}"
 
-    # For language categories, create a temp directory with definitive files
+    # For language and framework categories, create a temp directory with definitive files
     local test_dir=""
     local original_dir=""
-    if [[ "$category_name" == languages/* ]]; then
+    if [[ "$category_name" == languages/* || "$category_name" == frameworks/* ]]; then
         test_dir=$(mktemp -d)
         original_dir=$(pwd)
         create_language_files "$category_name" "$test_dir"
+        create_framework_files "$category_name" "$test_dir"
         cd "$test_dir"
     fi
 
@@ -371,12 +431,16 @@ main() {
     log_success "Environment checks passed"
     echo ""
 
+    log_info "Checking keyword case..."
+    check_keyword_case
+    echo ""
+
     # Determine which categories to test
     local categories_to_test=()
     if [[ -n "$CATEGORY_FILTER" ]]; then
         categories_to_test=("$CATEGORY_FILTER")
     else
-        categories_to_test=("base" "languages" "cloud")
+        categories_to_test=("base" "languages" "frameworks" "cloud")
     fi
 
     log_info "Testing categories: ${categories_to_test[*]}"
