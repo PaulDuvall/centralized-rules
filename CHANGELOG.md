@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `base/knowledge-management.md` holds the single ADR template. `base/architecture-principles.md` links to it instead of defining a second, shorter one
 
 ### Fixed
+- `docs/ralph-loop-guide.md` linked to `anthropics/claude-code/.../plugins/ralph-wiggum`, which now returns 404. The plugin moved to `anthropics/claude-plugins-official` as `ralph-loop`
 - Prompts using "tests" or "testing" no longer miss `base/testing-philosophy`. `test` is word-bounded (4 chars or fewer), so only the bare word matched
 - Mutation and property-based testing prompts now route to `base/testing-philosophy` (`mutation score`, `mutant`, `mutmut`, `stryker`, `pitest`, `property-based`, `hypothesis`, `fast-check`, `proptest`)
 - `scripts/test-keyword-validation.sh` probe prompt began with "Test", so every `base/testing` keyword passed regardless of routing
