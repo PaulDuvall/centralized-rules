@@ -29,6 +29,10 @@
       "java": {
         "files": ["pom.xml", "build.gradle", "*.java"],
         "patterns": ["public\\s+class", "import\\s+java", "package\\s+"]
+      },
+      "csharp": {
+        "files": ["*.csproj", "*.sln", "*.cs"],
+        "patterns": ["namespace\\s+\\w+", "using\\s+System", "public\\s+(class|record|interface)"]
       }
     },
     "frameworks": {
@@ -203,6 +207,12 @@
         "rules": ["languages/java"],
         "testing_rules": ["languages/java/testing"],
         "tip": "Favor composition over inheritance - interfaces are contracts"
+      },
+      "csharp": {
+        "keywords": ["c#", "csharp", ".cs", ".csproj", ".sln", "dotnet", ".net", "nuget", "msbuild", "linq"],
+        "rules": ["languages/csharp"],
+        "testing_rules": ["languages/csharp/testing"],
+        "tip": "Enable nullable reference types - let the compiler find null bugs"
       },
       "bash": {
         "keywords": ["bash", "shell", "sh", ".sh", ".bash", "#!/bin/bash", "shellcheck", "shell script", "bash script", "bats-core", "shunit2", "zsh", "posix"],

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/test-keyword-routing.sh`: natural-language routing regression tests, run in the keyword validation CI job
 - ADR guidance in `base/knowledge-management.md`: when to write one, file naming, Proposed/Accepted/Rejected/Deprecated/Superseded lifecycle, superseding steps, and agent workflow rules
 - Mutation Testing section in `base/testing-philosophy.md`: score target by maturity, a mutmut 3.8.0 worked example (100% line and branch coverage, 44% mutation score), tools and CI gates for Python, TypeScript, Java, C#, Rust, and Go, changed-code CI modes, and survivor triage
+- C# language mapping in `skill-rules.json`: `c#`, `csharp`, `.cs`, `.csproj`, `.sln`, `dotnet`, `.net`, `nuget`, `msbuild`, and `linq` route to `languages/csharp` (and `languages/csharp/testing` for testing prompts) in projects with a `*.csproj` or `*.sln`
 - `scripts/test-keyword-validation.sh` now tests framework keywords (react, django, fastapi, express) in fixture projects that satisfy `has_definitive_framework_files`, and fails on any keyword or slash command that is not lowercase
 
 ### Changed
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `base/knowledge-management.md` holds the single ADR template. `base/architecture-principles.md` links to it instead of defining a second, shorter one
 
 ### Fixed
+- `docs/ralph-loop-guide.md` linked to `anthropics/claude-code/.../plugins/ralph-wiggum`, which now returns 404. The plugin moved to `anthropics/claude-plugins-official` as `ralph-loop`
 - Prompts using "tests" or "testing" no longer miss `base/testing-philosophy`. `test` is word-bounded (4 chars or fewer), so only the bare word matched
 - Mutation and property-based testing prompts now route to `base/testing-philosophy` (`mutation score`, `mutant`, `mutmut`, `stryker`, `pitest`, `property-based`, `hypothesis`, `fast-check`, `proptest`)
 - `scripts/test-keyword-validation.sh` probe prompt began with "Test", so every `base/testing` keyword passed regardless of routing

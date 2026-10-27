@@ -214,6 +214,9 @@ create_language_files() {
         languages/java)
             touch "$test_dir/pom.xml"
             ;;
+        languages/csharp)
+            touch "$test_dir/App.csproj"
+            ;;
         languages/ruby)
             touch "$test_dir/Gemfile"
             ;;
