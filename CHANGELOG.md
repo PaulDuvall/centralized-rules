@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prompts using "tests" or "testing" no longer miss `base/testing-philosophy`. `test` is word-bounded (4 chars or fewer), so only the bare word matched
 - Mutation and property-based testing prompts now route to `base/testing-philosophy` (`mutation score`, `mutant`, `mutmut`, `stryker`, `pitest`, `property-based`, `hypothesis`, `fast-check`, `proptest`)
 - `scripts/test-keyword-validation.sh` probe prompt began with "Test", so every `base/testing` keyword passed regardless of routing
+- Cleared 3 high-severity `npm audit` findings in `skill/` that failed the Security Scanning job: vite 8.3.1 → 8.3.4, source-map-js 1.2.1 → 1.2.2, zod 3.25.76 → 4.6.7 (zod is declared but not imported, so the major bump has no API impact)
 
 ---
 
