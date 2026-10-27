@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Remove symlinked markdown files to avoid duplicate checking
         run: |
@@ -71,7 +71,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check known-flaky links (W3C, GNU, AgentSkills)
         uses: gaurav-nelson/github-action-markdown-link-check@v1
