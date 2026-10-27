@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/test-keyword-routing.sh`: natural-language routing regression tests, run in the keyword validation CI job
 - ADR guidance in `base/knowledge-management.md`: when to write one, file naming, Proposed/Accepted/Rejected/Deprecated/Superseded lifecycle, superseding steps, and agent workflow rules
 - Mutation Testing section in `base/testing-philosophy.md`: score target by maturity, a mutmut 3.8.0 worked example (100% line and branch coverage, 44% mutation score), tools and CI gates for Python, TypeScript, Java, C#, Rust, and Go, changed-code CI modes, and survivor triage
+- `scripts/test-keyword-validation.sh` now tests framework keywords (react, django, fastapi, express) in fixture projects that satisfy `has_definitive_framework_files`, and fails on any keyword or slash command that is not lowercase
 
 ### Changed
 - One mutation score target: 70%+ on changed code at production maturity. `base/testing-philosophy.md` previously said >80% and `SUCCESS_METRICS.md` said >70%
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mutation and property-based testing prompts now route to `base/testing-philosophy` (`mutation score`, `mutant`, `mutmut`, `stryker`, `pitest`, `property-based`, `hypothesis`, `fast-check`, `proptest`)
 - `scripts/test-keyword-validation.sh` probe prompt began with "Test", so every `base/testing` keyword passed regardless of routing
 - Cleared 3 high-severity `npm audit` findings in `skill/` that failed the Security Scanning job: vite 8.3.1 → 8.3.4, source-map-js 1.2.1 → 1.2.2, zod 3.25.76 → 4.6.7 (zod is declared but not imported, so the major bump has no API impact)
+- React keywords `useMutation`, `useQuery`, `useSWR`, `useNavigate`, and `useForm` never matched: the hook lowercases prompts, but these keywords were mixed-case. Now lowercase
 
 ---
 
