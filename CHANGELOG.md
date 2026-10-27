@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/test-keyword-validation.sh` probe prompt began with "Test", so every `base/testing` keyword passed regardless of routing
 - Cleared 3 high-severity `npm audit` findings in `skill/` that failed the Security Scanning job: vite 8.3.1 → 8.3.4, source-map-js 1.2.1 → 1.2.2, zod 3.25.76 → 4.6.7 (zod is declared but not imported, so the major bump has no API impact)
 - React keywords `useMutation`, `useQuery`, `useSWR`, `useNavigate`, and `useForm` never matched: the hook lowercases prompts, but these keywords were mixed-case. Now lowercase
+- Language testing rules (e.g. `languages/python/testing`) now load exactly when the base testing category matches. A separate hardcoded regex without word boundaries missed prompts like "add hypothesis checks to the python parser" and fired on "inspect" and "latest"
 
 ---
 

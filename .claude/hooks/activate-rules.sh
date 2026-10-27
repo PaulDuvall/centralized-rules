@@ -191,6 +191,10 @@ match_keywords() {
         local base_categories
         base_categories=$(echo "$SKILL_RULES_JSON" | jq -r '.keywordMappings.base | keys[]' 2>/dev/null)
 
+        # Set when the base testing category matches; language testing rules reuse it
+        # so both use the same keywords and word-boundary handling
+        local testing_matched=false
+
         while IFS= read -r category; do
             [[ -z "$category" ]] && continue
 
@@ -208,6 +212,7 @@ match_keywords() {
 
             # Match keywords
             if [[ -n "$keywords" ]] && echo "${prompt_lower}" | grep -qE "(${keywords})"; then
+                [[ "$category" == "testing" ]] && testing_matched=true
                 while IFS= read -r rule; do
                     [[ -n "$rule" ]] && matched_rules+=("$rule")
                 done <<< "$category_rules"
@@ -215,6 +220,7 @@ match_keywords() {
 
             # Match slash commands
             if [[ -n "$slash_cmds" ]] && echo "${prompt_lower}" | grep -qE "/(${slash_cmds})(\s|$)"; then
+                [[ "$category" == "testing" ]] && testing_matched=true
                 while IFS= read -r rule; do
                     [[ -n "$rule" ]] && matched_rules+=("$rule")
                 done <<< "$category_rules"
@@ -250,8 +256,8 @@ match_keywords() {
                             [[ -n "$rule" ]] && matched_rules+=("$rule")
                         done <<< "$lang_rules"
 
-                        # Add testing rules if testing keywords also matched
-                        if echo "${prompt_lower}" | grep -qE '(test|pytest|jest|mocha|unittest|spec|tdd|coverage|mock)'; then
+                        # Add testing rules if the base testing category also matched
+                        if [[ "$testing_matched" == true ]]; then
                             while IFS= read -r rule; do
                                 [[ -n "$rule" ]] && matched_rules+=("$rule")
                             done <<< "$lang_testing_rules"

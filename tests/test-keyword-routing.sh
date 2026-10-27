@@ -4,7 +4,8 @@
 #
 # Unlike scripts/test-keyword-validation.sh, which wraps each keyword in a
 # synthetic prompt, these cases use natural phrasing (plurals, gerunds,
-# tool names) to catch keywords that never fire in real prompts.
+# tool names) to catch keywords that never fire in real prompts. Language
+# cases run inside minimal fixture projects.
 #
 # Usage:
 #   ./tests/test-keyword-routing.sh
@@ -26,9 +27,20 @@ fi
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# Run the hook from an empty directory so only keyword routing applies
+# Fixture projects. Language rules need definitive files (has_definitive_files
+# in .claude/lib/detection.sh); "empty" leaves only keyword routing.
 WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
+mkdir -p "$WORK_DIR/empty" "$WORK_DIR/python" "$WORK_DIR/typescript"
+touch "$WORK_DIR/python/requirements.txt"
+echo '{}' > "$WORK_DIR/typescript/package.json"
+
+RUN_DIR="$WORK_DIR/empty"
+
+# use_project empty|python|typescript
+use_project() {
+    RUN_DIR="$WORK_DIR/$1"
+}
 
 # Print the rules the hook matched for a prompt, one per line
 matched_rules() {
@@ -36,7 +48,7 @@ matched_rules() {
     local input
     input=$(jq -cn --arg p "$prompt" '{prompt: $p}')
 
-    (cd "$WORK_DIR" && CLAUDE_PROJECT_DIR="$REPO_ROOT" "$HOOK_SCRIPT" <<< "$input" 2>/dev/null) |
+    (cd "$RUN_DIR" && CLAUDE_PROJECT_DIR="$REPO_ROOT" "$HOOK_SCRIPT" <<< "$input" 2>/dev/null) |
         jq -r '.systemMessage // empty' |
         grep "^🔍 Rules:" |
         sed 's/^🔍 Rules: //' |
@@ -97,6 +109,22 @@ expect_rule "review the ADRs in docs/architecture/adr" "base/knowledge-managemen
 expect_rule "add a decision record for the queue choice" "base/knowledge-management" yes
 expect_rule "create an architecture decision record" "base/knowledge-management" yes
 expect_rule "create an architecture decision record" "base/architecture-principles" yes
+echo
+
+echo "Language testing rules (follow the base testing keywords)"
+use_project python
+expect_rule "add hypothesis checks to the python parser" "languages/python/testing" yes
+expect_rule "run mutmut on the python billing module" "languages/python/testing" yes
+expect_rule "write tests for the python parser" "languages/python/testing" yes
+expect_rule "/xtest the python parser" "languages/python/testing" yes
+expect_rule "inspect the python logging setup" "languages/python" yes
+expect_rule "inspect the python logging setup" "languages/python/testing" no
+expect_rule "upgrade to the latest python release" "languages/python" yes
+expect_rule "upgrade to the latest python release" "languages/python/testing" no
+use_project typescript
+expect_rule "configure stryker for the typescript frontend" "languages/typescript/testing" yes
+expect_rule "add fast-check arbitraries to the typescript reducer" "languages/typescript/testing" yes
+use_project empty
 echo
 
 echo "False-positive guards"
