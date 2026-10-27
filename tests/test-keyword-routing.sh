@@ -31,13 +31,14 @@ TESTS_FAILED=0
 # in .claude/lib/detection.sh); "empty" leaves only keyword routing.
 WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
-mkdir -p "$WORK_DIR/empty" "$WORK_DIR/python" "$WORK_DIR/typescript"
+mkdir -p "$WORK_DIR/empty" "$WORK_DIR/python" "$WORK_DIR/typescript" "$WORK_DIR/csharp"
 touch "$WORK_DIR/python/requirements.txt"
 echo '{}' > "$WORK_DIR/typescript/package.json"
+touch "$WORK_DIR/csharp/App.csproj"
 
 RUN_DIR="$WORK_DIR/empty"
 
-# use_project empty|python|typescript
+# use_project empty|python|typescript|csharp
 use_project() {
     RUN_DIR="$WORK_DIR/$1"
 }
@@ -125,6 +126,16 @@ use_project typescript
 expect_rule "configure stryker for the typescript frontend" "languages/typescript/testing" yes
 expect_rule "add fast-check arbitraries to the typescript reducer" "languages/typescript/testing" yes
 use_project empty
+echo
+
+echo "C# language rules"
+use_project csharp
+expect_rule "refactor OrderService.cs to use records" "languages/csharp" yes
+expect_rule "add a linq query to the dotnet repository" "languages/csharp" yes
+expect_rule "write tests for the c# order service" "languages/csharp/testing" yes
+expect_rule "what is csharp" "languages/csharp" no
+use_project empty
+expect_rule "refactor OrderService.cs to use records" "languages/csharp" no
 echo
 
 echo "False-positive guards"

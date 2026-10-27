@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/test-keyword-routing.sh`: natural-language routing regression tests, run in the keyword validation CI job
 - ADR guidance in `base/knowledge-management.md`: when to write one, file naming, Proposed/Accepted/Rejected/Deprecated/Superseded lifecycle, superseding steps, and agent workflow rules
 - Mutation Testing section in `base/testing-philosophy.md`: score target by maturity, a mutmut 3.8.0 worked example (100% line and branch coverage, 44% mutation score), tools and CI gates for Python, TypeScript, Java, C#, Rust, and Go, changed-code CI modes, and survivor triage
+- C# language mapping in `skill-rules.json`: `c#`, `csharp`, `.cs`, `.csproj`, `.sln`, `dotnet`, `.net`, `nuget`, `msbuild`, and `linq` route to `languages/csharp` (and `languages/csharp/testing` for testing prompts) in projects with a `*.csproj` or `*.sln`
 - `scripts/test-keyword-validation.sh` now tests framework keywords (react, django, fastapi, express) in fixture projects that satisfy `has_definitive_framework_files`, and fails on any keyword or slash command that is not lowercase
 
 ### Changed
