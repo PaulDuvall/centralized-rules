@@ -101,6 +101,11 @@
           "name": "Rust Coding Standards",
           "file": "languages/rust/coding-standards.md",
           "when": "Rust files (.rs)"
+        },
+        {
+          "name": "Rust Testing",
+          "file": "languages/rust/testing.md",
+          "when": "Rust testing"
         }
       ]
     },
@@ -113,6 +118,11 @@
           "name": "Csharp Coding Standards",
           "file": "languages/csharp/coding-standards.md",
           "when": "C# files (.cs)"
+        },
+        {
+          "name": "Csharp Testing",
+          "file": "languages/csharp/testing.md",
+          "when": "C# testing"
         }
       ]
     },
