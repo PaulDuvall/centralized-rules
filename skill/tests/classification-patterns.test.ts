@@ -231,6 +231,41 @@ describe('Classification Patterns', () => {
       });
     });
 
+    it('should match domain-driven design vocabulary', () => {
+      const prompts = [
+        'Apply DDD to the billing module',
+        'Make the checkout module domain-driven',
+        'Split billing and shipping into separate bounded contexts',
+        'Draw a context map for the fulfillment team',
+        'Add an anti-corruption layer around the legacy ERP',
+        'Rename the classes to match the ubiquitous language',
+        'Move the pricing logic into the Order aggregate root',
+        'Replace the raw email strings with a value object',
+        'Sketch the domain model for invoicing',
+        'Publish a domain event when an order ships',
+        'Run an event storming session on returns',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = ARCHITECTURE_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(true);
+      });
+    });
+
+    it('should not treat generic "aggregate" or "domain" as DDD', () => {
+      const prompts = [
+        'Compute an aggregate of daily sales',
+        'Register a subdomain for the docs site',
+        'Point the custom domain at the load balancer',
+        'Format the weekday as dddd in the date picker',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = ARCHITECTURE_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
+      });
+    });
+
     it('should have at least 5 patterns', () => {
       expect(ARCHITECTURE_PATTERNS.length).toBeGreaterThanOrEqual(5);
     });

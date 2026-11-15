@@ -78,6 +78,30 @@ describe('Prompt Classifier', () => {
     });
   });
 
+  describe('Domain-driven design', () => {
+    // Before these patterns existed, most of these fell through to UNCLEAR,
+    // which before-response.ts treats as non-code and skips rule injection.
+    it('should classify DDD prompts as architecture', () => {
+      const prompts = [
+        'Apply DDD to the billing module',
+        'Make the checkout module domain-driven',
+        'Split billing and shipping into separate bounded contexts',
+        'Draw a context map for the fulfillment team',
+        'Add an anti-corruption layer around the legacy ERP',
+        'Rename the classes to match the ubiquitous language',
+        'Move the pricing logic into the Order aggregate root',
+        'Replace the raw email strings with a value object',
+        'Sketch the domain model for invoicing',
+        'Publish a domain event when an order ships',
+        'Run an event storming session on returns',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.ARCHITECTURE);
+      });
+    });
+  });
+
   describe('Keyword scoring (fallback)', () => {
     it('should fall back to keyword scoring for less clear cases', () => {
       // Prompt with implementation keywords but no strong pattern

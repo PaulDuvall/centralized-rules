@@ -184,6 +184,13 @@ export const ARCHITECTURE_PATTERNS = [
   // System design
   /\b(high-level design|technical design)\b/i,
   /\b(message queue|pub\/sub|event sourcing|cqrs)\b/i,
+
+  // Domain-driven design. Bare "aggregate" and "domain" are excluded:
+  // they also mean SQL aggregates, log aggregation, and DNS domains.
+  /\b(domain[- ]driven|ddd)\b/i,
+  /\b(bounded contexts?|context (maps?|mapping)|anti[- ]?corruption layers?)\b/i,
+  /\b(ubiquitous language|aggregate roots?|value objects?|event ?storming)\b/i,
+  /\bdomain (models?|modell?ing|events?|layer)\b/i,
 ];
 
 /**
