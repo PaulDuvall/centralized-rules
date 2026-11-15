@@ -149,6 +149,53 @@ describe('Prompt Classifier', () => {
       });
     });
 
+    it('should let code patterns win over generic ops words', () => {
+      const cases: Array<[string, PromptCategory]> = [
+        ['Create a notification service class', PromptCategory.CODE_IMPLEMENTATION],
+        ['Add a toast notification component', PromptCategory.CODE_IMPLEMENTATION],
+        ['Add logging to the parser function', PromptCategory.CODE_IMPLEMENTATION],
+        ['Add a logging middleware to the Express app', PromptCategory.CODE_IMPLEMENTATION],
+        ['Write a function that records request metrics', PromptCategory.CODE_IMPLEMENTATION],
+        ['Add an alert component to the settings page', PromptCategory.CODE_IMPLEMENTATION],
+        ['Build a data pipeline module for the ETL job', PromptCategory.CODE_IMPLEMENTATION],
+        ['Register the OrderRepository in the DI container', PromptCategory.ARCHITECTURE],
+        [
+          'Move the repository implementation into the infrastructure layer',
+          PromptCategory.ARCHITECTURE,
+        ],
+      ];
+
+      cases.forEach(([prompt, expected]) => {
+        expect(classifyPrompt(prompt), prompt).toBe(expected);
+      });
+    });
+
+    it('should keep operations prompts in DevOps', () => {
+      const prompts = [
+        'Setup monitoring and alerts',
+        'Configure log shipping to the observability stack',
+        'Add a lint step to the pipeline',
+        'Build a CI pipeline for the payment service',
+        'Run the app in a container',
+        'Set up on-call rotation and incident response',
+        'Provision the staging infrastructure',
+        'Collect metrics from the cluster',
+        'Rotate the salt minion keys',
+        'Enable distributed tracing with OpenTelemetry',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.DEVOPS);
+      });
+    });
+
+    it('should fall back to DevOps, not UNCLEAR, when no code pattern matches', () => {
+      // UNCLEAR skips rule injection; DevOps still loads rules
+      expect(classifyPrompt('Send an email notification when an order ships')).toBe(
+        PromptCategory.DEVOPS
+      );
+    });
+
     it('should keep HR prompts in legal/business', () => {
       const prompts = [
         'Review the salary bands for the engineering team',

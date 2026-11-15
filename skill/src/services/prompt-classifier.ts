@@ -23,6 +23,7 @@ import {
   CODE_REVIEW_PATTERNS,
   ARCHITECTURE_PATTERNS,
   DEVOPS_PATTERNS,
+  GENERIC_DEVOPS_PATTERNS,
   DOCUMENTATION_PATTERNS,
   GENERAL_QUESTION_PATTERNS,
 } from '../config/classification-patterns.js';
@@ -194,20 +195,21 @@ const KEYWORD_WEIGHTS: Record<PromptCategory, Record<string, number>> = {
  * ```
  */
 function classifyByPatterns(text: string): PromptCategory | undefined {
-  // Check each category's patterns in priority order
-  const priorityOrder: PromptCategory[] = [
-    PromptCategory.LEGAL_BUSINESS, // Highest priority - very distinctive
-    PromptCategory.CODE_DEBUGGING, // High priority - clear signals
-    PromptCategory.DEVOPS, // Medium-high - specific terms
-    PromptCategory.ARCHITECTURE, // Medium - specific domain
-    PromptCategory.CODE_REVIEW, // Medium - can overlap with debugging
-    PromptCategory.CODE_IMPLEMENTATION, // Medium-low - common words
-    PromptCategory.DOCUMENTATION, // Low - very common words
-    PromptCategory.GENERAL_QUESTION, // Lowest - catch-all
+  // Check pattern groups in priority order; the first match wins
+  const priorityOrder: Array<[PromptCategory, RegExp[]]> = [
+    [PromptCategory.LEGAL_BUSINESS, PATTERNS[PromptCategory.LEGAL_BUSINESS]], // Very distinctive
+    [PromptCategory.CODE_DEBUGGING, PATTERNS[PromptCategory.CODE_DEBUGGING]], // Clear signals
+    [PromptCategory.DEVOPS, PATTERNS[PromptCategory.DEVOPS]], // Tool names, ops phrases
+    [PromptCategory.ARCHITECTURE, PATTERNS[PromptCategory.ARCHITECTURE]], // Specific domain
+    [PromptCategory.CODE_REVIEW, PATTERNS[PromptCategory.CODE_REVIEW]], // Can overlap debugging
+    [PromptCategory.CODE_IMPLEMENTATION, PATTERNS[PromptCategory.CODE_IMPLEMENTATION]],
+    // Generic ops words ("logging", "container") lose to any code pattern above
+    [PromptCategory.DEVOPS, GENERIC_DEVOPS_PATTERNS],
+    [PromptCategory.DOCUMENTATION, PATTERNS[PromptCategory.DOCUMENTATION]], // Common words
+    [PromptCategory.GENERAL_QUESTION, PATTERNS[PromptCategory.GENERAL_QUESTION]], // Catch-all
   ];
 
-  for (const category of priorityOrder) {
-    const patterns = PATTERNS[category];
+  for (const [category, patterns] of priorityOrder) {
     for (const pattern of patterns) {
       if (pattern.test(text)) {
         return category;

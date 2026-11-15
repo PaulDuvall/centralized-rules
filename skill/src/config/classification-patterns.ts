@@ -193,17 +193,22 @@ export const ARCHITECTURE_PATTERNS = [
   /\b(bounded contexts?|context (maps?|mapping)|anti[- ]?corruption layers?)\b/i,
   /\b(ubiquitous language|aggregate roots?|value objects?|event ?storming)\b/i,
   /\b(?<!directory )domain (models?|modell?ing|events?|layer|services?)\b/i,
+
+  // Layering and dependency injection (see base/architecture-principles.md)
+  /\b(infrastructure|application|presentation|persistence) layers?\b/i,
+  /\b(dependency injection|inversion of control|(di|ioc) containers?)\b/i,
 ];
 
 /**
  * DevOps and infrastructure patterns
  *
- * Indicators of deployment, operations, and infrastructure tasks
+ * Tool names and unambiguous operations phrases. Checked before ARCHITECTURE.
+ * Words that also describe application code live in GENERIC_DEVOPS_PATTERNS.
  */
 export const DEVOPS_PATTERNS = [
   // Containerization
-  /\b(docker|dockerfile|container|containerize|containerization)\b/i,
-  /\b(kubernetes|k8s|helm|kubectl|pod|deployment)\b/i,
+  /\b(docker|dockerfile|containerize|containerization)\b/i,
+  /\b(kubernetes|k8s|helm|kubectl|deployment)\b/i,
   // A bare "service" is usually code ("build a payment service"), so only
   // operations on a service, or infrastructure-specific phrases, count here.
   /\b(service mesh|service account|systemd service|service discovery)\b/i,
@@ -211,20 +216,37 @@ export const DEVOPS_PATTERNS = [
 
   // CI/CD
   /\b(ci\/cd|continuous integration|continuous deployment|continuous delivery)\b/i,
-  /\b(pipeline|jenkins|github actions|gitlab ci|circleci|travis)\b/i,
+  /\b(jenkins|github actions|gitlab ci|circleci|travis)\b/i,
+  /\b(ci|cd|deploy|deployment|release|delivery) pipelines?\b/i,
   /\b(deploy|deployment|release|rollout)\s+(to|on|via)\b/i,
 
   // Infrastructure
   /\b(infrastructure as code|iac|terraform|cloudformation|pulumi)\b/i,
-  /\b(provision|provisioning|infrastructure|cloud resources)\b/i,
+  /\b(provision|provisioning|cloud resources)\b/i,
 
   // Monitoring and operations
-  /\b(monitoring|observability|metrics|logging|tracing)\b/i,
+  /\b(observability|alerting|incident|on-call)\b/i,
   /\b(prometheus|grafana|datadog|new relic|cloudwatch)\b/i,
-  /\b(alert|alerting|notification|incident|on-call)\b/i,
 
   // Configuration management
-  /\b(ansible|puppet|chef|salt|configuration management)\b/i,
+  /\b(ansible|puppet|chef|configuration management)\b/i,
+];
+
+/**
+ * Generic operations words
+ *
+ * These words also describe ordinary application code: "add logging to the
+ * parser function", "DI container", "toast notification component",
+ * "infrastructure layer". The classifier checks them after the architecture
+ * and code patterns, so a prompt reaches DEVOPS through these only when no
+ * code pattern matched. Prompts that matched DEVOPS before still match it or
+ * a code category; none fall through to UNCLEAR, which skips rule injection.
+ */
+export const GENERIC_DEVOPS_PATTERNS = [
+  /\b(container|pod|pipeline|infrastructure)\b/i,
+  /\b(monitoring|metrics|logging|tracing)\b/i,
+  /\b(alert|notification)\b/i,
+  /\bsalt\b/i,
 ];
 
 /**
@@ -450,6 +472,7 @@ export const CATEGORY_PATTERNS = {
   codeReview: CODE_REVIEW_PATTERNS,
   architecture: ARCHITECTURE_PATTERNS,
   devops: DEVOPS_PATTERNS,
+  genericDevops: GENERIC_DEVOPS_PATTERNS,
   documentation: DOCUMENTATION_PATTERNS,
   generalQuestion: GENERAL_QUESTION_PATTERNS,
 } as const;

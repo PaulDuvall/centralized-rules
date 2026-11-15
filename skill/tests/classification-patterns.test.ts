@@ -12,6 +12,7 @@ import {
   CODE_REVIEW_PATTERNS,
   ARCHITECTURE_PATTERNS,
   DEVOPS_PATTERNS,
+  GENERIC_DEVOPS_PATTERNS,
   DOCUMENTATION_PATTERNS,
   GENERAL_QUESTION_PATTERNS,
   CODE_INDICATORS,
@@ -259,6 +260,8 @@ describe('Classification Patterns', () => {
         'Publish a domain event when an order ships',
         'Extract a domain service for pricing',
         'Run an event storming session on returns',
+        'Register the OrderRepository in the DI container',
+        'Move the repository implementation into the infrastructure layer',
       ];
 
       prompts.forEach((prompt) => {
@@ -300,6 +303,21 @@ describe('Classification Patterns', () => {
       prompts.forEach((prompt) => {
         const matches = DEVOPS_PATTERNS.some((pattern) => pattern.test(prompt));
         expect(matches).toBe(true);
+      });
+    });
+
+    it('should leave generic ops words to GENERIC_DEVOPS_PATTERNS', () => {
+      const prompts = [
+        'Add logging to the parser function',
+        'Add a toast notification component',
+        'Register the OrderRepository in the DI container',
+        'Move the repository implementation into the infrastructure layer',
+        'Add a lint step to the pipeline',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(DEVOPS_PATTERNS.some((p) => p.test(prompt)), prompt).toBe(false);
+        expect(GENERIC_DEVOPS_PATTERNS.some((p) => p.test(prompt)), prompt).toBe(true);
       });
     });
 

@@ -34,16 +34,23 @@ Checks 70+ specialized regex patterns organized by category priority:
 
 ```typescript
 const priorityOrder = [
-  LEGAL_BUSINESS,     // Highest - very distinctive
-  CODE_DEBUGGING,     // High - clear signals
-  DEVOPS,             // Medium-high - specific terms
-  ARCHITECTURE,       // Medium - specific domain
-  CODE_REVIEW,        // Medium - can overlap
-  CODE_IMPLEMENTATION,// Medium-low - common words
-  DOCUMENTATION,      // Low - very common words
-  GENERAL_QUESTION,   // Lowest - catch-all
+  LEGAL_BUSINESS,         // Highest - very distinctive
+  CODE_DEBUGGING,         // High - clear signals
+  DEVOPS,                 // Medium-high - tool names, ops phrases
+  ARCHITECTURE,           // Medium - specific domain
+  CODE_REVIEW,            // Medium - can overlap
+  CODE_IMPLEMENTATION,    // Medium-low - common words
+  DEVOPS (generic words), // Low - "logging", "container", "notification"
+  DOCUMENTATION,          // Low - very common words
+  GENERAL_QUESTION,       // Lowest - catch-all
 ];
 ```
+
+DevOps is checked twice. `DEVOPS_PATTERNS` holds tool names and unambiguous
+operations phrases (docker, terraform, prometheus, "deploy the service").
+`GENERIC_DEVOPS_PATTERNS` holds words that also describe application code, so
+"Add logging to the parser function" reaches CODE_IMPLEMENTATION first, while
+"Collect metrics from the cluster" still falls through to DEVOPS.
 
 **Why Priority Ordering?**
 
