@@ -53,8 +53,8 @@ operations phrases (docker, terraform, prometheus, "deploy the service").
 "Add logging to the parser function" reaches CODE_IMPLEMENTATION first, while
 "Collect metrics from the cluster" still falls through to DEVOPS.
 
-`SECURITY_PATTERNS` (password storage: bcrypt, argon2, password hash or salt)
-is not a category. A match says the prompt is code, so keyword scoring picks
+`SECURITY_PATTERNS` (password storage, JWT, CSRF: bcrypt, argon2, password
+hash or salt, JWT, JWKS, CSRF, XSRF, SameSite) is not a category. A match says the prompt is code, so keyword scoring picks
 debugging, review, or implementation, and any result that would skip rule
 injection (UNCLEAR, LEGAL_BUSINESS, GENERAL_QUESTION) becomes
 CODE_IMPLEMENTATION. "Fix the password hashing bug" stays CODE_DEBUGGING, and

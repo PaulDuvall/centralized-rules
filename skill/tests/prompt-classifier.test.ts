@@ -219,6 +219,38 @@ describe('Prompt Classifier', () => {
       });
     });
 
+    it('should classify JWT and CSRF work as implementation', () => {
+      // Most of these were UNCLEAR before, which skips rule injection
+      const prompts = [
+        'Rotate the JWT signing secret',
+        'Switch JWT signing from HS256 to RS256',
+        'Store the JWT in an httpOnly cookie',
+        'Reject JWTs that use the none algorithm',
+        'Fetch signing keys from the JWKS endpoint',
+        'Add CSRF protection to the checkout form',
+        'Send the XSRF token header from the Angular client',
+        'Set SameSite=Strict on the session cookie',
+        'Guard the transfer form against cross-site request forgery',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.CODE_IMPLEMENTATION);
+      });
+    });
+
+    it('should keep the task for JWT and CSRF debugging, review, and docs', () => {
+      const cases: Array<[string, PromptCategory]> = [
+        ['Fix the expired JWT bug', PromptCategory.CODE_DEBUGGING],
+        ['The CSRF token check fails on login', PromptCategory.CODE_DEBUGGING],
+        ['Review the CSRF middleware', PromptCategory.CODE_REVIEW],
+        ['Document the JWT auth flow', PromptCategory.DOCUMENTATION],
+      ];
+
+      cases.forEach(([prompt, expected]) => {
+        expect(classifyPrompt(prompt), prompt).toBe(expected);
+      });
+    });
+
     it('should keep SaltStack prompts in DevOps', () => {
       expect(classifyPrompt('Apply the salt states to the web servers')).toBe(
         PromptCategory.DEVOPS

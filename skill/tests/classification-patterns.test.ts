@@ -198,6 +198,39 @@ describe('Classification Patterns', () => {
         expect(matches, prompt).toBe(false);
       });
     });
+
+    it('should match JWT and CSRF work', () => {
+      const prompts = [
+        'Rotate the JWT signing secret',
+        'Reject JWTs that use the none algorithm',
+        'Verify tokens against the JSON Web Token spec',
+        'Fetch signing keys from the JWKS endpoint',
+        'Add CSRF protection to the checkout form',
+        'Send the XSRF token header from the Angular client',
+        'Set SameSite=Strict on the session cookie',
+        'Use the double-submit cookie pattern for forms',
+        'Guard the transfer form against cross-site request forgery',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = SECURITY_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(true);
+      });
+    });
+
+    it('should not treat other tokens or cross-site links as JWT or CSRF', () => {
+      const prompts = [
+        'Count the tokens in the prompt',
+        'Update the design tokens for dark mode',
+        'Tokenize the input string',
+        'Add a cross-site link to the docs footer',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = SECURITY_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
+      });
+    });
   });
 
   describe('Code Debugging Patterns', () => {
