@@ -13,6 +13,7 @@ import {
   ARCHITECTURE_PATTERNS,
   DEVOPS_PATTERNS,
   GENERIC_DEVOPS_PATTERNS,
+  SECURITY_PATTERNS,
   DOCUMENTATION_PATTERNS,
   GENERAL_QUESTION_PATTERNS,
   CODE_INDICATORS,
@@ -164,6 +165,38 @@ describe('Classification Patterns', () => {
 
     it('should have at least 5 patterns', () => {
       expect(CODE_IMPLEMENTATION_PATTERNS.length).toBeGreaterThanOrEqual(5);
+    });
+  });
+
+  describe('Security Patterns', () => {
+    it('should match password storage work', () => {
+      const prompts = [
+        'Add a salt to the password hash',
+        'Hash user passwords with bcrypt before saving',
+        'Switch password storage to argon2id',
+        'Generate a random salt for each user',
+        'Store passwords as salted hashes',
+        'Derive the key with PBKDF2',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = SECURITY_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(true);
+      });
+    });
+
+    it('should not treat salt or hash alone as password storage', () => {
+      const prompts = [
+        'Rotate the salt minion keys',
+        'Apply the salt states to the web servers',
+        'Hash the cache keys with sha256',
+        'Season the dish with salt and pepper',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = SECURITY_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
+      });
     });
   });
 

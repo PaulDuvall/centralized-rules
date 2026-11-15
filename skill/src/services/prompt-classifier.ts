@@ -24,6 +24,7 @@ import {
   ARCHITECTURE_PATTERNS,
   DEVOPS_PATTERNS,
   GENERIC_DEVOPS_PATTERNS,
+  SECURITY_PATTERNS,
   DOCUMENTATION_PATTERNS,
   GENERAL_QUESTION_PATTERNS,
 } from '../config/classification-patterns.js';
@@ -54,6 +55,21 @@ export enum PromptCategory {
   GENERAL_QUESTION = 'general_question',
   UNCLEAR = 'unclear',
 }
+
+/**
+ * Categories that trigger rule injection
+ *
+ * The before-response hook skips rule loading for every other category
+ * (legal/business, general questions, unclear) to save tokens.
+ */
+export const CODE_CATEGORIES: readonly PromptCategory[] = [
+  PromptCategory.CODE_IMPLEMENTATION,
+  PromptCategory.CODE_DEBUGGING,
+  PromptCategory.CODE_REVIEW,
+  PromptCategory.ARCHITECTURE,
+  PromptCategory.DEVOPS,
+  PromptCategory.DOCUMENTATION,
+];
 
 /**
  * Pattern definitions for high-confidence classification
@@ -195,28 +211,48 @@ const KEYWORD_WEIGHTS: Record<PromptCategory, Record<string, number>> = {
  * ```
  */
 function classifyByPatterns(text: string): PromptCategory | undefined {
-  // Check pattern groups in priority order; the first match wins
-  const priorityOrder: Array<[PromptCategory, RegExp[]]> = [
+  // Pattern groups in priority order; the first match wins
+  const specific = firstMatch(text, [
     [PromptCategory.LEGAL_BUSINESS, PATTERNS[PromptCategory.LEGAL_BUSINESS]], // Very distinctive
     [PromptCategory.CODE_DEBUGGING, PATTERNS[PromptCategory.CODE_DEBUGGING]], // Clear signals
     [PromptCategory.DEVOPS, PATTERNS[PromptCategory.DEVOPS]], // Tool names, ops phrases
     [PromptCategory.ARCHITECTURE, PATTERNS[PromptCategory.ARCHITECTURE]], // Specific domain
     [PromptCategory.CODE_REVIEW, PATTERNS[PromptCategory.CODE_REVIEW]], // Can overlap debugging
     [PromptCategory.CODE_IMPLEMENTATION, PATTERNS[PromptCategory.CODE_IMPLEMENTATION]],
+  ]);
+  if (specific) {
+    return specific;
+  }
+
+  // Security vocabulary ("password hash", "bcrypt") marks the prompt as code
+  // without naming the task, so keyword scoring picks debugging, review, or
+  // implementation. Any result that would skip rule injection becomes
+  // implementation, which also beats the generic "salt" DevOps match below.
+  if (SECURITY_PATTERNS.some((pattern) => pattern.test(text))) {
+    const scored = classifyByKeywordScoring(text);
+    return CODE_CATEGORIES.includes(scored) ? scored : PromptCategory.CODE_IMPLEMENTATION;
+  }
+
+  return firstMatch(text, [
     // Generic ops words ("logging", "container") lose to any code pattern above
     [PromptCategory.DEVOPS, GENERIC_DEVOPS_PATTERNS],
     [PromptCategory.DOCUMENTATION, PATTERNS[PromptCategory.DOCUMENTATION]], // Common words
     [PromptCategory.GENERAL_QUESTION, PATTERNS[PromptCategory.GENERAL_QUESTION]], // Catch-all
-  ];
+  ]);
+}
 
-  for (const [category, patterns] of priorityOrder) {
-    for (const pattern of patterns) {
-      if (pattern.test(text)) {
-        return category;
-      }
+/**
+ * Return the category of the first pattern group with a matching pattern
+ */
+function firstMatch(
+  text: string,
+  groups: Array<[PromptCategory, RegExp[]]>
+): PromptCategory | undefined {
+  for (const [category, patterns] of groups) {
+    if (patterns.some((pattern) => pattern.test(text))) {
+      return category;
     }
   }
-
   return undefined;
 }
 
