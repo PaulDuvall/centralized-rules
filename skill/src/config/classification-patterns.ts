@@ -81,7 +81,9 @@ export const LEGAL_BUSINESS_PATTERNS = [
   // HR and employment
   /\b(employee handbook|hr policy|vacation policy|pto policy)\b/i,
   /\b(employment contract|offer letter|severance agreement)\b/i,
-  /\b(performance review|compensation|salary|benefits package)\b/i,
+  // Whole-prompt guard: these terms also name fields, saga steps, and domain
+  // concepts ("add a salary field", "compensation logic in the saga").
+  /^(?![\s\S]*\b(api|endpoint|code|function|class|method|module|field|schema|database|query|entity|entities|saga|value objects?|aggregate|domain model)\b)[\s\S]*\b(performance review|compensation|salary|benefits package)\b/i,
 
   // Business operations
   /\b(business plan|financial projection|revenue model)\b/i,
@@ -190,7 +192,7 @@ export const ARCHITECTURE_PATTERNS = [
   /\b(domain[- ]driven|ddd)\b/i,
   /\b(bounded contexts?|context (maps?|mapping)|anti[- ]?corruption layers?)\b/i,
   /\b(ubiquitous language|aggregate roots?|value objects?|event ?storming)\b/i,
-  /\bdomain (models?|modell?ing|events?|layer)\b/i,
+  /\b(?<!directory )domain (models?|modell?ing|events?|layer|services?)\b/i,
 ];
 
 /**
@@ -201,7 +203,11 @@ export const ARCHITECTURE_PATTERNS = [
 export const DEVOPS_PATTERNS = [
   // Containerization
   /\b(docker|dockerfile|container|containerize|containerization)\b/i,
-  /\b(kubernetes|k8s|helm|kubectl|pod|deployment|service)\b/i,
+  /\b(kubernetes|k8s|helm|kubectl|pod|deployment)\b/i,
+  // A bare "service" is usually code ("build a payment service"), so only
+  // operations on a service, or infrastructure-specific phrases, count here.
+  /\b(service mesh|service account|systemd service|service discovery)\b/i,
+  /\b(restart|stop|scale|redeploy|deploy|roll ?back)\s+(the\s+|a\s+|an\s+)?([\w-]+\s+)?services?\b/i,
 
   // CI/CD
   /\b(ci\/cd|continuous integration|continuous deployment|continuous delivery)\b/i,

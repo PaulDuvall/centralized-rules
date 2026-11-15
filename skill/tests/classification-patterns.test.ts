@@ -68,6 +68,20 @@ describe('Classification Patterns', () => {
       });
     });
 
+    it('should NOT match HR terms in a code or domain-model context', () => {
+      const techPrompts = [
+        'Model the salary calculation as a value object',
+        'Add compensation logic to the order saga',
+        'Add a salary field to the Employee entity',
+        'Run a performance review of the slow query',
+      ];
+
+      techPrompts.forEach((prompt) => {
+        const matches = LEGAL_BUSINESS_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
+      });
+    });
+
     it('should distinguish financial business from financial API', () => {
       // Should match (business context)
       expect(
@@ -243,6 +257,7 @@ describe('Classification Patterns', () => {
         'Replace the raw email strings with a value object',
         'Sketch the domain model for invoicing',
         'Publish a domain event when an order ships',
+        'Extract a domain service for pricing',
         'Run an event storming session on returns',
       ];
 
@@ -258,6 +273,7 @@ describe('Classification Patterns', () => {
         'Register a subdomain for the docs site',
         'Point the custom domain at the load balancer',
         'Format the weekday as dddd in the date picker',
+        'Configure Active Directory Domain Services',
       ];
 
       prompts.forEach((prompt) => {
@@ -284,6 +300,19 @@ describe('Classification Patterns', () => {
       prompts.forEach((prompt) => {
         const matches = DEVOPS_PATTERNS.some((pattern) => pattern.test(prompt));
         expect(matches).toBe(true);
+      });
+    });
+
+    it('should not match a bare "service" outside an operations context', () => {
+      const prompts = [
+        'Build a payment service',
+        'Split the order service into bounded contexts',
+        'Refactor the user service',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = DEVOPS_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
       });
     });
 

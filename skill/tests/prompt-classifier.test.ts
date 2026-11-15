@@ -100,6 +100,67 @@ describe('Prompt Classifier', () => {
         expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.ARCHITECTURE);
       });
     });
+
+    // DevOps and legal/business are checked before architecture, so a bare
+    // "service" or "salary" used to win over the DDD vocabulary.
+    it('should not let "service" or "salary" override DDD vocabulary', () => {
+      const prompts = [
+        'Split the order service into bounded contexts',
+        'Extract a domain service for pricing',
+        'Model the salary calculation as a value object',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.ARCHITECTURE);
+      });
+    });
+  });
+
+  describe('Overlap with DevOps and legal/business patterns', () => {
+    it('should classify building a service as implementation, not DevOps', () => {
+      expect(classifyPrompt('Build a payment service')).toBe(PromptCategory.CODE_IMPLEMENTATION);
+      expect(classifyPrompt('Create an inventory service class')).toBe(
+        PromptCategory.CODE_IMPLEMENTATION
+      );
+    });
+
+    it('should keep service operations in DevOps', () => {
+      const prompts = [
+        'Deploy the service to production',
+        'Restart the service on the staging cluster',
+        'Configure a service mesh with istio',
+        'Expose the app with a kubernetes service',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.DEVOPS);
+      });
+    });
+
+    it('should not treat HR terms in a code context as legal/business', () => {
+      // LEGAL_BUSINESS skips rule injection, so a false positive here costs the most
+      const prompts = [
+        'Add compensation logic to the order saga',
+        'Add a salary field to the Employee entity',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.CODE_IMPLEMENTATION);
+      });
+    });
+
+    it('should keep HR prompts in legal/business', () => {
+      const prompts = [
+        'Review the salary bands for the engineering team',
+        'Update the benefits package for 2027',
+        'Draft the compensation plan for sales',
+        'Schedule the annual performance review',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.LEGAL_BUSINESS);
+      });
+    });
   });
 
   describe('Keyword scoring (fallback)', () => {
