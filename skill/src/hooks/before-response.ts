@@ -8,20 +8,7 @@ import { analyzeIntent, selectRules, getAvailableRules } from '../tools/select-r
 import { fetchRules } from '../tools/get-rules';
 import { getErrorDetails, getErrorMessage, isSkillError } from '../errors';
 import { loggers, configureLogging, formatDuration } from '../services/logger';
-import { classifyPrompt, PromptCategory } from '../services/prompt-classifier';
-
-/**
- * Categories that should trigger rule injection
- * Non-code categories (legal, general questions) skip rule loading to save tokens
- */
-const CODE_CATEGORIES: PromptCategory[] = [
-  PromptCategory.CODE_IMPLEMENTATION,
-  PromptCategory.CODE_DEBUGGING,
-  PromptCategory.CODE_REVIEW,
-  PromptCategory.ARCHITECTURE,
-  PromptCategory.DEVOPS,
-  PromptCategory.DOCUMENTATION,
-];
+import { classifyPrompt, CODE_CATEGORIES } from '../services/prompt-classifier';
 
 /**
  * Hook execution timing

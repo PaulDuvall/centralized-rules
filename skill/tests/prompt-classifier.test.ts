@@ -189,6 +189,42 @@ describe('Prompt Classifier', () => {
       });
     });
 
+    it('should classify password storage work as implementation', () => {
+      // Without a security pattern these were DevOps ("salt") or UNCLEAR (no rules)
+      const prompts = [
+        'Add a salt to the password hash',
+        'Hash user passwords with bcrypt before saving',
+        'Switch password storage to argon2id',
+        'Generate a random salt for each user',
+        'Store passwords as salted hashes',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(classifyPrompt(prompt), prompt).toBe(PromptCategory.CODE_IMPLEMENTATION);
+      });
+    });
+
+    it('should let keyword scoring pick the task for security prompts', () => {
+      const cases: Array<[string, PromptCategory]> = [
+        ['Fix the password hashing bug', PromptCategory.CODE_DEBUGGING],
+        ['Review the password hashing code', PromptCategory.CODE_REVIEW],
+        // Scoring ties (refactor vs add) and would return UNCLEAR
+        ['Refactor password hashing to add a per-user salt', PromptCategory.CODE_IMPLEMENTATION],
+        // Scoring picks LEGAL_BUSINESS ("policy"), which skips rule injection
+        ['Update the password policy to require bcrypt', PromptCategory.CODE_IMPLEMENTATION],
+      ];
+
+      cases.forEach(([prompt, expected]) => {
+        expect(classifyPrompt(prompt), prompt).toBe(expected);
+      });
+    });
+
+    it('should keep SaltStack prompts in DevOps', () => {
+      expect(classifyPrompt('Apply the salt states to the web servers')).toBe(
+        PromptCategory.DEVOPS
+      );
+    });
+
     it('should fall back to DevOps, not UNCLEAR, when no code pattern matches', () => {
       // UNCLEAR skips rule injection; DevOps still loads rules
       expect(classifyPrompt('Send an email notification when an order ships')).toBe(

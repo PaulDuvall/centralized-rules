@@ -40,6 +40,7 @@ const priorityOrder = [
   ARCHITECTURE,           // Medium - specific domain
   CODE_REVIEW,            // Medium - can overlap
   CODE_IMPLEMENTATION,    // Medium-low - common words
+  SECURITY (domain signal), // "password hash", "bcrypt": keyword scoring picks the task
   DEVOPS (generic words), // Low - "logging", "container", "notification"
   DOCUMENTATION,          // Low - very common words
   GENERAL_QUESTION,       // Lowest - catch-all
@@ -51,6 +52,13 @@ operations phrases (docker, terraform, prometheus, "deploy the service").
 `GENERIC_DEVOPS_PATTERNS` holds words that also describe application code, so
 "Add logging to the parser function" reaches CODE_IMPLEMENTATION first, while
 "Collect metrics from the cluster" still falls through to DEVOPS.
+
+`SECURITY_PATTERNS` (password storage: bcrypt, argon2, password hash or salt)
+is not a category. A match says the prompt is code, so keyword scoring picks
+debugging, review, or implementation, and any result that would skip rule
+injection (UNCLEAR, LEGAL_BUSINESS, GENERAL_QUESTION) becomes
+CODE_IMPLEMENTATION. "Fix the password hashing bug" stays CODE_DEBUGGING, and
+"Add a salt to the password hash" no longer falls to the generic DevOps "salt".
 
 **Why Priority Ordering?**
 

@@ -121,6 +121,24 @@ export const CODE_IMPLEMENTATION_PATTERNS = [
 ];
 
 /**
+ * Security patterns: password storage
+ *
+ * Security vocabulary says a prompt is about code, not which task it is:
+ * "fix the password hashing bug" is debugging, "add a salt" is implementation.
+ * The classifier treats a match as a domain signal and lets keyword scoring
+ * pick the task, defaulting to CODE_IMPLEMENTATION.
+ *
+ * Each pattern needs a password-hashing algorithm or password context: a bare
+ * "salt" is also SaltStack (DevOps), and a bare "hash" also means cache keys
+ * and checksums.
+ */
+export const SECURITY_PATTERNS = [
+  /\b(bcrypt|scrypt|argon2(id|i|d)?|pbkdf2)\b/i,
+  /^(?=[\s\S]*\bpasswords?\b)[\s\S]*\b(hash\w*|salt\w*|pepper)\b/i,
+  /\b(random|unique|per-user|cryptographic)\s+salts?\b/i,
+];
+
+/**
  * Code debugging patterns
  *
  * Strong indicators of debugging/troubleshooting tasks
@@ -473,6 +491,7 @@ export const CATEGORY_PATTERNS = {
   architecture: ARCHITECTURE_PATTERNS,
   devops: DEVOPS_PATTERNS,
   genericDevops: GENERIC_DEVOPS_PATTERNS,
+  security: SECURITY_PATTERNS,
   documentation: DOCUMENTATION_PATTERNS,
   generalQuestion: GENERAL_QUESTION_PATTERNS,
 } as const;
