@@ -67,37 +67,53 @@ class NotificationService:
 ### DDD Implementation
 
 ```python
-# Entity
-class User:
-    def __init__(self, id, email):
-        self.id = id
-    def __eq__(self, other):
-        return self.id == other.id
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Protocol
 
-# Value Object
+# Entity: equality and hash by identity, not attributes
+class User:
+    def __init__(self, id: str, email: str):
+        self.id = id
+        self.email = email
+    def __eq__(self, other):
+        if not isinstance(other, User):
+            return NotImplemented
+        return self.id == other.id
+    def __hash__(self):
+        return hash(self.id)
+
+# Value Object: immutable, compared by value
+# Money uses Decimal (or integer cents), never float: 0.1 + 0.2 != 0.3
 @dataclass(frozen=True)
 class Money:
-    amount: float
+    amount: Decimal
     currency: str
-    def add(self, other):
+    def add(self, other: "Money") -> "Money":
         if self.currency != other.currency:
             raise ValueError("Currency mismatch")
         return Money(self.amount + other.amount, self.currency)
 
-# Aggregate Root
+@dataclass(frozen=True)
+class LineItem:
+    product_id: str
+    quantity: int
+    unit_price: Money
+
+# Aggregate Root: the only way to change its line items
 class Order:
-    def __init__(self, id):
+    def __init__(self, id: str):
         self.id = id
-        self._line_items = []
-    def add_item(self, product, quantity):
+        self._line_items: list[LineItem] = []
+    def add_item(self, product_id: str, quantity: int, unit_price: Money):
         if quantity <= 0:
             raise ValueError("Quantity must be positive")
-        self._line_items.append(LineItem(product, quantity))
+        self._line_items.append(LineItem(product_id, quantity, unit_price))
 
-# Repository
-class OrderRepository:
-    def find_by_id(self, order_id) -> Order: pass
-    def save(self, order: Order): pass
+# Repository: persistence contract the domain depends on
+class OrderRepository(Protocol):
+    def find_by_id(self, order_id: str) -> Order | None: ...
+    def save(self, order: Order) -> None: ...
 ```
 
 ---
