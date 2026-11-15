@@ -121,21 +121,29 @@ export const CODE_IMPLEMENTATION_PATTERNS = [
 ];
 
 /**
- * Security patterns: password storage
+ * Security patterns: password storage, JWT, CSRF
  *
  * Security vocabulary says a prompt is about code, not which task it is:
  * "fix the password hashing bug" is debugging, "add a salt" is implementation.
  * The classifier treats a match as a domain signal and lets keyword scoring
  * pick the task, defaulting to CODE_IMPLEMENTATION.
  *
- * Each pattern needs a password-hashing algorithm or password context: a bare
- * "salt" is also SaltStack (DevOps), and a bare "hash" also means cache keys
- * and checksums.
+ * Each pattern avoids words with non-security meanings: a bare "salt" is also
+ * SaltStack (DevOps), a bare "hash" also means cache keys and checksums, a bare
+ * "token" also means tokenizers, design tokens, and LLM tokens, and a bare
+ * "cross-site" also means links between sites.
  */
 export const SECURITY_PATTERNS = [
+  // Password storage
   /\b(bcrypt|scrypt|argon2(id|i|d)?|pbkdf2)\b/i,
   /^(?=[\s\S]*\bpasswords?\b)[\s\S]*\b(hash\w*|salt\w*|pepper)\b/i,
   /\b(random|unique|per-user|cryptographic)\s+salts?\b/i,
+
+  // JSON Web Tokens
+  /\b(jwts?|jwks|json web tokens?)\b/i,
+
+  // Cross-site request forgery and its standard mitigations
+  /\b(csrf|xsrf|cross[- ]site request forgery|samesite|double[- ]submit cookies?)\b/i,
 ];
 
 /**
