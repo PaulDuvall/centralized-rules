@@ -84,7 +84,7 @@
         "tip": "Write tests first - let them guide your design"
       },
       "security": {
-        "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability"],
+        "keywords": ["auth", "authentication", "authorization", "security", "password", "token", "jwt", "oauth", "permission", "encrypt", "hash", "sanitize", "validate", "injection", "xss", "csrf", "vulnerability", "jwts", "jwks", "xsrf", "samesite", "double-submit cookie", "double submit cookie", "cross-site request forgery", "cross site request forgery"],
         "slashCommands": ["/xsecurity", "/security", "/xaudit"],
         "rules": ["base/security-principles"],
         "tip": "Security isn't optional - validate all inputs"

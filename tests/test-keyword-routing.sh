@@ -148,7 +148,18 @@ expect_rule "rename the classes to match the ubiquitous language" "base/architec
 expect_rule "sketch the domain model for invoicing" "base/architecture-principles" yes
 echo
 
+echo "JWT and CSRF security"
+expect_rule "reject JWTs that use the none algorithm" "base/security-principles" yes
+expect_rule "fetch signing keys from the JWKS endpoint" "base/security-principles" yes
+expect_rule "set SameSite=Strict on the session cookie" "base/security-principles" yes
+expect_rule "set the XSRF header from the Angular client" "base/security-principles" yes
+expect_rule "use the double-submit cookie pattern for forms" "base/security-principles" yes
+expect_rule "guard the transfer form against cross-site request forgery" "base/security-principles" yes
+expect_rule "guard the transfer form against cross site request forgery" "base/security-principles" yes
+echo
+
 echo "False-positive guards"
+expect_rule "prevent double-submit on the signup button" "base/security-principles" no
 expect_rule "aggregate the cloudwatch logs by request id" "base/architecture-principles" no
 expect_rule "format the weekday as dddd in the date picker" "base/architecture-principles" no
 expect_rule "add a useMutation hook for the signup form" "base/testing-philosophy" no
