@@ -12,6 +12,7 @@ import {
   CODE_REVIEW_PATTERNS,
   ARCHITECTURE_PATTERNS,
   DEVOPS_PATTERNS,
+  GENERIC_DEVOPS_PATTERNS,
   DOCUMENTATION_PATTERNS,
   GENERAL_QUESTION_PATTERNS,
   CODE_INDICATORS,
@@ -65,6 +66,20 @@ describe('Classification Patterns', () => {
         );
         // These should NOT match because they have technical context
         expect(matches).toBe(false);
+      });
+    });
+
+    it('should NOT match HR terms in a code or domain-model context', () => {
+      const techPrompts = [
+        'Model the salary calculation as a value object',
+        'Add compensation logic to the order saga',
+        'Add a salary field to the Employee entity',
+        'Run a performance review of the slow query',
+      ];
+
+      techPrompts.forEach((prompt) => {
+        const matches = LEGAL_BUSINESS_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
       });
     });
 
@@ -231,6 +246,45 @@ describe('Classification Patterns', () => {
       });
     });
 
+    it('should match domain-driven design vocabulary', () => {
+      const prompts = [
+        'Apply DDD to the billing module',
+        'Make the checkout module domain-driven',
+        'Split billing and shipping into separate bounded contexts',
+        'Draw a context map for the fulfillment team',
+        'Add an anti-corruption layer around the legacy ERP',
+        'Rename the classes to match the ubiquitous language',
+        'Move the pricing logic into the Order aggregate root',
+        'Replace the raw email strings with a value object',
+        'Sketch the domain model for invoicing',
+        'Publish a domain event when an order ships',
+        'Extract a domain service for pricing',
+        'Run an event storming session on returns',
+        'Register the OrderRepository in the DI container',
+        'Move the repository implementation into the infrastructure layer',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = ARCHITECTURE_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(true);
+      });
+    });
+
+    it('should not treat generic "aggregate" or "domain" as DDD', () => {
+      const prompts = [
+        'Compute an aggregate of daily sales',
+        'Register a subdomain for the docs site',
+        'Point the custom domain at the load balancer',
+        'Format the weekday as dddd in the date picker',
+        'Configure Active Directory Domain Services',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = ARCHITECTURE_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
+      });
+    });
+
     it('should have at least 5 patterns', () => {
       expect(ARCHITECTURE_PATTERNS.length).toBeGreaterThanOrEqual(5);
     });
@@ -249,6 +303,34 @@ describe('Classification Patterns', () => {
       prompts.forEach((prompt) => {
         const matches = DEVOPS_PATTERNS.some((pattern) => pattern.test(prompt));
         expect(matches).toBe(true);
+      });
+    });
+
+    it('should leave generic ops words to GENERIC_DEVOPS_PATTERNS', () => {
+      const prompts = [
+        'Add logging to the parser function',
+        'Add a toast notification component',
+        'Register the OrderRepository in the DI container',
+        'Move the repository implementation into the infrastructure layer',
+        'Add a lint step to the pipeline',
+      ];
+
+      prompts.forEach((prompt) => {
+        expect(DEVOPS_PATTERNS.some((p) => p.test(prompt)), prompt).toBe(false);
+        expect(GENERIC_DEVOPS_PATTERNS.some((p) => p.test(prompt)), prompt).toBe(true);
+      });
+    });
+
+    it('should not match a bare "service" outside an operations context', () => {
+      const prompts = [
+        'Build a payment service',
+        'Split the order service into bounded contexts',
+        'Refactor the user service',
+      ];
+
+      prompts.forEach((prompt) => {
+        const matches = DEVOPS_PATTERNS.some((pattern) => pattern.test(prompt));
+        expect(matches, prompt).toBe(false);
       });
     });
 
