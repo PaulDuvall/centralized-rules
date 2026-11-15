@@ -138,7 +138,19 @@ use_project empty
 expect_rule "refactor OrderService.cs to use records" "languages/csharp" no
 echo
 
+echo "Domain-driven design (no generic architecture keyword in these prompts)"
+expect_rule "apply DDD to the billing module" "base/architecture-principles" yes
+expect_rule "make the billing module domain-driven" "base/architecture-principles" yes
+expect_rule "split billing and shipping into separate bounded contexts" "base/architecture-principles" yes
+expect_rule "move the pricing logic into the Order aggregate root" "base/architecture-principles" yes
+expect_rule "replace the raw email strings with a value object" "base/architecture-principles" yes
+expect_rule "rename the classes to match the ubiquitous language" "base/architecture-principles" yes
+expect_rule "sketch the domain model for invoicing" "base/architecture-principles" yes
+echo
+
 echo "False-positive guards"
+expect_rule "aggregate the cloudwatch logs by request id" "base/architecture-principles" no
+expect_rule "format the weekday as dddd in the date picker" "base/architecture-principles" no
 expect_rule "add a useMutation hook for the signup form" "base/testing-philosophy" no
 expect_rule "write a graphql mutation for createUser" "base/testing-philosophy" no
 expect_rule "render the quadrant chart on the dashboard" "base/knowledge-management" no

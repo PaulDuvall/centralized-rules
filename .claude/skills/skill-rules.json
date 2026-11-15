@@ -103,7 +103,7 @@
         "tip": "Refactor ruthlessly - simple code is maintainable code"
       },
       "architecture": {
-        "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer", "tracer bullet", "tracer", "bullet", "steel thread", "walking skeleton", "end-to-end", "vertical slice"],
+        "keywords": ["architect", "design", "pattern", "structure", "12-factor", "scalability", "deployment", "microservice", "monolith", "layer", "tracer bullet", "tracer", "bullet", "steel thread", "walking skeleton", "end-to-end", "vertical slice", "ddd", "domain-driven", "domain driven", "bounded context", "aggregate root", "value object", "ubiquitous language", "domain model"],
         "rules": ["base/architecture-principles", "base/12-factor-app"],
         "tip": "Design for change - make it easy to evolve"
       },
